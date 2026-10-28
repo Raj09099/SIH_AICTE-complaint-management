@@ -2,11 +2,13 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Page Imports
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Institutions from './pages/Institutions';
+import InstitutionDetails from './pages/InstitutionDetails';
 import Complaints from './pages/Complaints';
 import ComplaintDetails from './pages/ComplaintDetails';
 import CaseOverlap from './pages/CaseOverlap';
@@ -24,10 +26,18 @@ export function App() {
           <Route path="/login" element={<Login />} />
 
           {/* Protected Application Routes inside Master Layout */}
-          <Route path="/" element={<Layout />}>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="institutions" element={<Institutions />} />
+            <Route path="institutions/:id" element={<InstitutionDetails />} />
             <Route path="complaints" element={<Complaints />} />
             <Route path="complaints/:id" element={<ComplaintDetails />} />
             <Route path="case-overlap" element={<CaseOverlap />} />

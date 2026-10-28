@@ -1,15 +1,40 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authService } from '../services/auth';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState({
-    name: 'Authorized AICTE Official',
-    email: 'officer@aicte-india.org',
-    bureau: 'Central Grievance Redressal Cell',
-    role: 'Case Officer',
-  });
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Restore authenticated session from stored JWT token on initial load
+  const checkAuth = useCallback(async () => {
+    const token = localStorage.getItem('sih26264_auth_token');
+    if (!token) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const profile = await authService.getCurrentUser();
+      setUser(profile);
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.warn('Session verification failed or token expired:', err.message);
+      localStorage.removeItem('sih26264_auth_token');
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const login = (userData, token) => {
     setUser(userData);
@@ -26,7 +51,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

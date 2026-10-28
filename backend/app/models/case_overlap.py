@@ -19,11 +19,32 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import JSON, TypeDecorator
 from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.complaint import Complaint
     from app.models.user import User
+
+
+class CompatibleArray(TypeDecorator):
+    """
+    PostgreSQL ARRAY(Text) column that transparently falls back
+    to JSON on SQLite to support lightweight in-memory testing.
+    """
+    impl = ARRAY(Text)
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "sqlite":
+            return dialect.type_descriptor(JSON())
+        return dialect.type_descriptor(ARRAY(Text))
+
+    def process_bind_param(self, value, dialect):
+        return value
+
+    def process_result_value(self, value, dialect):
+        return value
 
 
 class CaseOverlap(Base):
@@ -50,7 +71,7 @@ class CaseOverlap(Base):
     )
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     matching_keywords: Mapped[Optional[List[str]]] = mapped_column(
-        ARRAY(Text), nullable=True
+        CompatibleArray, nullable=True
     )
     status: Mapped[Optional[str]] = mapped_column(
         String(50),
@@ -86,4 +107,3 @@ class CaseOverlap(Base):
         foreign_keys=[reviewed_by],
         back_populates="reviewed_overlaps",
     )
-
