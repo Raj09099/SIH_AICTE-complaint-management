@@ -69,11 +69,16 @@ export function Login() {
     } catch (err) {
       console.error('Demo sign-in failed:', err);
       const serverDetail = err.response?.data?.detail;
-      const displayMsg =
-        serverDetail ||
-        (err.response?.status === 401
-          ? 'Invalid demo credentials. Please verify your backend and database.'
-          : 'Unable to connect to the authentication service. Please verify the backend is active.');
+      let displayMsg = serverDetail;
+      if (!displayMsg) {
+        if (err.response?.status === 401) {
+          displayMsg = 'Invalid demo credentials. Please verify your database seeding.';
+        } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          displayMsg = 'Backend is currently waking up from sleep mode (Render free tier). Please retry in 10-15 seconds.';
+        } else {
+          displayMsg = 'Unable to connect to backend service. If using Render free tier, the instance is spinning up — please click Demo Login again in a moment.';
+        }
+      }
       setErrorMessage(displayMsg);
     } finally {
       setLoading(false);
@@ -107,11 +112,16 @@ export function Login() {
     } catch (err) {
       console.error('Sign-in failed:', err);
       const serverDetail = err.response?.data?.detail;
-      const displayMsg =
-        serverDetail ||
-        (err.response?.status === 401
-          ? 'Invalid credentials. Please verify your email and password.'
-          : 'Unable to connect to the authentication service. Please verify the backend is active.');
+      let displayMsg = serverDetail;
+      if (!displayMsg) {
+        if (err.response?.status === 401) {
+          displayMsg = 'Invalid credentials. Please verify your email and password.';
+        } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          displayMsg = 'Backend is currently waking up from sleep mode (Render free tier). Please retry in 10-15 seconds.';
+        } else {
+          displayMsg = 'Unable to connect to the authentication service. If using Render free tier, the instance is spinning up — please try again in a moment.';
+        }
+      }
       setErrorMessage(displayMsg);
     } finally {
       setLoading(false);
