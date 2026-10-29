@@ -13,11 +13,66 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.security import create_access_token
 from app.dependencies import get_db
 from app.main import app
 from app.models.complaint import Complaint
 from app.models.institution import Institution
 from app.models.user import User
+
+
+@pytest.fixture
+def auth_headers(sqlite_db_session):
+    """Generates valid Bearer authentication headers for an active officer."""
+    officer = User(
+        id=100,
+        email="officer.test@aicte.gov.in",
+        hashed_password="hashed_pwd",
+        full_name="Test Officer",
+        bureau="Approval Bureau",
+        role="officer",
+        is_active=True,
+    )
+    sqlite_db_session.add(officer)
+    sqlite_db_session.commit()
+    token = create_access_token(subject=officer.email, role="officer", bureau="Approval Bureau")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def viewer_auth_headers(sqlite_db_session):
+    """Generates valid Bearer authentication headers for a viewer role (read-only)."""
+    viewer = User(
+        id=101,
+        email="viewer.test@aicte.gov.in",
+        hashed_password="hashed_pwd",
+        full_name="Test Viewer",
+        bureau="Approval Bureau",
+        role="viewer",
+        is_active=True,
+    )
+    sqlite_db_session.add(viewer)
+    sqlite_db_session.commit()
+    token = create_access_token(subject=viewer.email, role="viewer", bureau="Approval Bureau")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def inactive_auth_headers(sqlite_db_session):
+    """Generates Bearer authentication headers for a deactivated officer."""
+    inactive = User(
+        id=102,
+        email="inactive.test@aicte.gov.in",
+        hashed_password="hashed_pwd",
+        full_name="Deactivated Officer",
+        bureau="Approval Bureau",
+        role="officer",
+        is_active=False,
+    )
+    sqlite_db_session.add(inactive)
+    sqlite_db_session.commit()
+    token = create_access_token(subject=inactive.email, role="officer", bureau="Approval Bureau")
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
@@ -264,7 +319,7 @@ def test_list_complaints_database_error_handling():
         app.dependency_overrides.clear()
 
 
-def test_create_complaint_success(client, sqlite_db_session):
+def test_create_complaint_success(client, sqlite_db_session, auth_headers):
     """Verifies successful complaint creation with validation and persistence."""
     inst = Institution(id=10, aicte_id="1-TEST-10", name="National Engg College", state="Karnataka", city="Bangalore")
     sqlite_db_session.add(inst)
@@ -284,7 +339,7 @@ def test_create_complaint_success(client, sqlite_db_session):
         "deadline_date": "2026-11-10",
     }
 
-    response = client.post("/api/v1/complaints/", json=payload)
+    response = client.post("/api/v1/complaints/", json=payload, headers=auth_headers)
     assert response.status_code == 201
     data = response.json()
     assert data["complaint_no"] == "AICTE-2026-9999"
@@ -300,7 +355,7 @@ def test_create_complaint_success(client, sqlite_db_session):
     assert persisted.subject == "Unauthorized Development Fee Collection"
 
 
-def test_create_complaint_auto_generated_complaint_no(client, sqlite_db_session):
+def test_create_complaint_auto_generated_complaint_no(client, sqlite_db_session, auth_headers):
     """Verifies that complaint_no is auto-generated in official AICTE format when omitted."""
     inst = Institution(id=11, aicte_id="1-TEST-11", name="Apex Tech", state="Punjab", city="Ludhiana")
     sqlite_db_session.add(inst)
@@ -315,7 +370,7 @@ def test_create_complaint_auto_generated_complaint_no(client, sqlite_db_session)
         "description": "Faculty members unpaid for three months.",
     }
 
-    response = client.post("/api/v1/complaints/", json=payload)
+    response = client.post("/api/v1/complaints/", json=payload, headers=auth_headers)
     assert response.status_code == 201
     data = response.json()
     assert data["complaint_no"].startswith("AICTE-")
@@ -324,7 +379,7 @@ def test_create_complaint_auto_generated_complaint_no(client, sqlite_db_session)
     assert data["deadline_date"] is not None
 
 
-def test_create_complaint_validation_failures(client, sqlite_db_session):
+def test_create_complaint_validation_failures(client, sqlite_db_session, auth_headers):
     """Verifies validation errors for non-existent institution, duplicate numbers, and invalid statuses."""
     inst = Institution(id=12, aicte_id="1-TEST-12", name="Polytechnic Inst", state="Kerala", city="Kochi")
     sqlite_db_session.add(inst)
@@ -338,7 +393,7 @@ def test_create_complaint_validation_failures(client, sqlite_db_session):
         "category": "Lab",
         "subject": "Broken Instruments",
         "description": "Physics lab non-functional",
-    })
+    }, headers=auth_headers)
     assert res1.status_code == 400
     assert "institution id 99999 does not exist" in res1.json()["detail"].lower()
 
@@ -351,7 +406,7 @@ def test_create_complaint_validation_failures(client, sqlite_db_session):
         "subject": "Broken Instruments",
         "description": "Physics lab non-functional",
         "status": "NonExistentStatus",
-    })
+    }, headers=auth_headers)
     assert res2.status_code == 422
 
     # 3. Invalid priority
@@ -363,7 +418,7 @@ def test_create_complaint_validation_failures(client, sqlite_db_session):
         "subject": "Broken Instruments",
         "description": "Physics lab non-functional",
         "priority": "ExtremeUrgent",
-    })
+    }, headers=auth_headers)
     assert res3.status_code == 422
 
     # 4. Duplicate complaint_no
@@ -375,7 +430,7 @@ def test_create_complaint_validation_failures(client, sqlite_db_session):
         "category": "Lab",
         "subject": "Original Record",
         "description": "Physics lab non-functional",
-    })
+    }, headers=auth_headers)
     assert first_res.status_code == 201
 
     dup_res = client.post("/api/v1/complaints/", json={
@@ -386,7 +441,7 @@ def test_create_complaint_validation_failures(client, sqlite_db_session):
         "category": "Lab",
         "subject": "Duplicate Record",
         "description": "Physics lab non-functional",
-    })
+    }, headers=auth_headers)
     assert dup_res.status_code == 409
     assert "already exists" in dup_res.json()["detail"].lower()
 
@@ -426,7 +481,7 @@ def test_get_complaint_by_id_and_tracking_number(client, sqlite_db_session):
     assert res_missing.status_code == 404
 
 
-def test_update_complaint_status_and_transfer(client, sqlite_db_session):
+def test_update_complaint_status_and_transfer(client, sqlite_db_session, auth_headers):
     """Verifies status transitions, resolution summary, and bureau transfers."""
     inst = Institution(id=20, aicte_id="1-TEST-20", name="Govt Tech", state="Goa", city="Panaji")
     sqlite_db_session.add(inst)
@@ -450,6 +505,7 @@ def test_update_complaint_status_and_transfer(client, sqlite_db_session):
     res1 = client.patch(
         f"/api/v1/complaints/{complaint.complaint_no}/status",
         json={"status": "Under Review", "priority": "High"},
+        headers=auth_headers,
     )
     assert res1.status_code == 200
     data1 = res1.json()
@@ -460,6 +516,7 @@ def test_update_complaint_status_and_transfer(client, sqlite_db_session):
     res2 = client.patch(
         f"/api/v1/complaints/{complaint.id}/status",
         json={"status": "Transferred", "bureau": "Approval Bureau"},
+        headers=auth_headers,
     )
     assert res2.status_code == 200
     data2 = res2.json()
@@ -473,6 +530,7 @@ def test_update_complaint_status_and_transfer(client, sqlite_db_session):
             "status": "Resolved",
             "resolution_summary": "Inquiry completed; scholarship arrears released on 28-Oct-2026.",
         },
+        headers=auth_headers,
     )
     assert res3.status_code == 200
     data3 = res3.json()
@@ -483,6 +541,7 @@ def test_update_complaint_status_and_transfer(client, sqlite_db_session):
     res_invalid = client.patch(
         f"/api/v1/complaints/{complaint.id}/status",
         json={"status": "InvalidLifecycleState"},
+        headers=auth_headers,
     )
     assert res_invalid.status_code == 422
 
@@ -490,6 +549,132 @@ def test_update_complaint_status_and_transfer(client, sqlite_db_session):
     res_not_found = client.patch(
         "/api/v1/complaints/99999/status",
         json={"status": "Resolved"},
+        headers=auth_headers,
     )
     assert res_not_found.status_code == 404
+
+
+# ==============================================================================
+# Security & Authorization Tests for Complaint Mutation Endpoints
+# ==============================================================================
+
+def test_create_complaint_unauthenticated_fails_with_401(client):
+    """Verifies that unauthenticated complaint creation attempts return HTTP 401."""
+    res = client.post("/api/v1/complaints/", json={
+        "institution_id": 1,
+        "complainant_type": "Student",
+        "bureau": "Approval Bureau",
+        "category": "Fee",
+        "subject": "Unauthenticated Creation Attempt",
+        "description": "Should fail with 401",
+    })
+    assert res.status_code == 401
+    assert "authentication required" in res.json()["detail"].lower()
+
+
+def test_create_complaint_invalid_token_fails_with_401(client):
+    """Verifies that requests with invalid/garbage Bearer token return HTTP 401."""
+    res = client.post(
+        "/api/v1/complaints/",
+        json={"institution_id": 1, "complainant_type": "Student"},
+        headers={"Authorization": "Bearer invalid_garbage_token_xyz"},
+    )
+    assert res.status_code == 401
+    assert "invalid or expired" in res.json()["detail"].lower()
+
+
+def test_create_complaint_inactive_user_fails_with_401(client, sqlite_db_session, inactive_auth_headers):
+    """Verifies that tokens belonging to deactivated accounts receive HTTP 401."""
+    res = client.post(
+        "/api/v1/complaints/",
+        json={
+            "institution_id": 1,
+            "complainant_type": "Student",
+            "bureau": "Approval Bureau",
+            "category": "Fee",
+            "subject": "Inactive User Attempt",
+            "description": "Should be rejected with 401",
+        },
+        headers=inactive_auth_headers,
+    )
+    assert res.status_code == 401
+    assert "deactivated" in res.json()["detail"].lower()
+
+
+def test_create_complaint_viewer_role_fails_with_403(client, sqlite_db_session, viewer_auth_headers):
+    """Verifies that authenticated users with read-only 'viewer' role are rejected with HTTP 403."""
+    res = client.post(
+        "/api/v1/complaints/",
+        json={
+            "institution_id": 1,
+            "complainant_type": "Student",
+            "bureau": "Approval Bureau",
+            "category": "Fee",
+            "subject": "Viewer Role Creation Attempt",
+            "description": "Should be rejected with 403",
+        },
+        headers=viewer_auth_headers,
+    )
+    assert res.status_code == 403
+    assert "access denied" in res.json()["detail"].lower()
+
+
+def test_update_complaint_status_unauthenticated_fails_with_401(client):
+    """Verifies that unauthenticated status updates return HTTP 401."""
+    res = client.patch(
+        "/api/v1/complaints/AICTE-2026-0001/status",
+        json={"status": "Under Review"},
+    )
+    assert res.status_code == 401
+    assert "authentication required" in res.json()["detail"].lower()
+
+
+def test_update_complaint_status_viewer_role_fails_with_403(client, sqlite_db_session, viewer_auth_headers):
+    """Verifies that viewer role cannot modify complaint status (HTTP 403)."""
+    res = client.patch(
+        "/api/v1/complaints/AICTE-2026-0001/status",
+        json={"status": "Under Review"},
+        headers=viewer_auth_headers,
+    )
+    assert res.status_code == 403
+    assert "access denied" in res.json()["detail"].lower()
+
+
+def test_update_complaint_general_unauthenticated_fails_with_401(client):
+    """Verifies that unauthenticated general complaint updates return HTTP 401."""
+    res = client.patch(
+        "/api/v1/complaints/AICTE-2026-0001",
+        json={"priority": "Urgent"},
+    )
+    assert res.status_code == 401
+    assert "authentication required" in res.json()["detail"].lower()
+
+
+def test_update_complaint_general_authorized_success(client, sqlite_db_session, auth_headers):
+    """Verifies that authenticated officers can update general complaint fields."""
+    inst = Institution(id=30, aicte_id="1-TEST-30", name="Apex South", state="Tamil Nadu", city="Chennai")
+    sqlite_db_session.add(inst)
+    sqlite_db_session.commit()
+
+    complaint = Complaint(
+        complaint_no="AICTE-2026-GENUPD",
+        institution_id=30,
+        complainant_type="Student",
+        bureau="Approval Bureau",
+        category="Infrastructure",
+        subject="Library Books Deficit",
+        description="Outdated edition textbooks.",
+        status="New",
+        priority="Low",
+    )
+    sqlite_db_session.add(complaint)
+    sqlite_db_session.commit()
+
+    res = client.patch(
+        f"/api/v1/complaints/{complaint.complaint_no}",
+        json={"priority": "Urgent"},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    assert res.json()["priority"] == "Urgent"
 

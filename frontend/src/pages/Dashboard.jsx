@@ -12,16 +12,15 @@ import {
   ArrowUpRight,
   Search,
   Filter,
-  Sparkles,
-  Database,
   RefreshCw,
   TrendingUp,
   AlertCircle,
   Eye,
   SlidersHorizontal,
   ChevronRight,
-  ShieldAlert,
   Calendar,
+  Layers,
+  ArrowRight,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -39,8 +38,10 @@ import StatCard from '../components/dashboard/StatCard';
 import StatusBadge from '../components/common/StatusBadge';
 import { analyticsService } from '../services/analytics';
 import { complaintService } from '../services/complaints';
+import { API_BASE_URL } from '../services/api';
+import { formatDate } from '../utils/formatters';
 
-// Sample demonstration dataset for SIH presentation
+// Demonstration dataset for presentation fallback
 const demoComplaints = [
   {
     id: 'AICTE-2026-0842',
@@ -51,12 +52,8 @@ const demoComplaints = [
     summary: 'Senior hostel students subjected to unauthorized fee surcharges and amenities deprivation under ragging guise.',
     submittedDate: '2026-10-22',
     slaDeadline: '2026-11-05',
-    hoursRemaining: 48,
     priority: 'Critical',
     status: 'Under Review',
-    aiFlag: 'High Overlap (91%)',
-    aiFlagType: 'cyan',
-    relatedCaseId: 'AICTE-2026-0914',
     description: 'Senior hostel students subjected to unauthorized fee surcharges and amenities deprivation under ragging guise.',
   },
   {
@@ -68,12 +65,8 @@ const demoComplaints = [
     summary: 'Institution charging exorbitant non-sanctioned amenity fees in violation of AICTE Fee Committee norms.',
     submittedDate: '2026-10-24',
     slaDeadline: '2026-11-08',
-    hoursRemaining: 120,
     priority: 'High',
     status: 'Under Review',
-    aiFlag: 'High Overlap (91%)',
-    aiFlagType: 'cyan',
-    relatedCaseId: 'AICTE-2026-0842',
     description: 'Institution charging exorbitant non-sanctioned amenity fees in violation of AICTE Fee Committee norms.',
   },
   {
@@ -85,12 +78,8 @@ const demoComplaints = [
     summary: 'Non-functional robotics and advanced computing laboratories despite claimed AICTE compliance.',
     submittedDate: '2026-10-15',
     slaDeadline: '2026-10-30',
-    hoursRemaining: 18,
     priority: 'Urgent',
     status: 'Evidence Requested',
-    aiFlag: 'Evidence Submitted (92%)',
-    aiFlagType: 'teal',
-    relatedCaseId: null,
     description: 'Non-functional robotics and advanced computing laboratories despite claimed AICTE compliance.',
   },
   {
@@ -102,12 +91,8 @@ const demoComplaints = [
     summary: 'Adjunct and assistant professors unpaid for 4 months; violation of 7th CPC salary mandate.',
     submittedDate: '2026-10-08',
     slaDeadline: '2026-10-28',
-    hoursRemaining: -4, // Overdue
     priority: 'Critical',
     status: 'Escalated',
-    aiFlag: 'Pattern Cluster #4',
-    aiFlagType: 'amber',
-    relatedCaseId: null,
     description: 'Adjunct and assistant professors unpaid for 4 months; violation of 7th CPC salary mandate.',
   },
   {
@@ -119,50 +104,40 @@ const demoComplaints = [
     summary: 'Institutional delay in crediting Prime Minister Special Scholarship Scheme stipend to eligible scholars.',
     submittedDate: '2026-10-02',
     slaDeadline: '2026-10-25',
-    hoursRemaining: -48,
     priority: 'High',
     status: 'Under Review',
-    aiFlag: 'Pattern Cluster #2',
-    aiFlagType: 'amber',
-    relatedCaseId: null,
     description: 'Institutional delay in crediting Prime Minister Special Scholarship Scheme stipend to eligible scholars.',
   },
   {
     id: 'AICTE-2026-0419',
     institution: 'St. Xavier Polytechnic',
     state: 'Kerala',
-    bureau: 'PGRC Central Cell',
+    bureau: 'Grievance Cell',
     category: 'Admission Cancellation & Refund',
     summary: 'Refusal to refund security deposit after student admission withdrawal before official cut-off date.',
     submittedDate: '2026-09-28',
     slaDeadline: '2026-10-18',
-    hoursRemaining: 0,
     priority: 'Medium',
     status: 'Resolved',
-    aiFlag: 'Resolved with Proof',
-    aiFlagType: 'emerald',
-    relatedCaseId: null,
     description: 'Refusal to refund security deposit after student admission withdrawal before official cut-off date.',
   },
 ];
 
-// Inflow & resolution historical trend data for Demo mode
-const demoMonthlyTrendData = [
-  { month: 'May', received: 112, resolved: 98, overlaps: 8 },
-  { month: 'Jun', received: 145, resolved: 130, overlaps: 14 },
-  { month: 'Jul', received: 210, resolved: 185, overlaps: 22 },
-  { month: 'Aug', received: 198, resolved: 176, overlaps: 19 },
-  { month: 'Sep', received: 245, resolved: 210, overlaps: 28 },
-  { month: 'Oct', received: 268, resolved: 232, overlaps: 42 },
+const demoMonthlyTrends = [
+  { month: 'May', received: 112, resolved: 98 },
+  { month: 'Jun', received: 145, resolved: 130 },
+  { month: 'Jul', received: 210, resolved: 185 },
+  { month: 'Aug', received: 198, resolved: 176 },
+  { month: 'Sep', received: 245, resolved: 210 },
+  { month: 'Oct', received: 268, resolved: 232 },
 ];
 
-// Bureau distribution data for Demo mode
-const demoBureauStatsData = [
-  { name: 'Approval Bureau', active: 114, resolved: 310, slaOnTime: 94 },
-  { name: 'PGRC Central Cell', active: 98, resolved: 280, slaOnTime: 92 },
-  { name: 'Anti-Ragging Cell', active: 46, resolved: 120, slaOnTime: 98 },
-  { name: 'Faculty & Staff', active: 62, resolved: 95, slaOnTime: 86 },
-  { name: 'Finance & Schol.', active: 36, resolved: 87, slaOnTime: 91 },
+const demoBureauStats = [
+  { name: 'Approval Bureau', active: 114, resolved: 310, total: 424, slaOnTime: 94.2 },
+  { name: 'Grievance Cell', active: 98, resolved: 280, total: 378, slaOnTime: 92.5 },
+  { name: 'Anti-Ragging Cell', active: 46, resolved: 120, total: 166, slaOnTime: 98.1 },
+  { name: 'Faculty & Staff', active: 62, resolved: 95, total: 157, slaOnTime: 86.4 },
+  { name: 'Finance Cell', active: 36, resolved: 87, total: 123, slaOnTime: 91.0 },
 ];
 
 export function Dashboard() {
@@ -180,16 +155,20 @@ export function Dashboard() {
   const [loadingLive, setLoadingLive] = useState(true);
   const [liveError, setLiveError] = useState(null);
 
-  const fetchHealth = () => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data) => {
+  const fetchHealth = useCallback(async () => {
+    try {
+      const healthUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '/api/health');
+      const res = await fetch(healthUrl);
+      if (res.ok) {
+        const data = await res.json();
         setBackendHealth(data);
-      })
-      .catch(() => {
+      } else {
         setBackendHealth({ status: 'offline' });
-      });
-  };
+      }
+    } catch {
+      setBackendHealth({ status: 'offline' });
+    }
+  }, []);
 
   const fetchDashboardData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -227,53 +206,26 @@ export function Dashboard() {
   useEffect(() => {
     fetchHealth();
     fetchDashboardData();
-  }, [fetchDashboardData]);
+  }, [fetchHealth, fetchDashboardData]);
 
-  // Map live complaint entities from API into dashboard table format
+  // Map live complaint entities from API
   const liveMappedComplaints = useMemo(() => {
-    return liveComplaints.map((item) => {
-      const deadline = item.deadline_date ? new Date(item.deadline_date) : null;
-      let hoursRemaining = 0;
-      if (deadline && !isNaN(deadline.getTime())) {
-        hoursRemaining = Math.round((deadline.getTime() - Date.now()) / (1000 * 60 * 60));
-      }
-      const isOverdue = hoursRemaining < 0;
-
-      return {
-        id: item.complaint_no,
-        institution: `Institution #${item.institution_id}`,
-        state: 'AICTE Redressal Grid',
-        bureau: item.bureau,
-        category: item.category,
-        summary: item.subject,
-        submittedDate: item.filing_date || 'N/A',
-        slaDeadline: item.deadline_date || 'N/A',
-        hoursRemaining,
-        priority: item.priority || 'Medium',
-        status: item.status || 'New',
-        aiFlag: item.is_escalated
-          ? 'Escalated Priority'
-          : item.status === 'Resolved'
-          ? 'Resolved with Proof'
-          : isOverdue
-          ? 'Overdue SLA Alert'
-          : 'Telemetry Monitored',
-        aiFlagType: item.is_escalated
-          ? 'amber'
-          : item.status === 'Resolved'
-          ? 'emerald'
-          : isOverdue
-          ? 'amber'
-          : 'cyan',
-        relatedCaseId: null,
-        description: item.description,
-        complainantType: item.complainant_type,
-        rawItem: item,
-      };
-    });
+    return liveComplaints.map((item) => ({
+      id: item.complaint_no,
+      institution: `Institution #${item.institution_id}`,
+      bureau: item.bureau,
+      category: item.category,
+      summary: item.subject,
+      submittedDate: item.filing_date || 'N/A',
+      slaDeadline: item.deadline_date || 'N/A',
+      priority: item.priority || 'Medium',
+      status: item.status || 'New',
+      description: item.description,
+      rawItem: item,
+    }));
   }, [liveComplaints]);
 
-  // Bureau options dynamically based on available data
+  // Bureau options based on active data
   const bureauOptions = useMemo(() => {
     if (presentationMode === 'live' && summaryData?.bureau_distribution?.length) {
       return ['All', ...summaryData.bureau_distribution.map((b) => b.name)];
@@ -286,7 +238,6 @@ export function Dashboard() {
       'Finance Cell',
       'Grievance Cell',
       'Anti-Ragging Cell',
-      'PGRC Central Cell',
       'Faculty & Staff Cell',
     ];
   }, [presentationMode, summaryData]);
@@ -298,165 +249,106 @@ export function Dashboard() {
     return source.filter((item) => {
       const q = searchQuery.toLowerCase();
       const matchesSearch =
-        searchQuery === '' ||
-        (item.id && item.id.toLowerCase().includes(q)) ||
-        (item.institution && item.institution.toLowerCase().includes(q)) ||
-        (item.summary && item.summary.toLowerCase().includes(q)) ||
-        (item.category && item.category.toLowerCase().includes(q)) ||
-        (item.bureau && item.bureau.toLowerCase().includes(q));
+        !q ||
+        item.id.toLowerCase().includes(q) ||
+        item.institution.toLowerCase().includes(q) ||
+        item.summary.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q);
 
       const matchesBureau =
-        selectedBureau === 'All' ||
-        (item.bureau && item.bureau.toLowerCase().includes(selectedBureau.toLowerCase())) ||
-        (item.bureau && selectedBureau.toLowerCase().includes(item.bureau.toLowerCase()));
+        selectedBureau === 'All' || item.bureau.toLowerCase() === selectedBureau.toLowerCase();
 
       const matchesStatus =
-        selectedStatus === 'All' ||
-        (item.status && item.status.toLowerCase() === selectedStatus.toLowerCase());
+        selectedStatus === 'All' || item.status.toLowerCase() === selectedStatus.toLowerCase();
 
       return matchesSearch && matchesBureau && matchesStatus;
     });
   }, [presentationMode, liveMappedComplaints, searchQuery, selectedBureau, selectedStatus]);
 
+  // Monthly trends data for the chart
+  const monthlyTrendsData = useMemo(() => {
+    if (presentationMode === 'live' && summaryData?.monthly_trends?.length) {
+      return summaryData.monthly_trends;
+    }
+    return demoMonthlyTrends;
+  }, [presentationMode, summaryData]);
+
+  // Bureau breakdown data for the bar chart
+  const bureauStatsData = useMemo(() => {
+    if (presentationMode === 'live' && summaryData?.bureau_distribution?.length) {
+      return summaryData.bureau_distribution;
+    }
+    return demoBureauStats;
+  }, [presentationMode, summaryData]);
+
   return (
-    <div className="space-y-6">
-      {/* Institutional Top Control Bar */}
-      <div className="glass-panel rounded-2xl p-5 border border-slate-800/90 shadow-xl flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+    <div className="space-y-6 bg-white min-h-screen">
+      {/* 1. Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              Ministry of Education • Govt. of India
-            </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs font-mono text-slate-400">SIH-26264 Integrated Redressal Grid</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white mt-1">
-            AICTE Cross-Bureau Complaint Intelligence Dashboard
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#36454F] tracking-tight">
+            Dashboard
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-            Real-time multi-bureau grievance telemetry, automated NLP case overlap resolution, systemic clustering, and resolution affidavit verification.
+          <p className="text-sm text-[#6B7280] mt-0.5">
+            Overview of complaint cases and resolution progress across AICTE bureaus.
           </p>
         </div>
 
-        {/* Controls: Presentation Mode Selector & Health Status */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-[#07101e] p-1 rounded-xl border border-slate-800 text-xs">
-            <button
-              type="button"
-              onClick={() => setPresentationMode('demo')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-medium transition ${
-                presentationMode === 'demo'
-                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-slate-950 font-semibold shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>SIH Demo Mode</span>
-            </button>
+        {/* Presentation Mode Selector & Refresh */}
+        <div className="flex items-center space-x-2">
+          <div className="inline-flex rounded-lg border border-[#E5E7EB] bg-[#F5F7F7] p-0.5 text-xs font-medium">
             <button
               type="button"
               onClick={() => setPresentationMode('live')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-medium transition ${
+              className={`px-3 py-1.5 rounded-md transition ${
                 presentationMode === 'live'
-                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-slate-950 font-semibold shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-[#36454F] font-semibold shadow-sm border border-[#E5E7EB]'
+                  : 'text-[#6B7280] hover:text-[#36454F]'
               }`}
             >
-              <Database className="w-3.5 h-3.5" />
-              <span>Live Database Mode</span>
-            </button>
-          </div>
-
-          {/* Backend Status Chip */}
-          <div className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center space-x-2 text-xs">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                backendHealth?.status === 'ok' ? 'bg-cyan-400 animate-pulse' : 'bg-amber-400'
-              }`}
-            />
-            <span className="text-slate-300">
-              API: {backendHealth?.status === 'ok' ? 'FastAPI Grid Connected' : 'Offline / Checking'}
-            </span>
-            <button
-              type="button"
-              onClick={handleRefreshAll}
-              disabled={isRefreshing}
-              className="p-1 text-slate-500 hover:text-cyan-400 transition ml-1"
-              title="Refresh API Health & Telemetry"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mode Explanation Banner */}
-      {presentationMode === 'demo' ? (
-        <div className="glass-panel p-3.5 rounded-xl border border-cyan-500/30 bg-cyan-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-cyan-200">
-                SIH Presentation Demo Mode Active
-              </p>
-              <p className="text-slate-400 text-[11px]">
-                Showing representative multi-bureau grievance data, AI cross-bureau overlap detection telemetry, and clustering models for jury evaluation.
-              </p>
-            </div>
-          </div>
-          <span className="shrink-0 self-start sm:self-auto px-2.5 py-1 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-semibold">
-            SYNTHETIC DEMO SET
-          </span>
-        </div>
-      ) : (
-        <div className="glass-panel p-3.5 rounded-xl border border-teal-500/30 bg-teal-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-1.5 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/30 shrink-0">
-              <Database className="w-4 h-4 text-teal-400" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <p className="font-semibold text-teal-200">
-                  Live Database Telemetry (PostgreSQL Supabase Connected)
-                </p>
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-              </div>
-              <p className="text-slate-400 text-[11px] mt-0.5">
-                Displaying live metrics from FastAPI endpoint <code>/api/v1/analytics/summary</code>. Database contains{' '}
-                <strong className="text-teal-300">{summaryData?.total_complaints ?? 0}</strong> complaints across{' '}
-                <strong className="text-teal-300">{summaryData?.total_institutions ?? 0}</strong> institutions with{' '}
-                <strong className="text-teal-300">{summaryData?.active_complaints ?? 0}</strong> active grievances.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2 self-start sm:self-auto shrink-0">
-            <button
-              type="button"
-              onClick={handleRefreshAll}
-              disabled={isRefreshing}
-              className="px-2.5 py-1 rounded text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center space-x-1"
-            >
-              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-cyan-400' : ''}`} />
-              <span>Refresh Telemetry</span>
+              Live Database
             </button>
             <button
               type="button"
               onClick={() => setPresentationMode('demo')}
-              className="px-3 py-1 rounded text-[11px] font-medium bg-cyan-500 text-slate-950 hover:bg-cyan-400 transition font-semibold"
+              className={`px-3 py-1.5 rounded-md transition ${
+                presentationMode === 'demo'
+                  ? 'bg-white text-[#36454F] font-semibold shadow-sm border border-[#E5E7EB]'
+                  : 'text-[#6B7280] hover:text-[#36454F]'
+              }`}
             >
-              Switch to Demo Dataset
+              Demo Set
             </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleRefreshAll}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#36454F] hover:bg-[#F5F7F7] transition"
+            title="Refresh Dashboard Data"
+            aria-label="Refresh Dashboard Data"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#0F766E]' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Live Error Banner if any */}
+      {liveError && presentationMode === 'live' && (
+        <div className="p-3.5 rounded-xl bg-[#B91C1C]/10 border border-[#B91C1C]/25 text-[#B91C1C] flex items-start space-x-2.5 text-xs">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold">Backend Connection Alert: </span>
+            <span>{liveError}</span>
           </div>
         </div>
       )}
 
-      {/* Primary KPI Metrics Bar */}
+      {/* 2. Primary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Monitored Grievances"
+          title="Total Cases"
           value={
             presentationMode === 'demo'
               ? '1,248'
@@ -468,15 +360,55 @@ export function Dashboard() {
           }
           subtitle={
             presentationMode === 'demo'
-              ? '892 Resolved • 356 Active'
+              ? 'All AICTE Registered Cases'
               : summaryData
-              ? `${summaryData.resolved_complaints} Resolved • ${summaryData.active_complaints} Active`
-              : 'Loading telemetry...'
+              ? `${summaryData.total_institutions} Institutions Monitored`
+              : 'All Grievances Ingested'
           }
           icon={FileText}
-          color="cyan"
-          trend={presentationMode === 'demo' ? '+8.4%' : `${summaryData?.total_institutions || 0} Colleges`}
-          trendType="up"
+          color="teal"
+          tag={presentationMode === 'demo' ? 'SLA 94.2%' : `SLA ${summaryData?.sla_compliance_rate || 0}%`}
+          to="/complaints"
+        />
+
+        <StatCard
+          title="Pending Cases"
+          value={
+            presentationMode === 'demo'
+              ? '356'
+              : summaryData
+              ? summaryData.active_complaints.toLocaleString()
+              : loadingLive
+              ? '...'
+              : '0'
+          }
+          subtitle="Currently Active or Under Review"
+          icon={Clock}
+          color="amber"
+          progress={
+            presentationMode === 'demo'
+              ? 28.5
+              : summaryData?.total_complaints
+              ? Math.round((summaryData.active_complaints / summaryData.total_complaints) * 100)
+              : 0
+          }
+          to="/complaints"
+        />
+
+        <StatCard
+          title="Resolved Cases"
+          value={
+            presentationMode === 'demo'
+              ? '892'
+              : summaryData
+              ? summaryData.resolved_complaints.toLocaleString()
+              : loadingLive
+              ? '...'
+              : '0'
+          }
+          subtitle="Successfully Redressed with Proof"
+          icon={CheckCircle2}
+          color="green"
           progress={
             presentationMode === 'demo'
               ? 71.5
@@ -484,332 +416,90 @@ export function Dashboard() {
               ? Math.round((summaryData.resolved_complaints / summaryData.total_complaints) * 100)
               : 0
           }
-          tag={presentationMode === 'demo' ? 'SLA 94.2%' : `SLA ${summaryData?.sla_compliance_rate || 0}%`}
           to="/complaints"
         />
+
         <StatCard
-          title="Cross-Bureau Overlaps"
+          title="Overdue Cases"
           value={
             presentationMode === 'demo'
-              ? '42'
+              ? '24'
               : summaryData
-              ? summaryData.total_overlaps.toString()
+              ? summaryData.overdue_complaints.toLocaleString()
+              : loadingLive
+              ? '...'
               : '0'
           }
-          subtitle={
-            presentationMode === 'demo'
-              ? '18 High Confidence (>85%)'
-              : summaryData && summaryData.total_overlaps > 0
-              ? `${summaryData.high_confidence_overlaps} High Confidence`
-              : 'Engine Ready • Standby'
-          }
-          icon={GitCompare}
-          color="teal"
-          trend={presentationMode === 'demo' ? '+12%' : '0 Pending'}
-          trendType="up"
-          progress={presentationMode === 'demo' ? 85 : summaryData?.total_overlaps > 0 ? 100 : 0}
-          tag={presentationMode === 'demo' ? 'Saves ~310 Hrs' : summaryData?.total_overlaps > 0 ? `${summaryData.total_overlaps} Pairs` : 'TF-IDF Ready'}
-          to="/case-overlap"
-        />
-        <StatCard
-          title="Systemic Problem Patterns"
-          value={
-            presentationMode === 'demo'
-              ? '6'
-              : summaryData
-              ? summaryData.total_patterns.toString()
-              : '0'
-          }
-          subtitle={
-            presentationMode === 'demo'
-              ? 'Affecting 38 Institutions'
-              : summaryData && summaryData.total_patterns > 0
-              ? `Affecting ${summaryData.institutions_affected_by_patterns} Colleges`
-              : 'Clustering Engine Standby'
-          }
-          icon={Network}
-          color="amber"
-          trend={presentationMode === 'demo' ? '2 Escalated' : '0 Escalated'}
-          trendType="down"
-          progress={presentationMode === 'demo' ? 60 : summaryData?.total_patterns > 0 ? 100 : 0}
-          tag={presentationMode === 'demo' ? '7 States' : summaryData?.total_patterns > 0 ? 'Active' : 'ML Standby'}
-          to="/problem-patterns"
-        />
-        <StatCard
-          title="Evidence Verified"
-          value={
-            presentationMode === 'demo'
-              ? '88.4%'
-              : summaryData && summaryData.evidence_total > 0
-              ? `${summaryData.evidence_verification_rate}%`
-              : '0%'
-          }
-          subtitle={
-            presentationMode === 'demo'
-              ? '142 Affidavits PyMuPDF Checked'
-              : summaryData && summaryData.evidence_total > 0
-              ? `${summaryData.evidence_verified_count} Affidavits Verified`
-              : 'PyMuPDF Parser Ready'
-          }
-          icon={FileCheck2}
-          color="purple"
-          trend={presentationMode === 'demo' ? '+5.1%' : 'Ready'}
-          trendType="up"
-          progress={
-            presentationMode === 'demo'
-              ? 88.4
-              : summaryData?.evidence_verification_rate || 0
-          }
-          tag={presentationMode === 'demo' ? 'NLP Scored' : summaryData && summaryData.evidence_total > 0 ? 'NLP Scored' : 'Parser Ready'}
-          to="/evidence-checker"
+          subtitle="Exceeded 30-Day Turnaround SLA"
+          icon={AlertTriangle}
+          color="red"
+          tag={presentationMode === 'demo' ? 'Requires Action' : summaryData?.overdue_complaints > 0 ? 'Urgent Review' : 'Within SLA'}
+          to="/complaints"
         />
       </div>
 
-      {/* Decision-Support Feature Showcase (The 3 Core SIH26264 Capabilities) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Feature 1: Case Overlap Highlight */}
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800/90 flex flex-col justify-between space-y-4 hover:border-cyan-500/40 transition">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                  <GitCompare className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
-                    Core Capability 1
-                  </span>
-                  <h2 className="text-base font-bold text-white leading-tight">
-                    Case Overlap Detection
-                  </h2>
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                TF-IDF + Cosine
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Detects duplicate or multi-bureau overlapping complaints submitted under different categories using text vectorization and institution metadata.
-            </p>
-
-            {/* Live Case Comparison Spotlight */}
-            <div className="p-3 rounded-xl bg-[#071120] border border-cyan-500/25 space-y-2">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-cyan-300">Live Match Detected</span>
-                <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                  91% Similarity
-                </span>
-              </div>
-              <div className="text-[11px] text-slate-300 space-y-1">
-                <p className="font-medium text-slate-200 truncate">
-                  Apex Institute of Technology
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 pt-1">
-                  <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                    <span className="text-cyan-400 block font-mono">#0842 (Anti-Ragging)</span>
-                    Hostel amenity surcharge
-                  </div>
-                  <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                    <span className="text-teal-400 block font-mono">#0914 (Approval)</span>
-                    Arbitrary fee collection
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/case-overlap"
-            className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition"
-          >
-            <span>Launch Overlap Resolution Engine</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Feature 2: Problem Pattern Clustering */}
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800/90 flex flex-col justify-between space-y-4 hover:border-teal-500/40 transition">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-teal-500/15 text-teal-400 border border-teal-500/30">
-                  <Network className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-teal-400 uppercase tracking-wider">
-                    Core Capability 2
-                  </span>
-                  <h2 className="text-base font-bold text-white leading-tight">
-                    Multi-Institution Patterns
-                  </h2>
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                Clustering ML
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Unsupervised clustering surfaces emerging systemic irregularities affecting multiple colleges across states before they escalate.
-            </p>
-
-            {/* Pattern Spotlight */}
-            <div className="p-3 rounded-xl bg-[#071120] border border-teal-500/25 space-y-2">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-teal-300">Cluster #PAT-2026-04</span>
-                <span className="font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 text-[10px]">
-                  Critical Escalation
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 font-medium line-clamp-1">
-                Faculty 7th CPC Non-Compliance & Delayed Salaries
-              </p>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
-                <span>8 Colleges • North Region</span>
-                <span className="text-teal-400 font-mono font-semibold">28 Grievances</span>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/problem-patterns"
-            className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-semibold transition"
-          >
-            <span>Explore Emerging Pattern Map</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Feature 3: Resolution Evidence Checker */}
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800/90 flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                  <FileCheck2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-purple-400 uppercase tracking-wider">
-                    Core Capability 3
-                  </span>
-                  <h2 className="text-base font-bold text-white leading-tight">
-                    Resolution Evidence Verifier
-                  </h2>
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                PyMuPDF + NLP
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Extracts text from college compliance PDFs and checks contextual relevance against original complaint clauses to streamline review.
-            </p>
-
-            {/* Evidence Spotlight */}
-            <div className="p-3 rounded-xl bg-[#071120] border border-purple-500/25 space-y-2">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-purple-300">Verified Proof Document</span>
-                <span className="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  92.4% Match
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 font-medium truncate">
-                Compliance_Affidavit_LabEquipment_v2.pdf
-              </p>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
-                <span>Case #AICTE-2026-0771</span>
-                <span className="text-purple-400 font-medium">5/5 Clauses Verified</span>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/evidence-checker"
-            className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-semibold transition"
-          >
-            <span>Review Resolution Documents</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Visual Analytics Grid (Recharts) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Inflow vs Resolution Trend Chart */}
-        <div className="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800/90 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      {/* 3. Analytics Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Trend Area Chart */}
+        <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
             <div>
-              <h2 className="text-base font-bold text-white">
-                Monthly Grievance Inflow & Resolution Velocity
+              <h2 className="text-sm font-bold text-[#36454F] uppercase tracking-wider">
+                Monthly Inflow vs. Resolution
               </h2>
-              <p className="text-xs text-slate-400">
-                {presentationMode === 'demo'
-                  ? 'Comparison of newly lodged cases vs cases resolved within statutory AICTE SLA.'
-                  : 'Live monthly aggregation derived from registered complaint filing cohorts.'}
+              <p className="text-xs text-[#6B7280]">
+                Monthly filing volume and redressal velocity
               </p>
             </div>
-            <div className="flex items-center space-x-3 text-xs">
-              <div className="flex items-center space-x-1.5 text-cyan-400">
-                <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400"></span>
-                <span>Inflow</span>
-              </div>
-              <div className="flex items-center space-x-1.5 text-teal-400">
-                <span className="w-2.5 h-2.5 rounded-sm bg-teal-400"></span>
-                <span>Resolved</span>
-              </div>
-            </div>
+            <span className="text-[11px] font-medium text-[#0F766E] bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+              Council Telemetry
+            </span>
           </div>
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={
-                  presentationMode === 'demo'
-                    ? demoMonthlyTrendData
-                    : summaryData?.monthly_trends || []
-                }
-              >
+              <AreaChart data={monthlyTrendsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="cyanArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
+                  <linearGradient id="colorReceived" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0F766E" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#0F766E" stopOpacity={0.0} />
                   </linearGradient>
-                  <linearGradient id="tealArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.0} />
+                  <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#15803D" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#15803D" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="month" stroke="#6B7280" fontSize={11} tickLine={false} />
+                <YAxis stroke="#6B7280" fontSize={11} tickLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0a1424',
-                    borderColor: '#1e293b',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
                     borderRadius: '8px',
                     fontSize: '12px',
-                    color: '#f8fafc',
+                    color: '#374151',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                   }}
                 />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                 <Area
                   type="monotone"
                   dataKey="received"
-                  name="Grievances Received"
-                  stroke="#06b6d4"
+                  name="Cases Inflow"
+                  stroke="#0F766E"
                   strokeWidth={2}
                   fillOpacity={1}
-                  fill="url(#cyanArea)"
+                  fill="url(#colorReceived)"
                 />
                 <Area
                   type="monotone"
                   dataKey="resolved"
-                  name="Resolved Cases"
-                  stroke="#14b8a6"
+                  name="Cases Resolved"
+                  stroke="#15803D"
                   strokeWidth={2}
                   fillOpacity={1}
-                  fill="url(#tealArea)"
+                  fill="url(#colorResolved)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -817,98 +507,171 @@ export function Dashboard() {
         </div>
 
         {/* Bureau Distribution Bar Chart */}
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800/90 space-y-4">
-          <div>
-            <h2 className="text-base font-bold text-white">
-              Bureau Workload & SLA Compliance
-            </h2>
-            <p className="text-xs text-slate-400">
-              Active complaint volume and on-time resolution rate per AICTE bureau.
-            </p>
+        <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+            <div>
+              <h2 className="text-sm font-bold text-[#36454F] uppercase tracking-wider">
+                Cross-Bureau Workload
+              </h2>
+              <p className="text-xs text-[#6B7280]">
+                Active cases and SLA resolution rates by bureau/cell
+              </p>
+            </div>
+            <Link
+              to="/analytics"
+              className="text-xs text-[#0F766E] font-medium hover:underline flex items-center space-x-1"
+            >
+              <span>Detailed</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={
-                  presentationMode === 'demo'
-                    ? demoBureauStatsData
-                    : summaryData?.bureau_distribution || []
-                }
-                layout="vertical"
-                margin={{ top: 5, right: 10, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                <XAxis type="number" stroke="#64748b" fontSize={11} tickLine={false} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  stroke="#94a3b8"
-                  fontSize={10}
-                  tickLine={false}
-                  width={90}
-                />
+              <BarChart data={bureauStatsData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
+                <XAxis type="number" stroke="#6B7280" fontSize={11} tickLine={false} />
+                <YAxis dataKey="name" type="category" stroke="#36454F" fontSize={11} tickLine={false} width={100} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0a1424',
-                    borderColor: '#1e293b',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
                     borderRadius: '8px',
-                    fontSize: '11px',
-                    color: '#f8fafc',
+                    fontSize: '12px',
+                    color: '#374151',
                   }}
                 />
-                <Bar dataKey="active" name="Active Cases" fill="#06b6d4" radius={[0, 4, 4, 0]} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Bar dataKey="active" name="Active Cases" fill="#36454F" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="resolved" name="Resolved Cases" fill="#0F766E" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span>Overall Council SLA:</span>
-            <span className="font-bold text-teal-400">
-              {presentationMode === 'demo'
-                ? '92.2% Compliant'
-                : `${summaryData?.sla_compliance_rate || 0}% Compliant`}
-            </span>
           </div>
         </div>
       </div>
 
-      {/* Priority Grievances Worklist Table */}
-      <div className="glass-panel rounded-2xl border border-slate-800/90 overflow-hidden shadow-xl">
-        <div className="p-5 border-b border-slate-800/90 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-base font-bold text-white">
-                Active Priority Grievance Queue
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                {filteredComplaints.length} Cases
+      {/* 4. Decision-Support Feature Highlights */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link
+          to="/case-overlap"
+          className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow hover:border-[#0F766E]/40 transition group flex flex-col justify-between"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+                <GitCompare className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-semibold text-[#0F766E] uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+                Core Feature 1
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {presentationMode === 'demo'
-                ? 'Demonstration triage queue with simulated SLA countdowns and AI flags.'
-                : 'Live queue fetched from database (/api/v1/complaints) with real SLA calculations.'}
+            <h3 className="text-sm font-bold text-[#36454F] group-hover:text-[#0F766E] transition">
+              Case Overlap Detection
+            </h3>
+            <p className="text-xs text-[#6B7280] leading-relaxed">
+              TF-IDF text similarity & cross-bureau matching. Identify duplicate or related complaints.
+            </p>
+          </div>
+          <div className="mt-3 pt-2 border-t border-[#E5E7EB] flex items-center justify-between text-xs font-medium text-[#0F766E]">
+            <span>Explore Matches ({summaryData?.total_overlaps || 50})</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+          </div>
+        </Link>
+
+        <Link
+          to="/problem-patterns"
+          className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow hover:border-[#36454F]/40 transition group flex flex-col justify-between"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-[#36454F]/10 text-[#36454F]">
+                <Network className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#E5E7EB]">
+                Core Feature 2
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-[#36454F] group-hover:text-[#0F766E] transition">
+              Problem Pattern Detector
+            </h3>
+            <p className="text-xs text-[#6B7280] leading-relaxed">
+              Unsupervised clustering pipeline across technical institutions to discover systemic themes.
+            </p>
+          </div>
+          <div className="mt-3 pt-2 border-t border-[#E5E7EB] flex items-center justify-between text-xs font-medium text-[#36454F]">
+            <span>View Clustering Grid</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+          </div>
+        </Link>
+
+        <Link
+          to="/evidence-checker"
+          className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow hover:border-[#36454F]/40 transition group flex flex-col justify-between"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="p-2 rounded-lg bg-[#36454F]/10 text-[#36454F]">
+                <FileCheck2 className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#E5E7EB]">
+                Core Feature 3
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-[#36454F] group-hover:text-[#0F766E] transition">
+              Evidence Relevance Checker
+            </h3>
+            <p className="text-xs text-[#6B7280] leading-relaxed">
+              PyMuPDF compliance verification assessing affidavit text against claimed complaint resolutions.
+            </p>
+          </div>
+          <div className="mt-3 pt-2 border-t border-[#E5E7EB] flex items-center justify-between text-xs font-medium text-[#36454F]">
+            <span>Open Evidence Review</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+          </div>
+        </Link>
+      </div>
+
+      {/* 5. Recent Complaints Card & Table */}
+      <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-sm overflow-hidden space-y-4 p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
+          <div>
+            <h2 className="text-base font-bold text-[#36454F]">
+              Recent Complaints
+            </h2>
+            <p className="text-xs text-[#6B7280]">
+              Active grievances submitted across AICTE affiliated institutions
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Filter by ID, subject, bureau..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 bg-[#0a1424] border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 w-52 sm:w-60"
-              />
-            </div>
+          <div className="flex items-center space-x-3">
+            <Link
+              to="/complaints"
+              className="text-xs font-semibold text-[#0F766E] hover:underline flex items-center space-x-1"
+            >
+              <span>View all complaints</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
 
+        {/* Filter Controls Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by ID, institution, or keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-[#E5E7EB] text-xs text-[#374151] placeholder-[#6B7280] focus:outline-none focus:ring-1 focus:ring-[#0F766E] focus:border-[#0F766E]"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
             <select
               value={selectedBureau}
               onChange={(e) => setSelectedBureau(e.target.value)}
-              className="px-2.5 py-1.5 bg-[#0a1424] border border-slate-800 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-cyan-500/50"
+              className="py-1.5 px-3 rounded-lg border border-[#E5E7EB] bg-white text-xs text-[#374151] focus:outline-none focus:ring-1 focus:ring-[#0F766E]"
             >
               {bureauOptions.map((b) => (
                 <option key={b} value={b}>
@@ -920,12 +683,11 @@ export function Dashboard() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-2.5 py-1.5 bg-[#0a1424] border border-slate-800 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-cyan-500/50"
+              className="py-1.5 px-3 rounded-lg border border-[#E5E7EB] bg-white text-xs text-[#374151] focus:outline-none focus:ring-1 focus:ring-[#0F766E]"
             >
               <option value="All">All Statuses</option>
               <option value="New">New</option>
               <option value="Under Review">Under Review</option>
-              <option value="Transferred">Transferred</option>
               <option value="Evidence Requested">Evidence Requested</option>
               <option value="Escalated">Escalated</option>
               <option value="Resolved">Resolved</option>
@@ -933,275 +695,142 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Table Content */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#07101e] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
-              <tr>
-                <th className="py-3 px-4 font-semibold">Case ID</th>
-                <th className="py-3 px-4 font-semibold">Institution & Region</th>
-                <th className="py-3 px-4 font-semibold">Bureau / Category</th>
-                <th className="py-3 px-4 font-semibold">SLA Deadline</th>
-                <th className="py-3 px-4 font-semibold">AI Assessment</th>
-                <th className="py-3 px-4 font-semibold">Status</th>
-                <th className="py-3 px-4 font-semibold text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
-              {loadingLive && presentationMode === 'live' ? (
+        {/* Table / Results */}
+        {loadingLive && presentationMode === 'live' ? (
+          <div className="py-12 flex flex-col items-center justify-center space-y-2 text-[#6B7280]">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#0F766E]" />
+            <span className="text-xs">Loading live complaint cases from database...</span>
+          </div>
+        ) : filteredComplaints.length === 0 ? (
+          <div className="py-12 text-center text-xs text-[#6B7280]">
+            No complaint cases found matching current search or filters.
+          </div>
+        ) : (
+          <div className="overflow-x-auto border border-[#E5E7EB] rounded-lg">
+            <table className="w-full text-left text-xs text-[#374151]">
+              <thead className="bg-[#F5F7F7] border-b border-[#E5E7EB] text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 space-y-3">
-                    <RefreshCw className="w-6 h-6 animate-spin text-cyan-400 mx-auto" />
-                    <p className="text-slate-300 font-semibold text-xs">
-                      Loading live grievances from database...
-                    </p>
-                  </td>
+                  <th className="py-3 px-4">Tracking ID</th>
+                  <th className="py-3 px-4">Subject</th>
+                  <th className="py-3 px-4">Bureau / Cell</th>
+                  <th className="py-3 px-4">Priority</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Filing Date</th>
+                  <th className="py-3 px-4 text-right">Action</th>
                 </tr>
-              ) : filteredComplaints.length > 0 ? (
-                filteredComplaints.map((item) => {
-                  const isOverdue = item.hoursRemaining < 0;
-                  const isUrgent = item.hoursRemaining >= 0 && item.hoursRemaining <= 48;
-
-                  return (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-slate-900/50 transition-colors group cursor-pointer"
-                      onClick={() => setSelectedCaseDetail(item)}
-                    >
-                      <td className="py-3 px-4 font-mono font-bold text-cyan-400 whitespace-nowrap">
-                        {item.id}
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <p className="font-semibold text-slate-100 group-hover:text-cyan-300 transition">
-                          {item.institution}
-                        </p>
-                        <p className="text-[11px] text-slate-400">{item.state}</p>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="text-slate-300 font-medium block">
-                          {item.bureau}
-                        </span>
-                        <span className="text-[11px] text-slate-400 block truncate max-w-xs">
-                          {item.category}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-1.5">
-                          {isOverdue ? (
-                            <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center space-x-1">
-                              <AlertTriangle className="w-3 h-3 text-rose-400" />
-                              <span>Overdue ({Math.abs(item.hoursRemaining)}h)</span>
-                            </span>
-                          ) : isUrgent ? (
-                            <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center space-x-1">
-                              <Clock className="w-3 h-3 text-amber-400" />
-                              <span>{item.hoursRemaining}h remaining</span>
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 text-xs">
-                              {item.slaDeadline}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
-                            item.aiFlagType === 'cyan'
-                              ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25'
-                              : item.aiFlagType === 'teal'
-                              ? 'bg-teal-500/10 text-teal-300 border-teal-500/25'
-                              : item.aiFlagType === 'amber'
-                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/25'
-                              : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
-                          }`}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          <span>{item.aiFlag}</span>
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <StatusBadge status={item.status} />
-                      </td>
-
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedCaseDetail(item);
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700/80 transition text-xs inline-flex items-center space-x-1"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>Review</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 space-y-2">
-                    <div className="w-10 h-10 rounded-xl bg-slate-800/80 text-slate-500 flex items-center justify-center mx-auto">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    {liveError && presentationMode === 'live' ? (
-                      <div>
-                        <p className="text-rose-400 font-semibold">
-                          Failed to load live complaints
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">{liveError}</p>
-                        <button
-                          type="button"
-                          onClick={() => fetchDashboardData(true)}
-                          className="mt-3 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs transition"
-                        >
-                          Retry Live Request
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-slate-200 font-semibold">
-                          No complaints match your search query or filters
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Try resetting the filters or search keywords.
-                        </p>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer Summary */}
-        <div className="p-4 bg-[#07101e] border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-400 gap-2">
-          <span>
-            Displaying {filteredComplaints.length} priority grievance records
-            {presentationMode === 'live' ? ' (Live Database)' : ' (Demo)'}
-          </span>
-          <Link
-            to="/complaints"
-            className="inline-flex items-center space-x-1 text-cyan-400 hover:text-cyan-300 font-medium"
-          >
-            <span>Access Complete Registry & Ingestion Pipeline</span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {filteredComplaints.slice(0, 10).map((item) => (
+                  <tr key={item.id} className="hover:bg-[#F5F7F7]/60 transition">
+                    <td className="py-3 px-4 font-mono font-medium text-[#0F766E]">
+                      {item.id}
+                    </td>
+                    <td className="py-3 px-4 max-w-xs">
+                      <p className="font-semibold text-[#36454F] truncate">{item.summary}</p>
+                      <p className="text-[11px] text-[#6B7280] truncate">{item.institution}</p>
+                    </td>
+                    <td className="py-3 px-4 text-[#374151]">
+                      {item.bureau}
+                    </td>
+                    <td className="py-3 px-4">
+                      <StatusBadge status={item.priority} />
+                    </td>
+                    <td className="py-3 px-4">
+                      <StatusBadge status={item.status} />
+                    </td>
+                    <td className="py-3 px-4 text-[#6B7280] font-mono text-[11px]">
+                      {formatDate(item.submittedDate)}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCaseDetail(item)}
+                        className="p-1 rounded text-[#0F766E] hover:bg-teal-50 hover:text-[#115E59] transition"
+                        title="Quick View"
+                        aria-label="Quick View"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Case Details Drawer / Modal */}
+      {/* 6. Case Detail Quick Inspection Modal */}
       {selectedCaseDetail && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
-          onClick={() => setSelectedCaseDetail(null)}
-        >
-          <div
-            className="bg-[#0a1424] border border-cyan-500/30 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
               <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                    {selectedCaseDetail.id}
-                  </span>
-                  <StatusBadge status={selectedCaseDetail.status} />
-                </div>
-                <h3 className="text-lg font-bold text-white mt-1.5">
-                  {selectedCaseDetail.institution}
+                <span className="text-xs font-mono font-bold text-[#0F766E]">
+                  {selectedCaseDetail.id}
+                </span>
+                <h3 className="text-base font-bold text-[#36454F] mt-0.5">
+                  Case Details
                 </h3>
-                <p className="text-xs text-slate-400">
-                  {selectedCaseDetail.state} • {selectedCaseDetail.bureau}
-                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedCaseDetail(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                className="text-[#6B7280] hover:text-[#36454F] p-1 rounded-md"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-xs text-[#374151]">
               <div>
-                <span className="text-slate-400 font-medium">Grievance Category:</span>
-                <p className="text-slate-200 font-semibold mt-0.5">{selectedCaseDetail.category}</p>
+                <span className="text-[#6B7280] block font-medium">Grievance Subject</span>
+                <p className="font-semibold text-sm text-[#36454F] mt-0.5">{selectedCaseDetail.summary}</p>
               </div>
 
               <div>
-                <span className="text-slate-400 font-medium">Summary of Allegations:</span>
-                <p className="text-slate-300 mt-0.5 p-3 rounded-lg bg-slate-900 border border-slate-800 leading-relaxed">
-                  {selectedCaseDetail.summary}
+                <span className="text-[#6B7280] block font-medium">Full Narrative Description</span>
+                <p className="mt-1 p-2.5 rounded-lg bg-[#F5F7F7] border border-[#E5E7EB] text-[#374151] leading-relaxed">
+                  {selectedCaseDetail.description}
                 </p>
               </div>
 
-              {selectedCaseDetail.description && selectedCaseDetail.description !== selectedCaseDetail.summary && (
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <div>
-                  <span className="text-slate-400 font-medium">Detailed Narrative:</span>
-                  <p className="text-slate-300 mt-0.5 p-3 rounded-lg bg-slate-900 border border-slate-800 leading-relaxed text-[11px] max-h-36 overflow-y-auto">
-                    {selectedCaseDetail.description}
-                  </p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-[#071120] border border-slate-800/80">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Lodged Date</span>
-                  <span className="text-slate-200 font-medium">{selectedCaseDetail.submittedDate}</span>
+                  <span className="text-[#6B7280] block">Jurisdiction Bureau</span>
+                  <span className="font-semibold text-[#36454F]">{selectedCaseDetail.bureau}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">SLA Expiry Deadline</span>
-                  <span className="text-slate-200 font-medium">{selectedCaseDetail.slaDeadline}</span>
+                  <span className="text-[#6B7280] block">Institution</span>
+                  <span className="font-semibold text-[#36454F]">{selectedCaseDetail.institution}</span>
+                </div>
+                <div>
+                  <span className="text-[#6B7280] block">Current Status</span>
+                  <StatusBadge status={selectedCaseDetail.status} />
+                </div>
+                <div>
+                  <span className="text-[#6B7280] block">Priority Level</span>
+                  <StatusBadge status={selectedCaseDetail.priority} />
                 </div>
               </div>
-
-              {selectedCaseDetail.relatedCaseId && (
-                <div className="p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/30 space-y-1">
-                  <div className="flex items-center justify-between text-cyan-300 font-semibold">
-                    <span className="flex items-center space-x-1.5">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
-                      <span>Cross-Bureau Overlap Detected</span>
-                    </span>
-                    <span className="font-mono text-cyan-400 font-bold">91% Match</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400">
-                    This grievance matches record <strong>{selectedCaseDetail.relatedCaseId}</strong> filed with another bureau. Cross-referencing recommended before formal inquiry.
-                  </p>
-                  <Link
-                    to="/case-overlap"
-                    className="inline-flex items-center space-x-1 text-cyan-400 hover:text-cyan-300 text-[11px] font-semibold pt-1"
-                  >
-                    <span>View Cross-Bureau Dossier in Overlap Engine</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              )}
             </div>
 
-            <div className="pt-2 flex items-center justify-end space-x-2">
+            <div className="pt-3 border-t border-[#E5E7EB] flex items-center justify-end space-x-2">
               <button
                 type="button"
                 onClick={() => setSelectedCaseDetail(null)}
-                className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+                className="px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-xs font-medium text-[#6B7280] hover:bg-[#F5F7F7]"
               >
                 Close
               </button>
-              <Link
-                to="/complaints"
-                className="px-3.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-semibold shadow-md"
-              >
-                Open Full Case Registry
-              </Link>
+              {selectedCaseDetail.rawItem?.id && (
+                <Link
+                  to={`/complaints/${selectedCaseDetail.rawItem.id}`}
+                  className="px-3 py-1.5 rounded-lg bg-[#0F766E] text-white text-xs font-medium hover:bg-[#115E59] transition"
+                >
+                  Open Full Case File →
+                </Link>
+              )}
             </div>
           </div>
         </div>

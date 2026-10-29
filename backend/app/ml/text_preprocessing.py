@@ -97,3 +97,67 @@ class ComplaintTextPreprocessor:
         # Double-weight subject and category for stronger semantic matching
         raw_combined = f"{subject} {subject} {category} {description}"
         return self.clean_text(raw_combined)
+
+    def stem_word(self, word: str) -> str:
+        """
+        Lightweight morphological normalization for grievance terms
+        (handles common English plurals, gerunds, past tenses).
+        """
+        w = word.lower().strip()
+        if len(w) <= 3:
+            return w
+
+        # Common grievance term special cases
+        irregulars = {
+            "salaries": "salary",
+            "irregularities": "irregular",
+            "amenities": "amenity",
+            "deficiencies": "deficiency",
+            "unpaid": "pay",
+            "nonpayment": "pay",
+            "refusal": "refuse",
+            "admissions": "admission",
+            "examinations": "exam",
+            "certificates": "certificate",
+            "marksheets": "marksheet",
+            "fees": "fee",
+            "fined": "fine",
+            "fines": "fine",
+            "charges": "charge",
+            "charged": "charge",
+            "charging": "charge",
+            "donations": "donation",
+            "receipts": "receipt",
+            "demanded": "demand",
+            "demanding": "demand",
+            "demands": "demand",
+            "professors": "professor",
+            "teachers": "teacher",
+            "shortages": "shortage",
+            "withholding": "withhold",
+            "withheld": "withhold",
+            "extortion": "extort",
+            "extorting": "extort",
+        }
+        if w in irregulars:
+            return irregulars[w]
+
+        # Rule-based stripping
+        for suffix in ("ing", "ies", "es", "ed", "s"):
+            if w.endswith(suffix) and len(w) > len(suffix) + 2:
+                if suffix == "ies":
+                    return w[:-3] + "y"
+                return w[:-len(suffix)]
+
+        return w
+
+    def normalize_text_for_clustering(self, text: str) -> str:
+        """
+        Cleans and morphologically stems text tokens for topic and pattern clustering.
+        """
+        cleaned = self.clean_text(text)
+        if not cleaned:
+            return ""
+        tokens = cleaned.split()
+        stemmed = [self.stem_word(t) for t in tokens if t not in DOMAIN_STOPWORDS]
+        return " ".join(stemmed)

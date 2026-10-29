@@ -59,18 +59,17 @@ async def get_current_user(
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        # Fall back to token claims if database record was not found
-        return {
-            "sub": email,
-            "role": payload.get("role", "officer"),
-            "bureau": payload.get("bureau", "General"),
-            "id": None,
-        }
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account associated with this token does not exist.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="This user account has been deactivated. Please contact an AICTE administrator.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     return {
@@ -111,3 +110,7 @@ def require_roles(*allowed_roles: str):
             )
         return user
     return role_checker
+
+
+# Predefined authorized officer dependency for state-mutating operations
+require_officer = require_roles("admin", "bureau_head", "officer")

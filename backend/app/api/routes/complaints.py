@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status as http_sta
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_user, get_db, require_roles
 from app.models.complaint import Complaint
 from app.models.institution import Institution
 from app.models.user import User
@@ -132,7 +132,7 @@ def list_complaints(
 def create_complaint(
     payload: ComplaintCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[dict] = Depends(get_current_user),
+    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer")),
 ) -> ComplaintOut:
     """
     Register a new grievance case in the AICTE grievance registry with validation and persistence:
@@ -266,7 +266,7 @@ def update_complaint_status(
     identifier: str,
     payload: ComplaintStatusUpdate,
     db: Session = Depends(get_db),
-    current_user: Optional[dict] = Depends(get_current_user),
+    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer")),
 ) -> ComplaintOut:
     """
     Update complaint lifecycle status (e.g. Under Review, Evidence Requested, Escalated, Resolved),
@@ -349,7 +349,7 @@ def update_complaint(
     identifier: str,
     payload: ComplaintUpdate,
     db: Session = Depends(get_db),
-    current_user: Optional[dict] = Depends(get_current_user),
+    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer")),
 ) -> ComplaintOut:
     """
     General update endpoint for complaint records.

@@ -7,18 +7,13 @@ import {
   XCircle,
   AlertTriangle,
   RefreshCw,
-  Search,
-  Filter,
   ArrowRight,
-  Building2,
-  Calendar,
-  FileText,
   SlidersHorizontal,
   ChevronRight,
-  ShieldCheck,
   AlertCircle,
-  Eye,
-  Check,
+  FileText,
+  Building2,
+  Calendar,
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import { overlapService } from '../services/overlap';
@@ -169,41 +164,43 @@ export function CaseOverlap() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & ML Control Bar */}
-      <div className="glass-panel rounded-2xl p-5 border border-slate-800/90 shadow-xl flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+    <div className="space-y-6 bg-white min-h-screen">
+      {/* 1. Header & ML Control Bar */}
+      <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center space-x-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#0F766E] border border-teal-200 flex items-center space-x-1">
+              <Sparkles className="w-3 h-3 text-[#0F766E]" />
               <span>Feature 1: ML Intelligence</span>
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs font-mono text-slate-400">TF-IDF Vectorization & Cosine Similarity</span>
+            <span className="text-[#6B7280]">•</span>
+            <span className="text-xs font-mono text-[#6B7280]">
+              TF-IDF Vectorization & Cosine Similarity
+            </span>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#36454F] mt-1.5">
             Smart Case Relationship & Overlap Detector
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#6B7280] mt-0.5">
             Detect duplicate grievances and cross-bureau related filings using scikit-learn NLP models, verified by authorized council officers.
           </p>
         </div>
 
-        {/* Controls: Threshold Selector & Run Action */}
+        {/* Controls: Threshold Selector & Actions */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-1.5 bg-[#07101e] px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-400">Threshold:</span>
+          <div className="flex items-center space-x-2 bg-[#F5F7F7] px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-xs">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B7280]" />
+            <span className="text-[#6B7280] font-medium">Threshold:</span>
             <select
               value={threshold}
               onChange={(e) => setThreshold(parseFloat(e.target.value))}
               disabled={isAnalyzing}
-              className="bg-transparent text-cyan-400 font-semibold focus:outline-none cursor-pointer"
+              className="bg-transparent text-[#0F766E] font-semibold focus:outline-none cursor-pointer"
             >
-              <option value={0.50} className="bg-slate-900 text-slate-200">50% (High Recall)</option>
-              <option value={0.60} className="bg-slate-900 text-slate-200">60% (Recommended)</option>
-              <option value={0.70} className="bg-slate-900 text-slate-200">70% (Strict)</option>
-              <option value={0.85} className="bg-slate-900 text-slate-200">85% (Near Duplicate)</option>
+              <option value={0.50}>50% (High Recall)</option>
+              <option value={0.60}>60% (Recommended)</option>
+              <option value={0.70}>70% (Strict)</option>
+              <option value={0.85}>85% (Near Duplicate)</option>
             </select>
           </div>
 
@@ -211,21 +208,22 @@ export function CaseOverlap() {
             type="button"
             onClick={() => fetchOverlaps(true)}
             disabled={loading || isRefreshing}
-            className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-medium border border-slate-800 transition"
+            className="p-2 bg-white hover:bg-[#F5F7F7] text-[#6B7280] hover:text-[#36454F] rounded-lg text-xs font-medium border border-[#E5E7EB] transition"
             title="Refresh from Database"
+            aria-label="Refresh from Database"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-cyan-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#0F766E]' : ''}`} />
           </button>
 
           <button
             type="button"
             onClick={handleRunDetection}
             disabled={isAnalyzing}
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-amber-500/20 disabled:opacity-60"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-medium rounded-lg text-xs transition shadow-sm disabled:opacity-50"
           >
             {isAnalyzing ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
                 <span>Scanning Corpus...</span>
               </>
             ) : (
@@ -240,70 +238,78 @@ export function CaseOverlap() {
 
       {/* Action Notification Feedback */}
       {actionFeedback && (
-        <div className="p-3.5 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs flex items-center justify-between animate-in fade-in">
+        <div className="p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-[#0F766E] text-xs flex items-center justify-between animate-in fade-in">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#0F766E] shrink-0" />
             <span className="font-medium">{actionFeedback}</span>
           </div>
           <button
             type="button"
             onClick={() => setActionFeedback(null)}
-            className="p-1 text-teal-400 hover:text-white"
+            className="p-1 text-[#0F766E] hover:text-[#115E59]"
           >
             ✕
           </button>
         </div>
       )}
 
-      {/* Primary Telemetry Summary Cards */}
+      {/* 2. Primary Telemetry Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-panel p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-slate-400 block">Flagged for Review</span>
-            <span className="text-xl font-extrabold text-amber-400">{flaggedCount}</span>
-            <span className="text-[10px] text-slate-500 block">Awaiting Officer Decision</span>
+        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-medium uppercase tracking-wider text-[#6B7280] block">
+              Flagged for Review
+            </span>
+            <span className="text-2xl font-bold text-[#B45309]">{flaggedCount}</span>
+            <span className="text-[11px] text-[#6B7280] block">Awaiting Officer Decision</span>
           </div>
-          <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
+          <div className="p-2.5 rounded-lg bg-[#B45309]/10 text-[#B45309] border border-[#B45309]/20">
             <AlertTriangle className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-slate-400 block">High Confidence Matches</span>
-            <span className="text-xl font-extrabold text-rose-400">{highConfidenceCount}</span>
-            <span className="text-[10px] text-slate-500 block">Cosine Similarity &ge; 85%</span>
+        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-medium uppercase tracking-wider text-[#6B7280] block">
+              High Confidence Matches
+            </span>
+            <span className="text-2xl font-bold text-[#B91C1C]">{highConfidenceCount}</span>
+            <span className="text-[11px] text-[#6B7280] block">Cosine Similarity &ge; 85%</span>
           </div>
-          <div className="p-2.5 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/30">
+          <div className="p-2.5 rounded-lg bg-[#B91C1C]/10 text-[#B91C1C] border border-[#B91C1C]/20">
             <Sparkles className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-slate-400 block">Confirmed Duplicates</span>
-            <span className="text-xl font-extrabold text-teal-400">{duplicateCount}</span>
-            <span className="text-[10px] text-slate-500 block">Binding Officer Ruling</span>
+        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-medium uppercase tracking-wider text-[#6B7280] block">
+              Confirmed Duplicates
+            </span>
+            <span className="text-2xl font-bold text-[#15803D]">{duplicateCount}</span>
+            <span className="text-[11px] text-[#6B7280] block">Binding Officer Ruling</span>
           </div>
-          <div className="p-2.5 rounded-xl bg-teal-500/15 text-teal-400 border border-teal-500/30">
+          <div className="p-2.5 rounded-lg bg-[#15803D]/10 text-[#15803D] border border-[#15803D]/20">
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="glass-panel p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-slate-400 block">Related Cross-Cases</span>
-            <span className="text-xl font-extrabold text-cyan-400">{relatedCount}</span>
-            <span className="text-[10px] text-slate-500 block">Linked In Redressal Grid</span>
+        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-medium uppercase tracking-wider text-[#6B7280] block">
+              Related Cross-Cases
+            </span>
+            <span className="text-2xl font-bold text-[#0F766E]">{relatedCount}</span>
+            <span className="text-[11px] text-[#6B7280] block">Linked in Redressal Grid</span>
           </div>
-          <div className="p-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+          <div className="p-2.5 rounded-lg bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20">
             <GitCompare className="w-5 h-5" />
           </div>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3 text-xs">
+      {/* 3. Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 pb-2 text-xs">
         {[
           { key: 'All', label: `All Pairs (${overlaps.length})` },
           { key: 'Flagged', label: `Awaiting Review (${flaggedCount})` },
@@ -315,10 +321,10 @@ export function CaseOverlap() {
             key={tab.key}
             type="button"
             onClick={() => setStatusFilter(tab.key)}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition ${
               statusFilter === tab.key
-                ? 'bg-cyan-500 text-slate-950 shadow-md'
-                : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                ? 'bg-[#0F766E] text-white font-semibold shadow-sm'
+                : 'bg-white text-[#6B7280] hover:text-[#36454F] hover:bg-[#F5F7F7] border border-[#E5E7EB]'
             }`}
           >
             {tab.label}
@@ -326,38 +332,38 @@ export function CaseOverlap() {
         ))}
       </div>
 
-      {/* Main Content Area */}
+      {/* 4. Main Content Area */}
       {error ? (
-        <div className="glass-panel p-8 rounded-2xl border border-rose-500/30 bg-rose-950/20 text-center space-y-3">
-          <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center mx-auto">
+        <div className="bg-white p-8 rounded-xl border border-[#B91C1C]/25 text-center space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-[#B91C1C]/10 text-[#B91C1C] border border-[#B91C1C]/20 flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-semibold text-rose-200">Unable to Fetch Overlap Records</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">{error}</p>
+          <h3 className="text-base font-semibold text-[#B91C1C]">Unable to Fetch Overlap Records</h3>
+          <p className="text-xs text-[#6B7280] max-w-md mx-auto">{error}</p>
           <button
             type="button"
             onClick={() => fetchOverlaps()}
-            className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition"
+            className="px-4 py-2 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-semibold transition"
           >
             Retry Request
           </button>
         </div>
       ) : loading ? (
-        <div className="glass-panel rounded-2xl border border-slate-800/90 p-12 text-center space-y-3">
-          <RefreshCw className="w-8 h-8 animate-spin text-cyan-400 mx-auto" />
-          <p className="text-sm font-semibold text-slate-300">Loading case overlap telemetry from database...</p>
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-12 text-center space-y-3 shadow-sm">
+          <RefreshCw className="w-7 h-7 animate-spin text-[#0F766E] mx-auto" />
+          <p className="text-sm font-semibold text-[#36454F]">Loading case overlap telemetry from database...</p>
         </div>
       ) : filteredOverlaps.length === 0 ? (
-        <div className="glass-panel p-12 rounded-2xl border border-slate-800/90 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
+        <div className="bg-white p-12 rounded-xl border border-[#E5E7EB] text-center space-y-4 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20 flex items-center justify-center mx-auto">
             <GitCompare className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-lg font-bold text-[#36454F]">
             {overlaps.length === 0
               ? 'No Case Overlaps Currently Recorded'
               : 'No Pairs Match Active Filter'}
           </h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
+          <p className="text-xs text-[#6B7280] max-w-md mx-auto">
             {overlaps.length === 0
               ? 'Run the TF-IDF and Cosine Similarity analysis across the 500+ registered grievances to detect potential duplicates and cross-bureau overlaps.'
               : 'Try switching the filter above or run a fresh analysis with a lower similarity threshold.'}
@@ -367,15 +373,15 @@ export function CaseOverlap() {
               type="button"
               onClick={handleRunDetection}
               disabled={isAnalyzing}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-amber-500/20"
+              className="px-5 py-2.5 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-medium text-xs transition shadow-sm"
             >
               Run First Overlap Scan
             </button>
           )}
         </div>
       ) : (
-        /* Populated Overlap Comparison Cards */
-        <div className="space-y-5">
+        /* 5. Populated Overlap Comparison Cards */
+        <div className="space-y-4">
           {filteredOverlaps.map((item) => {
             const scorePct = (parseFloat(item.similarity_score) * 100).toFixed(1);
             const isHighMatch = parseFloat(item.similarity_score) >= 0.85;
@@ -385,12 +391,12 @@ export function CaseOverlap() {
             return (
               <div
                 key={item.id}
-                className="glass-panel rounded-2xl border border-slate-800/90 overflow-hidden shadow-xl hover:border-slate-700 transition"
+                className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden shadow-sm hover:shadow transition-shadow"
               >
-                {/* Card Header with Scores & Classification */}
-                <div className="p-4 bg-[#07101e] border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {/* Card Header: Score, Type & Status */}
+                <div className="p-4 bg-[#F5F7F7] border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                    <span className="font-mono text-xs font-bold text-[#36454F] bg-white px-2.5 py-1 rounded border border-[#E5E7EB]">
                       PAIR #{item.id}
                     </span>
 
@@ -398,45 +404,44 @@ export function CaseOverlap() {
                     <span
                       className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-bold flex items-center space-x-1.5 border ${
                         isHighMatch
-                          ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
-                          : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+                          ? 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/25'
+                          : 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/25'
                       }`}
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{scorePct}% Match</span>
                     </span>
 
-                    {/* Overlap Type Badge */}
-                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    {/* Overlap Classification */}
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-white text-[#374151] border border-[#E5E7EB]">
                       {item.overlap_type || 'Semantic Duplicate'}
                     </span>
                   </div>
 
-                  {/* Status Indicator */}
                   <div>
                     <StatusBadge status={item.status} />
                   </div>
                 </div>
 
                 {/* AI Rationale & Overlapping Keywords */}
-                <div className="p-4 bg-[#0a1424]/60 border-b border-slate-800/80 space-y-2 text-xs">
+                <div className="p-4 bg-white border-b border-[#E5E7EB] space-y-2 text-xs">
                   <div className="flex items-start space-x-2">
-                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <Sparkles className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-slate-200">AI Detection Rationale: </span>
-                      <span className="text-slate-300">{item.reason}</span>
+                      <span className="font-bold text-[#36454F]">AI Detection Rationale: </span>
+                      <span className="text-[#374151]">{item.reason}</span>
                     </div>
                   </div>
 
                   {item.matching_keywords && item.matching_keywords.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider">
                         Matched Lexical Terms:
                       </span>
                       {item.matching_keywords.map((kw, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/40 text-cyan-300 border border-cyan-500/30"
+                          className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#F5F7F7] text-[#0F766E] border border-[#E5E7EB]"
                         >
                           {kw}
                         </span>
@@ -445,17 +450,17 @@ export function CaseOverlap() {
                   )}
                 </div>
 
-                {/* Side-by-Side Complaint Comparison Columns */}
-                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Side-by-Side Complaint Comparison Cards */}
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white">
                   {/* Primary Complaint */}
-                  <div className="p-4 rounded-xl bg-[#07101e] border border-cyan-500/25 space-y-2 text-xs">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                  <div className="p-4 rounded-xl border border-[#E5E7EB] bg-white space-y-2.5 text-xs shadow-sm">
+                    <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-2">
+                      <span className="text-[11px] font-mono font-bold text-[#0F766E] uppercase tracking-wider">
                         Primary Grievance
                       </span>
                       <Link
                         to={`/complaints/${item.primary_complaint?.complaint_no || item.primary_complaint_id}`}
-                        className="text-cyan-400 hover:text-cyan-300 font-mono font-bold inline-flex items-center space-x-1"
+                        className="text-[#0F766E] hover:underline font-mono font-bold inline-flex items-center space-x-1"
                       >
                         <span>{item.primary_complaint?.complaint_no || `ID #${item.primary_complaint_id}`}</span>
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -463,33 +468,33 @@ export function CaseOverlap() {
                     </div>
 
                     <div>
-                      <p className="font-bold text-white text-sm line-clamp-1">
+                      <p className="font-bold text-[#36454F] text-sm line-clamp-1">
                         {item.primary_complaint?.subject || 'Subject details loaded'}
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Bureau: <strong className="text-slate-300">{item.primary_complaint?.bureau || '—'}</strong> • Category: {item.primary_complaint?.category || '—'}
+                      <p className="text-[11px] text-[#6B7280] mt-0.5">
+                        Bureau: <strong className="text-[#374151]">{item.primary_complaint?.bureau || '—'}</strong> • Category: {item.primary_complaint?.category || '—'}
                       </p>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800/80 text-[11px] text-slate-300 line-clamp-3 leading-relaxed">
+                    <div className="p-2.5 rounded-lg bg-[#F5F7F7] border border-[#E5E7EB] text-[11px] text-[#374151] line-clamp-3 leading-relaxed">
                       {item.primary_complaint?.description || 'Narrative allegation loaded from database.'}
                     </div>
 
-                    <div className="pt-1 flex items-center justify-between text-[10px] text-slate-500">
+                    <div className="pt-1 flex items-center justify-between text-[11px] text-[#6B7280]">
                       <span>Institution ID: #{item.primary_complaint?.institution_id}</span>
                       <span>Filed: {formatDate(item.primary_complaint?.filing_date)}</span>
                     </div>
                   </div>
 
-                  {/* Related Complaint */}
-                  <div className="p-4 rounded-xl bg-[#07101e] border border-amber-500/25 space-y-2 text-xs">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider">
+                  {/* Matched Related Complaint */}
+                  <div className="p-4 rounded-xl border border-[#E5E7EB] bg-white space-y-2.5 text-xs shadow-sm">
+                    <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-2">
+                      <span className="text-[11px] font-mono font-bold text-[#36454F] uppercase tracking-wider">
                         Matched Related Grievance
                       </span>
                       <Link
                         to={`/complaints/${item.related_complaint?.complaint_no || item.related_complaint_id}`}
-                        className="text-amber-400 hover:text-amber-300 font-mono font-bold inline-flex items-center space-x-1"
+                        className="text-[#36454F] hover:text-[#0F766E] hover:underline font-mono font-bold inline-flex items-center space-x-1"
                       >
                         <span>{item.related_complaint?.complaint_no || `ID #${item.related_complaint_id}`}</span>
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -497,54 +502,54 @@ export function CaseOverlap() {
                     </div>
 
                     <div>
-                      <p className="font-bold text-white text-sm line-clamp-1">
+                      <p className="font-bold text-[#36454F] text-sm line-clamp-1">
                         {item.related_complaint?.subject || 'Subject details loaded'}
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Bureau: <strong className="text-slate-300">{item.related_complaint?.bureau || '—'}</strong> • Category: {item.related_complaint?.category || '—'}
+                      <p className="text-[11px] text-[#6B7280] mt-0.5">
+                        Bureau: <strong className="text-[#374151]">{item.related_complaint?.bureau || '—'}</strong> • Category: {item.related_complaint?.category || '—'}
                       </p>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800/80 text-[11px] text-slate-300 line-clamp-3 leading-relaxed">
+                    <div className="p-2.5 rounded-lg bg-[#F5F7F7] border border-[#E5E7EB] text-[11px] text-[#374151] line-clamp-3 leading-relaxed">
                       {item.related_complaint?.description || 'Narrative allegation loaded from database.'}
                     </div>
 
-                    <div className="pt-1 flex items-center justify-between text-[10px] text-slate-500">
+                    <div className="pt-1 flex items-center justify-between text-[11px] text-[#6B7280]">
                       <span>Institution ID: #{item.related_complaint?.institution_id}</span>
                       <span>Filed: {formatDate(item.related_complaint?.filing_date)}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Reviewer Determination Action Bar (Requirement 8) */}
-                <div className="p-4 bg-[#07101e] border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                {/* Reviewer Determination Action Bar */}
+                <div className="p-4 bg-[#F5F7F7] border-t border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
                   <div>
                     {isReviewed ? (
-                      <div className="flex items-center space-x-2 text-slate-300">
-                        <CheckCircle2 className="w-4 h-4 text-teal-400" />
+                      <div className="flex items-center space-x-2 text-[#374151]">
+                        <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
                         <span>
-                          Officer Determination: <strong className="text-white">{item.status}</strong>
+                          Officer Determination: <strong className="text-[#36454F]">{item.status}</strong>
                           {item.reviewed_at && ` (Recorded ${formatDate(item.reviewed_at)})`}
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-1.5 text-amber-400">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span className="font-semibold">Reviewer Determination Required (AI suggestion non-binding)</span>
+                      <div className="flex items-center space-x-1.5 text-[#B45309]">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        <span className="font-semibold">Reviewer Determination Required (AI suggestion is non-binding)</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Actions */}
+                  {/* Binding Decision Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleReviewDecision(item.id, 'Duplicate')}
-                      className={`px-3 py-1.5 rounded-lg font-semibold transition flex items-center space-x-1 ${
+                      className={`px-3 py-1.5 rounded-lg font-semibold transition flex items-center space-x-1.5 ${
                         item.status === 'Duplicate' || item.status === 'Confirmed Linked'
-                          ? 'bg-rose-500 text-slate-950 font-bold'
-                          : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30'
+                          ? 'bg-[#B91C1C] text-white shadow-sm'
+                          : 'bg-white hover:bg-[#B91C1C]/10 text-[#B91C1C] border border-[#B91C1C]/30'
                       }`}
                     >
                       <AlertTriangle className="w-3.5 h-3.5" />
@@ -555,10 +560,10 @@ export function CaseOverlap() {
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleReviewDecision(item.id, 'Related')}
-                      className={`px-3 py-1.5 rounded-lg font-semibold transition flex items-center space-x-1 ${
+                      className={`px-3 py-1.5 rounded-lg font-semibold transition flex items-center space-x-1.5 ${
                         item.status === 'Related'
-                          ? 'bg-teal-500 text-slate-950 font-bold'
-                          : 'bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30'
+                          ? 'bg-[#0F766E] text-white shadow-sm'
+                          : 'bg-white hover:bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/30'
                       }`}
                     >
                       <GitCompare className="w-3.5 h-3.5" />
@@ -569,10 +574,10 @@ export function CaseOverlap() {
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleReviewDecision(item.id, 'Unrelated')}
-                      className={`px-3 py-1.5 rounded-lg font-semibold transition flex items-center space-x-1 ${
+                      className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center space-x-1.5 ${
                         item.status === 'Unrelated' || item.status === 'Dismissed'
-                          ? 'bg-slate-700 text-white font-bold'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700'
+                          ? 'bg-[#36454F] text-white shadow-sm'
+                          : 'bg-white hover:bg-[#F5F7F7] text-[#6B7280] hover:text-[#36454F] border border-[#E5E7EB]'
                       }`}
                     >
                       <XCircle className="w-3.5 h-3.5" />

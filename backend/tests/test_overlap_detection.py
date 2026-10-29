@@ -14,6 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.security import create_access_token
 from app.dependencies import get_db
 from app.main import app
 from app.ml.overlap_detector import ComplaintOverlapDetector
@@ -22,6 +23,60 @@ from app.models.case_overlap import CaseOverlap
 from app.models.complaint import Complaint
 from app.models.institution import Institution
 from app.models.user import User
+
+
+@pytest.fixture
+def auth_headers(sqlite_overlap_session):
+    """Generates valid Bearer authentication headers for an active officer."""
+    officer = User(
+        id=1,
+        email="officer@aicte-india.org",
+        hashed_password="hash",
+        full_name="Dr. S. Sharma",
+        bureau="Approval Bureau",
+        role="officer",
+        is_active=True,
+    )
+    sqlite_overlap_session.add(officer)
+    sqlite_overlap_session.commit()
+    token = create_access_token(subject=officer.email, role="officer", bureau="Approval Bureau")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def viewer_auth_headers(sqlite_overlap_session):
+    """Generates valid Bearer authentication headers for a read-only viewer."""
+    viewer = User(
+        id=2,
+        email="viewer@aicte-india.org",
+        hashed_password="hash",
+        full_name="Viewer User",
+        bureau="Approval Bureau",
+        role="viewer",
+        is_active=True,
+    )
+    sqlite_overlap_session.add(viewer)
+    sqlite_overlap_session.commit()
+    token = create_access_token(subject=viewer.email, role="viewer", bureau="Approval Bureau")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def inactive_auth_headers(sqlite_overlap_session):
+    """Generates Bearer authentication headers for a deactivated officer."""
+    inactive = User(
+        id=3,
+        email="inactive@aicte-india.org",
+        hashed_password="hash",
+        full_name="Inactive Officer",
+        bureau="Approval Bureau",
+        role="officer",
+        is_active=False,
+    )
+    sqlite_overlap_session.add(inactive)
+    sqlite_overlap_session.commit()
+    token = create_access_token(subject=inactive.email, role="officer", bureau="Approval Bureau")
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
@@ -166,7 +221,7 @@ def test_configurable_threshold():
 # API Integration Tests: Detection, Listing, and Reviewer Determinations
 # ==============================================================================
 
-def test_api_detect_and_persist_overlaps(client, sqlite_overlap_session):
+def test_api_detect_and_persist_overlaps(client, sqlite_overlap_session, auth_headers):
     """Verifies POST /api/v1/overlap/detect runs ML analysis and persists flagged pairs."""
     inst = Institution(id=1, aicte_id="1-INST-01", name="Apex Engineering", state="Maharashtra", city="Pune")
     sqlite_overlap_session.add(inst)
@@ -213,6 +268,7 @@ def test_api_detect_and_persist_overlaps(client, sqlite_overlap_session):
     detect_res = client.post(
         "/api/v1/overlap/detect",
         json={"threshold": 0.40, "persist": True},
+        headers=auth_headers,
     )
     assert detect_res.status_code == 200
     data = detect_res.json()
@@ -292,21 +348,13 @@ def test_api_list_flagged_overlaps(client, sqlite_overlap_session):
     assert res_single.json()["id"] == 1
 
 
-def test_api_reviewer_determination_binding(client, sqlite_overlap_session):
+def test_api_reviewer_determination_binding(client, sqlite_overlap_session, auth_headers):
     """
     Requirement 8: Allow authorized human reviewers to mark a suggested relationship
     as Duplicate, Related, or Unrelated. Never let the algorithm make the final decision automatically.
     """
     inst = Institution(id=3, aicte_id="1-INST-03", name="Delhi Tech", state="Delhi", city="Delhi")
-    user = User(
-        id=1,
-        email="officer@aicte-india.org",
-        hashed_password="hash",
-        full_name="Dr. S. Sharma",
-        bureau="Approval Bureau",
-        role="officer",
-    )
-    sqlite_overlap_session.add_all([inst, user])
+    sqlite_overlap_session.add(inst)
     sqlite_overlap_session.commit()
 
     c1 = Complaint(
@@ -345,18 +393,20 @@ def test_api_reviewer_determination_binding(client, sqlite_overlap_session):
     sqlite_overlap_session.add(overlap)
     sqlite_overlap_session.commit()
 
-    # 1. Reviewer marks as Duplicate
+    # 1. Reviewer marks as Duplicate (supplying a spoofed reviewer_id 99999 to test override)
     review_res = client.patch(
         "/api/v1/overlap/5/review",
         json={
             "decision": "Duplicate",
             "notes": "Confirmed duplicate by bureau officer; merge with primary dossier.",
-            "reviewer_id": 1,
+            "reviewer_id": 99999,
         },
+        headers=auth_headers,
     )
     assert review_res.status_code == 200
     data = review_res.json()
     assert data["status"] == "Duplicate"
+    # Must be derived from authenticated user ID (1), NOT the spoofed 99999
     assert data["reviewed_by"] == 1
     assert data["reviewed_at"] is not None
     assert "Confirmed duplicate by bureau officer" in data["reason"]
@@ -365,6 +415,7 @@ def test_api_reviewer_determination_binding(client, sqlite_overlap_session):
     review_related = client.patch(
         "/api/v1/overlap/5/review",
         json={"decision": "Related"},
+        headers=auth_headers,
     )
     assert review_related.status_code == 200
     assert review_related.json()["status"] == "Related"
@@ -373,6 +424,7 @@ def test_api_reviewer_determination_binding(client, sqlite_overlap_session):
     review_dismiss = client.patch(
         "/api/v1/overlap/5/review",
         json={"decision": "Unrelated"},
+        headers=auth_headers,
     )
     assert review_dismiss.status_code == 200
     assert review_dismiss.json()["status"] == "Unrelated"
@@ -381,6 +433,7 @@ def test_api_reviewer_determination_binding(client, sqlite_overlap_session):
     review_invalid = client.patch(
         "/api/v1/overlap/5/review",
         json={"decision": "InvalidDeterminationWord"},
+        headers=auth_headers,
     )
     assert review_invalid.status_code == 422
 
@@ -388,5 +441,137 @@ def test_api_reviewer_determination_binding(client, sqlite_overlap_session):
     review_missing = client.patch(
         "/api/v1/overlap/99999/review",
         json={"decision": "Duplicate"},
+        headers=auth_headers,
     )
     assert review_missing.status_code == 404
+
+
+# ==============================================================================
+# Security & Authorization Tests for Overlap Detection Mutation Endpoints
+# ==============================================================================
+
+def test_overlap_detect_unauthenticated_fails_with_401(client):
+    """Verifies that unauthenticated scan requests receive HTTP 401."""
+    res = client.post("/api/v1/overlap/detect", json={"threshold": 0.50})
+    assert res.status_code == 401
+    assert "authentication required" in res.json()["detail"].lower()
+
+
+def test_overlap_detect_invalid_token_fails_with_401(client):
+    """Verifies that invalid token on detect endpoint returns HTTP 401."""
+    res = client.post(
+        "/api/v1/overlap/detect",
+        json={"threshold": 0.50},
+        headers={"Authorization": "Bearer fake_invalid_token"},
+    )
+    assert res.status_code == 401
+    assert "invalid or expired" in res.json()["detail"].lower()
+
+
+def test_overlap_detect_inactive_user_fails_with_401(client, sqlite_overlap_session, inactive_auth_headers):
+    """Verifies that deactivated account token receives HTTP 401 on detect endpoint."""
+    res = client.post(
+        "/api/v1/overlap/detect",
+        json={"threshold": 0.50},
+        headers=inactive_auth_headers,
+    )
+    assert res.status_code == 401
+    assert "deactivated" in res.json()["detail"].lower()
+
+
+def test_overlap_detect_viewer_role_fails_with_403(client, sqlite_overlap_session, viewer_auth_headers):
+    """Verifies that read-only viewer role receives HTTP 403 on detect endpoint."""
+    res = client.post(
+        "/api/v1/overlap/detect",
+        json={"threshold": 0.50},
+        headers=viewer_auth_headers,
+    )
+    assert res.status_code == 403
+    assert "access denied" in res.json()["detail"].lower()
+
+
+def test_overlap_review_unauthenticated_fails_with_401(client):
+    """Verifies that unauthenticated review determination receives HTTP 401."""
+    res = client.patch("/api/v1/overlap/1/review", json={"decision": "Duplicate"})
+    assert res.status_code == 401
+    assert "authentication required" in res.json()["detail"].lower()
+
+
+def test_overlap_review_invalid_token_fails_with_401(client):
+    """Verifies that invalid token on review determination receives HTTP 401."""
+    res = client.patch(
+        "/api/v1/overlap/1/review",
+        json={"decision": "Duplicate"},
+        headers={"Authorization": "Bearer bad_token_123"},
+    )
+    assert res.status_code == 401
+    assert "invalid or expired" in res.json()["detail"].lower()
+
+
+def test_overlap_review_inactive_user_fails_with_401(client, sqlite_overlap_session, inactive_auth_headers):
+    """Verifies that deactivated account token receives HTTP 401 on review endpoint."""
+    res = client.patch(
+        "/api/v1/overlap/1/review",
+        json={"decision": "Duplicate"},
+        headers=inactive_auth_headers,
+    )
+    assert res.status_code == 401
+    assert "deactivated" in res.json()["detail"].lower()
+
+
+def test_overlap_review_viewer_role_fails_with_403(client, sqlite_overlap_session, viewer_auth_headers):
+    """Verifies that read-only viewer role receives HTTP 403 on review endpoint."""
+    res = client.patch(
+        "/api/v1/overlap/1/review",
+        json={"decision": "Duplicate"},
+        headers=viewer_auth_headers,
+    )
+    assert res.status_code == 403
+    assert "access denied" in res.json()["detail"].lower()
+
+
+def test_overlap_review_derives_reviewer_from_auth_and_ignores_payload_id(
+    client, sqlite_overlap_session, auth_headers
+):
+    """Requirement 4: Never trust client-supplied reviewer_id; derive strictly from JWT actor."""
+    inst = Institution(id=99, aicte_id="1-INST-99", name="Security Tech", state="UP", city="Noida")
+    c1 = Complaint(
+        id=901,
+        complaint_no="CMP-901",
+        institution_id=99,
+        complainant_type="Student",
+        bureau="Approval Bureau",
+        category="Fee",
+        subject="Spoof Test A",
+        description="Description A",
+    )
+    c2 = Complaint(
+        id=902,
+        complaint_no="CMP-902",
+        institution_id=99,
+        complainant_type="Student",
+        bureau="Approval Bureau",
+        category="Fee",
+        subject="Spoof Test B",
+        description="Description B",
+    )
+    overlap = CaseOverlap(
+        id=900,
+        primary_complaint_id=901,
+        related_complaint_id=902,
+        similarity_score=Decimal("0.9500"),
+        overlap_type="Exact Duplicate",
+        status="Flagged",
+    )
+    sqlite_overlap_session.add_all([inst, c1, c2, overlap])
+    sqlite_overlap_session.commit()
+
+    # Pass malicious/spoofed reviewer_id 77777 in request body
+    res = client.patch(
+        f"/api/v1/overlap/{overlap.id}/review",
+        json={"decision": "Duplicate", "reviewer_id": 77777},
+        headers=auth_headers,
+    )
+    assert res.status_code == 200
+    # Must be 1 (authenticated officer ID from auth_headers), NEVER 77777
+    assert res.json()["reviewed_by"] == 1

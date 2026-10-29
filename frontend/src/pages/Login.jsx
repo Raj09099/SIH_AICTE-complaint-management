@@ -9,7 +9,6 @@ import {
   EyeOff,
   AlertCircle,
   RefreshCw,
-  CheckCircle2,
   Building2,
   FileText,
   GitCompare,
@@ -69,114 +68,121 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060c18] text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 font-sans">
+    <div className="min-h-screen bg-white text-[#374151] flex flex-col font-sans selection:bg-[#0F766E] selection:text-white">
       {/* Top Government-Style Institutional Banner */}
-      <header className="border-b border-slate-800/80 bg-[#071120] px-4 sm:px-8 py-3 flex items-center justify-between">
+      <header className="border-b border-[#28343C] bg-[#36454F] px-4 sm:px-8 py-3 flex items-center justify-between text-white">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-teal-500 p-0.5 flex items-center justify-center shadow-md shadow-cyan-500/20">
-            <div className="w-full h-full bg-[#071120] rounded-[6px] flex items-center justify-center">
-              <Shield className="w-4 h-4 text-cyan-400" />
-            </div>
+          <div className="w-8 h-8 rounded-lg bg-[#0F766E] flex items-center justify-center text-white shadow-sm shrink-0">
+            <Shield className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-bold tracking-widest text-teal-400 uppercase">
+              <span className="text-[10px] font-bold tracking-widest text-teal-300 uppercase">
                 Government of India
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-[10px] font-mono text-cyan-400 font-semibold">
+              <span className="text-slate-400">•</span>
+              <span className="text-[10px] font-mono text-slate-300 font-medium">
                 SIH26264
               </span>
             </div>
-            <p className="text-xs font-semibold text-slate-200">
-              Council Grievance Redressal Network
+            <p className="text-xs font-semibold text-white leading-tight">
+              All India Council for Technical Education
             </p>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-400 font-mono">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Redressal Grid TLS 1.3</span>
+        <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-300 font-mono">
+          <span className="w-2 h-2 rounded-full bg-[#14B8A6]" />
+          <span>National Redressal Grid</span>
         </div>
       </header>
 
-      {/* Main Split Portal Area */}
-      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-        <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-slate-800/80 bg-[#081325]/90 shadow-2xl backdrop-blur-xl overflow-hidden">
+      {/* Main Split Authentication Layout */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12">
+        <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-[#E5E7EB] shadow-lg overflow-hidden bg-white">
           
-          {/* Left Institutional Overview Column */}
-          <div className="lg:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-[#0a1830] via-[#071224] to-[#050b18] border-b lg:border-b-0 lg:border-r border-slate-800/80 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[11px] font-medium text-cyan-300">
-                <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+          {/* Left Panel: Charcoal Grey Background */}
+          <div className="lg:col-span-5 bg-[#36454F] text-white p-6 sm:p-10 flex flex-col justify-between space-y-8 border-b lg:border-b-0 lg:border-r border-[#28343C]">
+            <div className="space-y-6">
+              {/* Authorized Access Label */}
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#28343C] border border-slate-600/50 text-xs font-medium text-teal-200">
+                <KeyRound className="w-3.5 h-3.5 text-[#14B8A6]" />
                 <span>Authorized Officer Access</span>
               </div>
 
+              {/* Application Title & Subtitle */}
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-snug">
-                  AICTE Complaint Intelligence Dashboard
+                  AICTE Complaint Intelligence
                 </h1>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Integrated Complaint Monitoring and Tracking System Across AICTE Bureaus & Regional Cells.
+                <p className="text-sm text-slate-300 mt-1.5 leading-relaxed">
+                  Institution Monitoring & Resolution
                 </p>
               </div>
 
-              <div className="pt-2 space-y-3">
-                <div className="flex items-start space-x-3 text-xs text-slate-300">
-                  <div className="p-1 rounded bg-teal-500/10 text-teal-400 mt-0.5 border border-teal-500/20">
-                    <Building2 className="w-3.5 h-3.5" />
+              {/* Three Feature Highlights */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-start space-x-3 text-xs text-slate-200">
+                  <div className="p-1.5 rounded-lg bg-[#28343C] text-teal-300 shrink-0 border border-slate-600/50 mt-0.5">
+                    <Shield className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-semibold text-white">100 Technical Institutions</span>
-                    <p className="text-[11px] text-slate-400">Institutional monitoring dossiers and cross-bureau tracking.</p>
+                    <span className="font-semibold text-white block">Secure Officer Authentication</span>
+                    <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                      Role-aware session control and verified access for AICTE regional bureaus.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3 text-xs text-slate-300">
-                  <div className="p-1 rounded bg-cyan-500/10 text-cyan-400 mt-0.5 border border-cyan-500/20">
-                    <FileText className="w-3.5 h-3.5" />
+                <div className="flex items-start space-x-3 text-xs text-slate-200">
+                  <div className="p-1.5 rounded-lg bg-[#28343C] text-teal-300 shrink-0 border border-slate-600/50 mt-0.5">
+                    <Building2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-semibold text-white">500+ Grievance Records</span>
-                    <p className="text-[11px] text-slate-400">SLA enforcement, transfer history, and multi-cell workflows.</p>
+                    <span className="font-semibold text-white block">Cross-Bureau Case Tracking</span>
+                    <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                      Real-time grievance monitoring across 100 approved technical institutions.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3 text-xs text-slate-300">
-                  <div className="p-1 rounded bg-indigo-500/10 text-indigo-400 mt-0.5 border border-indigo-500/20">
-                    <GitCompare className="w-3.5 h-3.5" />
+                <div className="flex items-start space-x-3 text-xs text-slate-200">
+                  <div className="p-1.5 rounded-lg bg-[#28343C] text-teal-300 shrink-0 border border-slate-600/50 mt-0.5">
+                    <GitCompare className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-semibold text-white">TF-IDF Overlap Intelligence</span>
-                    <p className="text-[11px] text-slate-400">Duplicate allegation detection and cross-bureau case linkage.</p>
+                    <span className="font-semibold text-white block">Complaint Intelligence Engine</span>
+                    <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                      Automated TF-IDF overlap detection and multi-bureau duplicate identification.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Officer Account Note Card */}
-            <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
-              <div className="flex items-center space-x-1.5 text-cyan-300 font-semibold">
-                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+            {/* Officer Provisioning CLI Guide */}
+            <div className="p-3.5 rounded-xl bg-[#28343C] border border-slate-600/50 text-[11px] text-slate-300 space-y-1.5">
+              <div className="flex items-center space-x-1.5 text-teal-300 font-semibold">
+                <Terminal className="w-3.5 h-3.5 text-[#14B8A6]" />
                 <span>Account Provisioning</span>
               </div>
-              <p className="text-[11px] leading-relaxed">
-                Authorized officer accounts are provisioned via the backend script:
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Authorized accounts are created via the provisioning utility:
               </p>
-              <code className="block p-1.5 rounded bg-slate-950 border border-slate-800/80 text-[10px] font-mono text-cyan-300 select-all overflow-x-auto">
+              <code className="block p-1.5 rounded bg-[#1F2930] border border-slate-700/60 text-[10px] font-mono text-teal-200 select-all overflow-x-auto">
                 python scripts/create_officer.py --email officer@aicte-india.org --password &lt;secret&gt;
               </code>
             </div>
           </div>
 
-          {/* Right Sign-in Form Column */}
-          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
+          {/* Right Panel: Pure White Background Form */}
+          <div className="lg:col-span-7 bg-white p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#36454F] tracking-tight">
                 Officer Sign In
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Enter your official AICTE email address and password to access the portal.
+              <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
+                Authorized officers can sign in using their official AICTE email credentials.
               </p>
             </div>
 
@@ -184,10 +190,10 @@ export function Login() {
             {errorMessage && (
               <div
                 role="alert"
-                className="mb-5 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 flex items-start space-x-2.5 text-xs animate-in fade-in"
+                className="mb-5 p-3.5 rounded-xl bg-[#B91C1C]/10 border border-[#B91C1C]/25 text-[#B91C1C] flex items-start space-x-2.5 text-xs animate-in fade-in"
               >
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{errorMessage}</span>
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="leading-relaxed font-medium">{errorMessage}</span>
               </div>
             )}
 
@@ -196,12 +202,12 @@ export function Login() {
               <div>
                 <label
                   htmlFor="officer-email"
-                  className="block text-xs font-semibold text-slate-300 mb-1.5"
+                  className="block text-xs font-semibold text-[#374151] mb-1.5"
                 >
                   Official Email Address
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6B7280]">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
@@ -214,7 +220,7 @@ export function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="officer@aicte-india.org"
                     disabled={loading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#050c18] border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors disabled:opacity-50"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-[#6B7280] focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -224,14 +230,14 @@ export function Login() {
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="officer-password"
-                    className="block text-xs font-semibold text-slate-300"
+                    className="block text-xs font-semibold text-[#374151]"
                   >
                     Password
                   </label>
-                  <span className="text-[11px] text-slate-400">Case-sensitive</span>
+                  <span className="text-[11px] text-[#6B7280]">Case-sensitive</span>
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6B7280]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -244,14 +250,14 @@ export function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     disabled={loading}
-                    className="w-full pl-10 pr-11 py-2.5 bg-[#050c18] border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors disabled:opacity-50"
+                    className="w-full pl-10 pr-11 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-[#6B7280] focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={0}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 focus:outline-none"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#6B7280] hover:text-[#374151] focus:outline-none"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -267,11 +273,11 @@ export function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-cyan-600/20 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#081325] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-medium text-sm transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
                       <span>Authenticating Credentials...</span>
                     </>
                   ) : (
@@ -284,16 +290,21 @@ export function Login() {
               </div>
             </form>
 
-            {/* Compliance Disclaimer */}
-            <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 text-center leading-relaxed">
-              Protected under IT Act & AICTE Redressal Regulations. Unauthorized access attempts are monitored and recorded.
+            {/* Subtle Footer */}
+            <div className="mt-8 pt-4 border-t border-[#E5E7EB] text-center space-y-1">
+              <p className="text-xs font-medium text-[#36454F]">
+                Authorized access only
+              </p>
+              <p className="text-[11px] text-[#6B7280]">
+                Protected under IT Act & AICTE Redressal Regulations. Unauthorized attempts are logged.
+              </p>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/70 bg-[#071120] py-3 px-4 text-center text-xs text-slate-400">
+      {/* Global Footer */}
+      <footer className="border-t border-[#E5E7EB] bg-white py-3 px-4 text-center text-xs text-[#6B7280]">
         AICTE Multi-Bureau Complaint Intelligence • Smart India Hackathon 2026
       </footer>
     </div>

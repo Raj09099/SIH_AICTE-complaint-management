@@ -1,43 +1,32 @@
 import React from 'react';
-import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const colorStyles = {
-  cyan: {
-    badge: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/25',
-    glow: 'group-hover:border-cyan-500/40',
-    bar: 'bg-cyan-400',
-    text: 'text-cyan-400',
-  },
   teal: {
-    badge: 'text-teal-400 bg-teal-500/10 border-teal-500/25',
-    glow: 'group-hover:border-teal-500/40',
-    bar: 'bg-teal-400',
-    text: 'text-teal-400',
+    iconBg: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
+    bar: 'bg-[#0F766E]',
+    tag: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
   },
-  emerald: {
-    badge: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-    glow: 'group-hover:border-emerald-500/40',
-    bar: 'bg-emerald-400',
-    text: 'text-emerald-400',
+  green: {
+    iconBg: 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/20',
+    bar: 'bg-[#15803D]',
+    tag: 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/20',
   },
   amber: {
-    badge: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
-    glow: 'group-hover:border-amber-500/40',
-    bar: 'bg-amber-400',
-    text: 'text-amber-400',
+    iconBg: 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/20',
+    bar: 'bg-[#B45309]',
+    tag: 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/20',
   },
-  purple: {
-    badge: 'text-purple-400 bg-purple-500/10 border-purple-500/25',
-    glow: 'group-hover:border-purple-500/40',
-    bar: 'bg-purple-400',
-    text: 'text-purple-400',
+  red: {
+    iconBg: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/20',
+    bar: 'bg-[#B91C1C]',
+    tag: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/20',
   },
-  rose: {
-    badge: 'text-rose-400 bg-rose-500/10 border-rose-500/25',
-    glow: 'group-hover:border-rose-500/40',
-    bar: 'bg-rose-400',
-    text: 'text-rose-400',
+  charcoal: {
+    iconBg: 'bg-[#36454F]/10 text-[#36454F] border-[#36454F]/20',
+    bar: 'bg-[#36454F]',
+    tag: 'bg-[#36454F]/10 text-[#36454F] border-[#36454F]/20',
   },
 };
 
@@ -46,75 +35,73 @@ export function StatCard({
   value,
   subtitle,
   icon: Icon,
-  color = 'cyan',
-  trend,
-  trendType = 'up',
+  color = 'teal',
   tag,
   progress,
   to,
 }) {
-  const scheme = colorStyles[color] || colorStyles.cyan;
+  const scheme = colorStyles[color] || colorStyles.teal;
 
   const CardContent = (
-    <div
-      className={`group relative glass-panel rounded-xl p-5 border border-slate-800/80 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${scheme.glow}`}
-    >
+    <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm hover:shadow transition-shadow duration-150 flex flex-col justify-between h-full">
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">{title}</p>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-mono">
-              {value}
-            </span>
-            {trend && (
-              <span
-                className={`inline-flex items-center text-xs font-semibold ${
-                  trendType === 'up' ? 'text-emerald-400' : 'text-rose-400'
-                }`}
-              >
-                {trendType === 'up' ? (
-                  <TrendingUp className="w-3.5 h-3.5 mr-0.5" />
-                ) : (
-                  <TrendingDown className="w-3.5 h-3.5 mr-0.5" />
-                )}
-                {trend}
-              </span>
-            )}
+        <div className="space-y-1">
+          <p className="text-xs font-medium uppercase tracking-wider text-[#6B7280]">
+            {title}
+          </p>
+          <div className="text-2xl sm:text-3xl font-bold text-[#36454F] tracking-tight">
+            {value}
           </div>
+          {subtitle && (
+            <p className="text-xs text-[#6B7280] leading-snug">
+              {subtitle}
+            </p>
+          )}
         </div>
 
         {Icon && (
-          <div className={`p-2.5 rounded-lg border ${scheme.badge} transition-transform group-hover:scale-105`}>
+          <div className={`p-2.5 rounded-lg border shrink-0 ${scheme.iconBg}`}>
             <Icon className="w-5 h-5" />
           </div>
         )}
       </div>
 
-      {progress != null && (
-        <div className="mt-3 w-full bg-slate-800/70 h-1.5 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${scheme.bar}`}
-            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-          />
+      {(progress != null || tag || to) && (
+        <div className="mt-4 pt-3 border-t border-[#E5E7EB] flex items-center justify-between text-xs">
+          {progress != null && (
+            <div className="flex-1 mr-3">
+              <div className="w-full bg-[#E5E7EB] h-1.5 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${scheme.bar}`}
+                  style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {tag && (
+            <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${scheme.tag}`}>
+              {tag}
+            </span>
+          )}
+
+          {to && (
+            <span className="inline-flex items-center text-xs font-medium text-[#0F766E] hover:underline ml-auto">
+              <span>View</span>
+              <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" />
+            </span>
+          )}
         </div>
       )}
-
-      <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-        <span className="truncate">{subtitle}</span>
-        {tag && (
-          <span className="shrink-0 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60">
-            {tag}
-          </span>
-        )}
-        {to && (
-          <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition ml-1 shrink-0" />
-        )}
-      </div>
     </div>
   );
 
   if (to) {
-    return <Link to={to} className="block focus:outline-none">{CardContent}</Link>;
+    return (
+      <Link to={to} className="block group focus:outline-none focus:ring-2 focus:ring-[#0F766E] rounded-xl">
+        {CardContent}
+      </Link>
+    );
   }
 
   return CardContent;

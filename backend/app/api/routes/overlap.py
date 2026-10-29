@@ -12,7 +12,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_user, get_db, require_roles
 from app.ml.overlap_detector import ComplaintOverlapDetector
 from app.models.case_overlap import CaseOverlap
 from app.models.complaint import Complaint
@@ -47,7 +47,7 @@ VALID_DECISIONS = {
 def detect_overlaps(
     request: OverlapDetectRequest = OverlapDetectRequest(),
     db: Session = Depends(get_db),
-    current_user: Optional[dict] = Depends(get_current_user),
+    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer")),
 ) -> OverlapDetectResponse:
     """
     Feature 1: Smart Case Relationship & Overlap Detection.
@@ -288,7 +288,7 @@ def review_overlap_determination(
     overlap_id: int,
     payload: OverlapReviewRequest,
     db: Session = Depends(get_db),
-    current_user: Optional[dict] = Depends(get_current_user),
+    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer")),
 ) -> CaseOverlapOut:
     """
     Requirement 8: Allow authorized human reviewers to mark a suggested relationship
@@ -320,11 +320,17 @@ def review_overlap_determination(
     overlap.status = canonical_status
     overlap.reviewed_at = datetime.now(timezone.utc)
 
-    # Resolve reviewer user ID if provided
-    if payload.reviewer_id:
-        user = db.query(User).filter(User.id == payload.reviewer_id).first()
-        if user:
-            overlap.reviewed_by = user.id
+    # Requirement 4: Never trust a user ID supplied by the frontend for reviewer identity.
+    # Derive the actor strictly from the authenticated active user.
+    reviewer_user_id = current_user.get("id")
+    if reviewer_user_id:
+        overlap.reviewed_by = reviewer_user_id
+    else:
+        auth_email = current_user.get("email") or current_user.get("sub")
+        if auth_email:
+            matched_user = db.query(User).filter(User.email == auth_email).first()
+            if matched_user:
+                overlap.reviewed_by = matched_user.id
 
     if payload.notes:
         existing_reason = overlap.reason or ""

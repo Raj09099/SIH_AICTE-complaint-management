@@ -33,6 +33,13 @@ from app.schemas.overlap import (
     OverlapDetectResponse,
     OverlapReviewRequest,
 )
+from app.schemas.pattern import (
+    ComplaintPatternBrief,
+    InstitutionPatternBrief,
+    PatternDiscoveryRequest,
+    PatternListResponse,
+    ProblemPatternOut,
+)
 
 __all__ = [
     "ComplaintCreate",
@@ -47,6 +54,11 @@ __all__ = [
     "OverlapDetectRequest",
     "OverlapDetectResponse",
     "OverlapReviewRequest",
+    "ComplaintPatternBrief",
+    "InstitutionPatternBrief",
+    "PatternDiscoveryRequest",
+    "PatternListResponse",
+    "ProblemPatternOut",
     "LoginRequest",
     "TokenResponse",
     "UserCreateRequest",

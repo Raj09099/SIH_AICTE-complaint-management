@@ -2,54 +2,54 @@ import React from 'react';
 
 const statusStyles = {
   // Operational Statuses
-  New: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25',
-  'Under Review': 'bg-amber-500/10 text-amber-300 border-amber-500/25',
-  Transferred: 'bg-purple-500/10 text-purple-300 border-purple-500/25',
-  'Evidence Requested': 'bg-indigo-500/10 text-indigo-300 border-indigo-500/25',
-  Resolved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
-  Escalated: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-  Closed: 'bg-slate-700/30 text-slate-400 border-slate-700/50',
+  New: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/25',
+  'Under Review': 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/25',
+  Transferred: 'bg-[#36454F]/10 text-[#36454F] border-[#36454F]/20',
+  'Evidence Requested': 'bg-[#36454F]/10 text-[#36454F] border-[#36454F]/20',
+  Resolved: 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/25',
+  Escalated: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/25',
+  Closed: 'bg-[#6B7280]/10 text-[#6B7280] border-[#E5E7EB]',
 
   // Priorities
-  Critical: 'bg-red-500/15 text-red-300 border-red-500/35 font-semibold animate-pulse',
-  Urgent: 'bg-rose-500/15 text-rose-300 border-rose-500/30 animate-pulse',
-  High: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  Medium: 'bg-sky-500/10 text-sky-300 border-sky-500/25',
-  Low: 'bg-slate-500/10 text-slate-400 border-slate-600/30',
+  Critical: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/30 font-semibold',
+  Urgent: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/25',
+  High: 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/25',
+  Medium: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
+  Low: 'bg-[#6B7280]/10 text-[#6B7280] border-[#E5E7EB]',
 
   // AI & Analytics Flags
-  'High Overlap': 'bg-cyan-500/15 text-cyan-300 border-cyan-500/35 font-medium',
-  'Potential Overlap': 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  'Pattern Match': 'bg-teal-500/15 text-teal-300 border-teal-500/35',
-  'Verified Match': 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35',
+  'High Overlap': 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/30 font-medium',
+  'Potential Overlap': 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/25',
+  'Pattern Match': 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/25',
+  'Verified Match': 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/25',
 };
 
 const statusDots = {
-  New: 'bg-cyan-400',
-  'Under Review': 'bg-amber-400',
-  Transferred: 'bg-purple-400',
-  'Evidence Requested': 'bg-indigo-400',
-  Resolved: 'bg-emerald-400',
-  Escalated: 'bg-rose-500',
-  Critical: 'bg-red-500',
-  Urgent: 'bg-rose-400',
-  High: 'bg-amber-400',
-  Medium: 'bg-sky-400',
-  Low: 'bg-slate-400',
-  'High Overlap': 'bg-cyan-400',
-  'Pattern Match': 'bg-teal-400',
-  'Verified Match': 'bg-emerald-400',
+  New: 'bg-[#0F766E]',
+  'Under Review': 'bg-[#B45309]',
+  Transferred: 'bg-[#36454F]',
+  'Evidence Requested': 'bg-[#36454F]',
+  Resolved: 'bg-[#15803D]',
+  Escalated: 'bg-[#B91C1C]',
+  Critical: 'bg-[#B91C1C]',
+  Urgent: 'bg-[#B91C1C]',
+  High: 'bg-[#B45309]',
+  Medium: 'bg-[#0F766E]',
+  Low: 'bg-[#6B7280]',
+  'High Overlap': 'bg-[#0F766E]',
+  'Pattern Match': 'bg-[#0F766E]',
+  'Verified Match': 'bg-[#15803D]',
 };
 
 export function StatusBadge({ status = 'New', showDot = true, className = '' }) {
-  const appliedStyle = statusStyles[status] || 'bg-slate-800 text-slate-300 border-slate-700';
-  const dotColor = statusDots[status];
+  const appliedStyle = statusStyles[status] || 'bg-[#F5F7F7] text-[#374151] border-[#E5E7EB]';
+  const dotColor = statusDots[status] || 'bg-[#6B7280]';
 
   return (
     <span
-      className={`inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${appliedStyle} ${className}`}
+      className={`inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${appliedStyle} ${className}`}
     >
-      {showDot && dotColor && (
+      {showDot && (
         <span className={`w-1.5 h-1.5 rounded-full ${dotColor} shrink-0`} />
       )}
       <span>{status}</span>
