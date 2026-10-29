@@ -80,7 +80,7 @@ def main():
     parser.add_argument("--password", required=True, help="Account password (min 6 chars)")
     parser.add_argument("--name", default="Authorized AICTE Official", help="Officer full name")
     parser.add_argument("--bureau", default="Central Grievance Redressal Cell", help="AICTE bureau or cell")
-    parser.add_argument("--role", default="officer", choices=["officer", "admin", "bureau_head", "viewer"], help="User role")
+    parser.add_argument("--role", default="officer", choices=["officer", "admin", "bureau_head", "institute", "viewer"], help="User role")
     parser.add_argument("--designation", default="AICTE Case Officer", help="Official designation")
 
     args = parser.parse_args()

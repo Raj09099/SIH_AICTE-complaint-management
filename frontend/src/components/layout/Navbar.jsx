@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Shield,
   User,
+  Building2,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../services/api';
 
@@ -84,14 +85,31 @@ export function Navbar({ onToggleSidebar }) {
         {/* Brand Identification */}
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-lg bg-[#0F766E] flex items-center justify-center text-white shadow-sm shrink-0">
-            <Shield className="w-5 h-5" />
+            {user?.role === 'institute' ? (
+              <Building2 className="w-5 h-5" />
+            ) : (
+              <Shield className="w-5 h-5" />
+            )}
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-bold tracking-tight text-white leading-tight">
-              AICTE Complaint Intelligence
-            </h1>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-sm sm:text-base font-bold tracking-tight text-white leading-tight">
+                AICTE Complaint Intelligence
+              </h1>
+              {user?.role === 'institute' ? (
+                <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                  Institute Level
+                </span>
+              ) : (
+                <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-700 text-slate-300 border border-slate-600">
+                  AICTE Officer
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-slate-300 leading-tight">
-              Institution Monitoring & Resolution
+              {user?.role === 'institute'
+                ? `Campus Portal • ${user?.bureau || 'Technical Institution'}`
+                : 'Central Bureau Monitoring & Resolution'}
             </p>
           </div>
         </div>

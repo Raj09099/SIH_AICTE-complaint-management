@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   FileText,
   Search,
@@ -37,6 +38,10 @@ const COMPLAINANT_TYPES = ['Student', 'Faculty', 'Parent', 'Anonymous', 'Public'
 const PRIORITIES = ['Urgent', 'High', 'Medium', 'Low'];
 
 export function Complaints() {
+  const location = useLocation();
+  const { user } = useAuth();
+  const isInstitute = user?.role === 'institute';
+
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -58,6 +63,14 @@ export function Complaints() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(null);
   const [submitError, setSubmitError] = useState(null);
+
+  // Auto-open modal if URL query param ?action=new is passed
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') === 'new') {
+      setShowRegisterModal(true);
+    }
+  }, [location.search]);
 
   // Form fields for new complaint
   const [newFormData, setNewFormData] = useState({
@@ -212,16 +225,20 @@ export function Complaints() {
         <div>
           <div className="flex items-center space-x-2">
             <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#0F766E] border border-teal-200">
-              AICTE Redressal Grid
+              {isInstitute ? 'Technical Institute Portal' : 'AICTE Redressal Grid'}
             </span>
             <span className="text-[#6B7280]">•</span>
-            <span className="text-xs font-mono text-[#6B7280]">Grievance Master Registry</span>
+            <span className="text-xs font-mono text-[#6B7280]">
+              {isInstitute ? `Campus Registry: ${user?.bureau || 'Apex Institute'}` : 'Grievance Master Registry'}
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#36454F] mt-1.5">
-            Complaint Registry
+            {isInstitute ? 'Institute Grievance Registry' : 'Complaint Registry'}
           </h1>
           <p className="text-xs sm:text-sm text-[#6B7280] mt-0.5">
-            Search, filter, track status, and monitor statutory SLA deadlines across technical institutions.
+            {isInstitute
+              ? 'Lodge and track grievance submissions dispatched to AICTE Central Bureaus for review and resolution.'
+              : 'Search, filter, track status, and monitor statutory SLA deadlines across technical institutions.'}
           </p>
         </div>
 
@@ -247,7 +264,7 @@ export function Complaints() {
             className="inline-flex items-center space-x-2 px-4 py-2 bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-medium rounded-lg text-xs transition shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            <span>Register Complaint</span>
+            <span>{isInstitute ? 'Send Grievance to AICTE' : 'Register Complaint'}</span>
           </button>
         </div>
       </div>
@@ -690,14 +707,16 @@ export function Complaints() {
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#0F766E] border border-teal-200">
-                    AICTE Intake Desk
+                    {isInstitute ? 'Institute Escalation Desk' : 'AICTE Intake Desk'}
                   </span>
                 </div>
                 <h2 className="text-lg font-bold text-[#36454F] mt-1">
-                  Register Official Grievance Case
+                  {isInstitute ? 'Send Grievance to AICTE Central Grid' : 'Register Official Grievance Case'}
                 </h2>
                 <p className="text-xs text-[#6B7280]">
-                  New complaints are assigned statutory SLA tracking numbers and routed to target bureau queues.
+                  {isInstitute
+                    ? 'Submit an official grievance, compliance issue, or dispute directly to AICTE central bureaus for formal redressal.'
+                    : 'New complaints are assigned statutory SLA tracking numbers and routed to target bureau queues.'}
                 </p>
               </div>
               <button
@@ -879,12 +898,12 @@ export function Complaints() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
-                      <span>Persisting to Database...</span>
+                      <span>{isInstitute ? 'Dispatching to AICTE...' : 'Persisting to Database...'}</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>Submit Grievance</span>
+                      <span>{isInstitute ? 'Dispatch Grievance to AICTE' : 'Submit Grievance'}</span>
                     </>
                   )}
                 </button>

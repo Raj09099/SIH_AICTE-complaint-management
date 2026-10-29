@@ -132,7 +132,7 @@ def list_complaints(
 def create_complaint(
     payload: ComplaintCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer")),
+    current_user: dict = Depends(require_roles("admin", "bureau_head", "officer", "institute")),
 ) -> ComplaintOut:
     """
     Register a new grievance case in the AICTE grievance registry with validation and persistence:

@@ -21,7 +21,10 @@ import {
   Calendar,
   Layers,
   ArrowRight,
+  Send,
+  Shield,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -141,6 +144,9 @@ const demoBureauStats = [
 ];
 
 export function Dashboard() {
+  const { user } = useAuth();
+  const isInstitute = user?.role === 'institute';
+
   const [backendHealth, setBackendHealth] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [presentationMode, setPresentationMode] = useState('live'); // 'live' | 'demo'
@@ -286,16 +292,37 @@ export function Dashboard() {
       {/* 1. Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#36454F] tracking-tight">
-            Dashboard
+          <div className="flex items-center space-x-2">
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#0F766E] border border-teal-200">
+              {isInstitute ? 'Technical Institute Redressal Portal' : 'AICTE Central Command'}
+            </span>
+            <span className="text-[#6B7280]">•</span>
+            <span className="text-xs font-mono text-[#6B7280]">
+              {isInstitute ? (user?.bureau || 'Apex Institute of Technology') : 'All India Monitoring Grid'}
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#36454F] tracking-tight mt-1">
+            {isInstitute ? 'Campus Grievance Console' : 'Complaint Intelligence Dashboard'}
           </h1>
           <p className="text-sm text-[#6B7280] mt-0.5">
-            Overview of complaint cases and resolution progress across AICTE bureaus.
+            {isInstitute
+              ? 'Lodge institutional disputes, track redressal milestones, and interface directly with AICTE Bureaus.'
+              : 'Overview of complaint cases, resolution progress, and cross-bureau overlap telemetry.'}
           </p>
         </div>
 
-        {/* Presentation Mode Selector & Refresh */}
+        {/* Action Button for Institute + Presentation Mode Selector & Refresh */}
         <div className="flex items-center space-x-2">
+          {isInstitute && (
+            <Link
+              to="/complaints?action=new"
+              className="inline-flex items-center space-x-2 px-3.5 py-2 bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-semibold rounded-lg text-xs transition shadow-sm"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Send Grievance to AICTE</span>
+            </Link>
+          )}
+
           <div className="inline-flex rounded-lg border border-[#E5E7EB] bg-[#F5F7F7] p-0.5 text-xs font-medium">
             <button
               type="button"
@@ -333,6 +360,39 @@ export function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Institute Institutional Affiliation Banner */}
+      {isInstitute && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-teal-50 to-[#F5F7F7] border border-teal-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start space-x-3">
+            <div className="p-2.5 rounded-lg bg-[#0F766E] text-white shrink-0 shadow-sm">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-[#36454F]">
+                  {user?.bureau || 'Apex Institute of Technology'} (AICTE Permanent ID: 1-001)
+                </h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#0F766E] border border-teal-200">
+                  Affiliated Technical Institute
+                </span>
+              </div>
+              <p className="text-xs text-[#6B7280] mt-0.5">
+                Logged in as <strong>{user?.full_name || 'Institute Grievance Officer'}</strong> ({user?.email}). You have authorized dispatch access to transmit institutional grievances directly to AICTE Central Bureaus.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 shrink-0">
+            <Link
+              to="/complaints?action=new"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#0F766E] hover:bg-[#115E59] text-white font-medium rounded-lg text-xs transition shadow-sm"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Dispatch New Grievance</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Live Error Banner if any */}
       {liveError && presentationMode === 'live' && (

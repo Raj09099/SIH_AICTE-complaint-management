@@ -74,6 +74,23 @@ def inactive_auth_headers(sqlite_db_session):
     token = create_access_token(subject=inactive.email, role="officer", bureau="Approval Bureau")
     return {"Authorization": f"Bearer {token}"}
 
+@pytest.fixture
+def institute_auth_headers(sqlite_db_session):
+    """Generates valid Bearer authentication headers for an institute representative."""
+    inst_user = User(
+        id=103,
+        email="institute.test@apex.edu.in",
+        hashed_password="hashed_pwd",
+        full_name="Prof. Test (Apex Institute)",
+        bureau="Apex Institute",
+        role="institute",
+        is_active=True,
+    )
+    sqlite_db_session.add(inst_user)
+    sqlite_db_session.commit()
+    token = create_access_token(subject=inst_user.email, role="institute", bureau="Apex Institute")
+    return {"Authorization": f"Bearer {token}"}
+
 
 @pytest.fixture
 def sqlite_db_session():
@@ -678,3 +695,46 @@ def test_update_complaint_general_authorized_success(client, sqlite_db_session, 
     assert res.status_code == 200
     assert res.json()["priority"] == "Urgent"
 
+
+
+def test_create_complaint_institute_role_success(client, sqlite_db_session):
+    """Verifies that an institute user can submit a complaint to the AICTE portal."""
+    inst = Institution(
+        id=1,
+        aicte_id="1-001",
+        name="Apex Institute of Technology",
+        state="Maharashtra",
+        city="Pune",
+    )
+    sqlite_db_session.add(inst)
+    sqlite_db_session.commit()
+
+    inst_user = User(
+        id=103,
+        email="institute.test@apex.edu.in",
+        hashed_password="hashed_pwd",
+        full_name="Prof. Test (Apex Institute)",
+        bureau="Apex Institute of Technology",
+        role="institute",
+        is_active=True,
+    )
+    sqlite_db_session.add(inst_user)
+    sqlite_db_session.commit()
+    token = create_access_token(subject=inst_user.email, role="institute", bureau="Apex Institute of Technology")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    payload = {
+        "institution_id": 1,
+        "complainant_type": "Institute Representative",
+        "bureau": "Approval Bureau",
+        "category": "Fee Irregularities",
+        "subject": "Institutional Report Regarding Unsanctioned Fee Circular",
+        "description": "Submitting formal institutional documentation regarding disputed student fee circular.",
+        "priority": "High",
+    }
+    res = client.post("/api/v1/complaints/", json=payload, headers=headers)
+    assert res.status_code == 201
+    data = res.json()
+    assert data["complaint_no"].startswith("AICTE-")
+    assert data["category"] == "Fee Irregularities"
+    assert data["status"] == "New"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
   Building2,
@@ -12,9 +13,10 @@ import {
   X,
   Database,
   Cpu,
+  Send,
 } from 'lucide-react';
 
-const navigationGroups = [
+const officerGroups = [
   {
     title: 'Core Platform',
     items: [
@@ -36,7 +38,7 @@ const navigationGroups = [
         name: 'Problem Patterns',
         path: '/problem-patterns',
         icon: Network,
-        badge: 'Phase 2',
+        badge: 'ML Clustered',
       },
       {
         name: 'Evidence Review',
@@ -54,7 +56,38 @@ const navigationGroups = [
   },
 ];
 
+const instituteGroups = [
+  {
+    title: 'Institute Grievance Portal',
+    items: [
+      { name: 'Campus Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      {
+        name: 'Send Grievance to AICTE',
+        path: '/complaints?action=new',
+        icon: Send,
+        badge: 'Submit',
+      },
+      { name: 'My College Grievances', path: '/complaints', icon: FileText },
+      { name: 'Institutions Directory', path: '/institutions', icon: Building2 },
+    ],
+  },
+  {
+    title: 'AI Advisory Intelligence',
+    items: [
+      {
+        name: 'Problem Patterns',
+        path: '/problem-patterns',
+        icon: Network,
+        badge: 'Advisory',
+      },
+    ],
+  },
+];
+
 export function Sidebar({ isOpen, onClose }) {
+  const { user } = useAuth();
+  const isInstitute = user?.role === 'institute';
+  const navigationGroups = isInstitute ? instituteGroups : officerGroups;
   return (
     <>
       {/* Mobile Backdrop */}
