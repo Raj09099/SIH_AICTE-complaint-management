@@ -4,13 +4,14 @@ User ORM model for users table in SIH26264 schema (AICTE Bureau Officers & Admin
 
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
-from sqlalchemy import Boolean, DateTime, Index, Integer, String, func, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.case_overlap import CaseOverlap
     from app.models.complaint import Complaint
+    from app.models.institution import Institution
     from app.models.resolution_evidence import ResolutionEvidence
 
 
@@ -30,6 +31,9 @@ class User(Base):
         nullable=True,
         default="officer",
         server_default=text("'officer'"),
+    )
+    institution_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("institutions.id", ondelete="SET NULL"), nullable=True
     )
     designation: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     is_active: Mapped[Optional[bool]] = mapped_column(

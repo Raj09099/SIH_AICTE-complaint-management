@@ -3,8 +3,9 @@ Pydantic schemas for Complaint request and response validation.
 """
 
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.attachment import AttachmentOut
 
 
 class ComplaintBase(BaseModel):
@@ -61,3 +62,4 @@ class ComplaintOut(ComplaintBase):
     filing_date: Optional[date] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    attachments: List[AttachmentOut] = []

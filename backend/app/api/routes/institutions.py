@@ -14,11 +14,13 @@ from app.models.case_overlap import CaseOverlap
 from app.models.complaint import Complaint
 from app.models.institution import Institution
 from app.schemas.institution import (
+    InstitutionBureauStat,
     InstitutionComplaintItem,
     InstitutionDetailOut,
     InstitutionListResponse,
     InstitutionOut,
     InstitutionSummaryStats,
+    RecurringCategoryStat,
 )
 
 router = APIRouter(prefix="/institutions", tags=["Institutions"])
@@ -58,7 +60,14 @@ def list_institutions(
     """
     Search and filter AICTE approved technical institutions.
     Aggregates open, resolved, and overdue complaint counts using a single batch SQL query.
+    Restricted to AICTE central officers.
     """
+    if current_user and current_user.get("role") == "institute":
+        raise HTTPException(
+            status_code=http_status.HTTP_403_FORBIDDEN,
+            detail="Access denied: The Institutions Directory is restricted to AICTE Central Officers.",
+        )
+
     query = db.query(Institution)
 
     if search:
@@ -106,6 +115,15 @@ def list_institutions(
                         )
                     )
                 ).label("overdue"),
+                func.count(case((Complaint.status == "New", 1))).label("pending"),
+                func.count(
+                    case(
+                        (
+                            Complaint.status.in_(["Under Review", "Evidence Requested", "Transferred"]),
+                            1,
+                        )
+                    )
+                ).label("in_progress"),
             )
             .filter(Complaint.institution_id.in_(inst_ids))
             .group_by(Complaint.institution_id)
@@ -118,11 +136,23 @@ def list_institutions(
                 "open": row[2] or 0,
                 "resolved": row[3] or 0,
                 "overdue": row[4] or 0,
+                "pending": row[5] or 0,
+                "in_progress": row[6] or 0,
             }
 
     items: List[InstitutionOut] = []
     for inst in institutions:
-        st = complaint_stats.get(inst.id, {"total": 0, "open": 0, "resolved": 0, "overdue": 0})
+        st = complaint_stats.get(
+            inst.id,
+            {
+                "total": 0,
+                "open": 0,
+                "resolved": 0,
+                "overdue": 0,
+                "pending": 0,
+                "in_progress": 0,
+            },
+        )
         items.append(
             InstitutionOut(
                 id=inst.id,
@@ -140,6 +170,8 @@ def list_institutions(
                 open_complaints=st["open"],
                 resolved_complaints=st["resolved"],
                 overdue_complaints=st["overdue"],
+                pending_complaints=st["pending"],
+                in_progress_complaints=st["in_progress"],
             )
         )
 
@@ -171,10 +203,24 @@ def list_institutions(
             .scalar()
             or 0
         )
+        pending_comp = (
+            db.query(func.count(Complaint.id))
+            .filter(Complaint.status == "New")
+            .scalar()
+            or 0
+        )
+        in_progress_comp = (
+            db.query(func.count(Complaint.id))
+            .filter(Complaint.status.in_(["Under Review", "Evidence Requested", "Transferred"]))
+            .scalar()
+            or 0
+        )
         summary_stats = InstitutionSummaryStats(
             total_institutions=total_inst,
             total_complaints=total_comp,
             open_complaints=open_comp,
+            pending_complaints=pending_comp,
+            in_progress_complaints=in_progress_comp,
             overdue_complaints=overdue_comp,
             resolved_complaints=resolved_comp,
         )
@@ -209,6 +255,15 @@ def get_institution_details(
             detail=f"Institution with identifier '{identifier}' was not found in the AICTE directory.",
         )
 
+    # BACKEND SECURITY CHECK: Institute accounts can only inspect their own college profile
+    if current_user and current_user.get("role") == "institute":
+        inst_id = current_user.get("institution_id")
+        if inst_id is not None and inst.id != inst_id:
+            raise HTTPException(
+                status_code=http_status.HTTP_403_FORBIDDEN,
+                detail="Access denied: You are only authorized to view your own institution dossier.",
+            )
+
     # Fetch complaints filed against this institution
     complaints = (
         db.query(Complaint)
@@ -219,25 +274,64 @@ def get_institution_details(
 
     today = date.today()
     total_count = len(complaints)
-    open_count = sum(1 for c in complaints if c.status != "Resolved")
-    resolved_count = sum(1 for c in complaints if c.status == "Resolved")
+    pending_count = sum(1 for c in complaints if (c.status or "").strip() == "New")
+    in_progress_count = sum(
+        1
+        for c in complaints
+        if (c.status or "").strip() in ("Under Review", "Evidence Requested", "Transferred")
+    )
+    resolved_count = sum(1 for c in complaints if (c.status or "").strip() == "Resolved")
+    open_count = sum(1 for c in complaints if (c.status or "").strip() != "Resolved")
     overdue_count = sum(
         1
         for c in complaints
-        if c.status != "Resolved" and c.deadline_date is not None and c.deadline_date < today
+        if (c.status or "").strip() != "Resolved"
+        and c.deadline_date is not None
+        and c.deadline_date < today
     )
 
-    # Aggregate active bureaus and categories
-    bureau_set = set()
+    # Bureau-wise breakdown, SLA compliance, and category distribution
+    bureau_data: Dict[str, Dict[str, int]] = {}
+    on_time_resolved_count = 0
     category_counts: Dict[str, int] = {}
     complaint_items: List[InstitutionComplaintItem] = []
+    complaint_ids: List[int] = []
 
-    complaint_ids = []
     for c in complaints:
         complaint_ids.append(c.id)
-        if c.bureau:
-            bureau_set.add(c.bureau)
-        cat = c.category or "General"
+        b_name = (c.bureau or "").strip() or "Unassigned Bureau"
+        if b_name not in bureau_data:
+            bureau_data[b_name] = {
+                "total": 0,
+                "open": 0,
+                "resolved": 0,
+                "overdue": 0,
+            }
+
+        b_entry = bureau_data[b_name]
+        b_entry["total"] += 1
+
+        status_clean = (c.status or "").strip()
+        is_resolved = status_clean == "Resolved"
+        if is_resolved:
+            b_entry["resolved"] += 1
+            # SLA on-time resolution calculation:
+            # A complaint is strictly considered on-time if and only if:
+            # 1. It has an explicit statutory SLA deadline (deadline_date is not None).
+            # 2. It has an authentic resolution event timestamp (updated_at is not None).
+            # 3. The resolution date occurred on or before the deadline date (updated_at.date() <= deadline_date).
+            # Note: filing_date is NEVER used as a proxy for resolution date.
+            # Missing deadlines and missing resolution timestamps are handled transparently and NOT counted as on-time.
+            if c.deadline_date is not None and c.updated_at is not None:
+                resolution_date = c.updated_at.date()
+                if resolution_date <= c.deadline_date:
+                    on_time_resolved_count += 1
+        else:
+            b_entry["open"] += 1
+            if c.deadline_date is not None and c.deadline_date < today:
+                b_entry["overdue"] += 1
+
+        cat = (c.category or "").strip() or "General"
         category_counts[cat] = category_counts.get(cat, 0) + 1
 
         complaint_items.append(
@@ -255,6 +349,41 @@ def get_institution_details(
                 updated_at=c.updated_at,
             )
         )
+
+    # SLA compliance rate: percentage of resolved complaints resolved on or before deadline
+    if resolved_count > 0:
+        sla_compliance_rate = round((on_time_resolved_count / resolved_count) * 100, 1)
+    else:
+        sla_compliance_rate = 0.0
+
+    # Build Bureau Breakdown list sorted by complaint volume descending
+    bureau_breakdown = [
+        InstitutionBureauStat(
+            bureau=b_name,
+            total=b_stats["total"],
+            open=b_stats["open"],
+            resolved=b_stats["resolved"],
+            overdue=b_stats["overdue"],
+        )
+        for b_name, b_stats in sorted(
+            bureau_data.items(),
+            key=lambda x: (-x[1]["total"], x[0]),
+        )
+    ]
+
+    # Build Recurring Categories list (marked recurring when count >= 2)
+    recurring_categories = [
+        RecurringCategoryStat(
+            category=cat_name,
+            count=cnt,
+            percentage=round((cnt / total_count) * 100, 1) if total_count > 0 else 0.0,
+            is_recurring=(cnt >= 2),
+        )
+        for cat_name, cnt in sorted(
+            category_counts.items(),
+            key=lambda x: (-x[1], x[0]),
+        )
+    ]
 
     # Count overlaps involving complaints of this institution
     overlap_count = 0
@@ -290,8 +419,13 @@ def get_institution_details(
         open_complaints=open_count,
         resolved_complaints=resolved_count,
         overdue_complaints=overdue_count,
+        pending_complaints=pending_count,
+        in_progress_complaints=in_progress_count,
+        sla_compliance_rate=sla_compliance_rate,
+        bureau_breakdown=bureau_breakdown,
+        recurring_categories=recurring_categories,
         complaints=complaint_items,
-        active_bureaus=sorted(list(bureau_set)),
+        active_bureaus=sorted(list(bureau_data.keys())),
         category_distribution=category_counts,
         related_overlaps_count=overlap_count,
     )

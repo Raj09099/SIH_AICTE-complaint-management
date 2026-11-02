@@ -18,6 +18,7 @@ from app.dependencies import get_db
 from app.main import app
 from app.models.complaint import Complaint
 from app.models.institution import Institution
+from app.models.attachment import Attachment
 from app.models.user import User
 
 
@@ -107,6 +108,7 @@ def sqlite_db_session():
     Institution.__table__.create(test_engine)
     User.__table__.create(test_engine)
     Complaint.__table__.create(test_engine)
+    Attachment.__table__.create(test_engine)
 
     TestingSessionLocal = sessionmaker(
         autocommit=False, autoflush=False, bind=test_engine
@@ -738,3 +740,114 @@ def test_create_complaint_institute_role_success(client, sqlite_db_session):
     assert data["complaint_no"].startswith("AICTE-")
     assert data["category"] == "Fee Irregularities"
     assert data["status"] == "New"
+
+
+def test_institute_role_scoping_and_forbidden_access(client, sqlite_db_session):
+    """
+    Acceptance check 1 & 2: Institute role can only fetch its own complaints,
+    and attempting to access other institutes' complaint returns 403 Forbidden.
+    """
+    # 1. Setup two institutions
+    inst1 = Institution(id=1, aicte_id="1-001", name="Apex Institute", state="MH", city="Pune")
+    inst2 = Institution(id=2, aicte_id="1-002", name="Other College", state="KA", city="Bengaluru")
+    sqlite_db_session.add_all([inst1, inst2])
+
+    # 2. Add complaints for both institutions
+    c1 = Complaint(
+        id=10, complaint_no="AICTE-APEX-01", institution_id=1, complainant_type="Student",
+        bureau="Approval Bureau", category="Fee", subject="Apex Fee Issue", description="Narrative",
+        priority="Medium", status="New", filing_date=date.today(),
+    )
+    c2 = Complaint(
+        id=20, complaint_no="AICTE-OTHER-01", institution_id=2, complainant_type="Student",
+        bureau="Approval Bureau", category="Fee", subject="Other College Issue", description="Narrative",
+        priority="Medium", status="New", filing_date=date.today(),
+    )
+    sqlite_db_session.add_all([c1, c2])
+
+    # 3. Create institute user belonging to institution 1
+    inst_user = User(
+        id=200, email="rep@apex.edu.in", hashed_password="pwd", full_name="Apex Rep",
+        bureau="Apex Institute", role="institute", institution_id=1, is_active=True,
+    )
+    sqlite_db_session.add(inst_user)
+    sqlite_db_session.commit()
+
+    token = create_access_token(
+        subject=inst_user.email, role="institute", bureau="Apex Institute", institution_id=1
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 4. GET /complaints/ with institute token should ONLY return complaint 10 (not 20)
+    res = client.get("/api/v1/complaints/", headers=headers)
+    assert res.status_code == 200
+    items = res.json()
+    assert len(items) == 1
+    assert items[0]["id"] == 10
+    assert items[0]["complaint_no"] == "AICTE-APEX-01"
+
+    # 5. GET /complaints/10 (own complaint) should succeed
+    res_own = client.get("/api/v1/complaints/10", headers=headers)
+    assert res_own.status_code == 200
+
+    # 6. GET /complaints/20 (other institution's complaint) must return 403 Forbidden!
+    res_other = client.get("/api/v1/complaints/20", headers=headers)
+    assert res_other.status_code == 403
+    assert "Access denied" in res_other.json()["detail"]
+
+
+def test_attachment_upload_validation_and_retrieval(client, sqlite_db_session):
+    """
+    Acceptance check 3 & 4: File upload validation (types, size, max count),
+    storage persistence, and access permissions.
+    """
+    inst = Institution(id=1, aicte_id="1-001", name="Apex Institute", state="MH", city="Pune")
+    sqlite_db_session.add(inst)
+    comp = Complaint(
+        id=50, complaint_no="AICTE-ATTACH-01", institution_id=1, complainant_type="Student",
+        bureau="Approval Bureau", category="Lab Deficit", subject="Lab complaint", description="Narrative",
+        priority="High", status="New",
+    )
+    officer = User(
+        id=300, email="att.officer@aicte.gov.in", hashed_password="pwd", full_name="Officer",
+        bureau="Approval Bureau", role="officer", is_active=True,
+    )
+    sqlite_db_session.add_all([comp, officer])
+    sqlite_db_session.commit()
+
+    token = create_access_token(subject=officer.email, role="officer", bureau="Approval Bureau")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. Invalid file type (.exe) must be rejected with 400
+    res_bad_type = client.post(
+        "/api/v1/complaints/50/attachments",
+        files=[("files", ("malware.exe", b"binary content", "application/octet-stream"))],
+        headers=headers,
+    )
+    assert res_bad_type.status_code == 400
+    assert "Allowed extensions are: PDF, JPG, PNG, DOCX" in res_bad_type.json()["detail"]
+
+    # 2. Valid PDF upload must succeed
+    dummy_pdf_content = b"%PDF-1.4 dummy valid pdf content for testing attachment upload"
+    res_upload = client.post(
+        "/api/v1/complaints/50/attachments",
+        files=[("files", ("complaint_letter.pdf", dummy_pdf_content, "application/pdf"))],
+        data={"labels": ["Complaint Letter"]},
+        headers=headers,
+    )
+    assert res_upload.status_code == 201
+    uploaded_items = res_upload.json()
+    assert len(uploaded_items) == 1
+    assert uploaded_items[0]["file_name"] == "complaint_letter.pdf"
+    assert uploaded_items[0]["label"] == "Complaint Letter"
+    att_id = uploaded_items[0]["id"]
+
+    # 3. List attachments
+    res_list = client.get("/api/v1/complaints/50/attachments", headers=headers)
+    assert res_list.status_code == 200
+    assert len(res_list.json()) == 1
+
+    # 4. Download attachment file
+    res_file = client.get(f"/api/v1/complaints/50/attachments/{att_id}/file", headers=headers)
+    assert res_file.status_code == 200
+    assert res_file.content == dummy_pdf_content

@@ -67,6 +67,7 @@ def login(
         subject=user.email,
         role=user.role or "officer",
         bureau=user.bureau,
+        institution_id=user.institution_id,
     )
 
     user_out = UserOut(
@@ -75,6 +76,7 @@ def login(
         full_name=user.full_name,
         bureau=user.bureau,
         role=user.role or "officer",
+        institution_id=user.institution_id,
         designation=user.designation,
         is_active=user.is_active if user.is_active is not None else True,
         created_at=user.created_at,
@@ -109,6 +111,7 @@ def get_current_user_profile(
             full_name=current_user.get("name") or "Authorized Officer",
             bureau=current_user.get("bureau") or "General Grievance Cell",
             role=current_user.get("role") or "officer",
+            institution_id=current_user.get("institution_id"),
             designation=current_user.get("designation"),
             is_active=True,
             created_at=datetime.now(timezone.utc),
@@ -120,6 +123,7 @@ def get_current_user_profile(
         full_name=user.full_name,
         bureau=user.bureau,
         role=user.role or "officer",
+        institution_id=user.institution_id,
         designation=user.designation,
         is_active=user.is_active if user.is_active is not None else True,
         created_at=user.created_at,

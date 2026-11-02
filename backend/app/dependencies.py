@@ -77,6 +77,7 @@ async def get_current_user(
         "email": user.email,
         "name": user.full_name,
         "role": user.role or "officer",
+        "institution_id": getattr(user, "institution_id", None),
         "bureau": user.bureau,
         "designation": user.designation,
         "id": user.id,

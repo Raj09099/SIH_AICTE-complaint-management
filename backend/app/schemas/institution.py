@@ -24,6 +24,27 @@ class InstitutionComplaintItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class InstitutionBureauStat(BaseModel):
+    """Bureau-wise complaint telemetry for an institution."""
+    bureau: str
+    total: int = 0
+    open: int = 0
+    resolved: int = 0
+    overdue: int = 0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecurringCategoryStat(BaseModel):
+    """Grievance category frequency and recurrence flag for an institution."""
+    category: str
+    count: int = 0
+    percentage: float = 0.0
+    is_recurring: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class InstitutionOut(BaseModel):
     """Public institution directory item with aggregated complaint telemetry."""
     id: int
@@ -41,12 +62,19 @@ class InstitutionOut(BaseModel):
     open_complaints: int = 0
     resolved_complaints: int = 0
     overdue_complaints: int = 0
+    pending_complaints: int = 0
+    in_progress_complaints: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class InstitutionDetailOut(InstitutionOut):
-    """Comprehensive institution profile with complaint registry and active bureau breakdown."""
+    """Comprehensive institution 360° profile with complaint registry, bureau statistics, and recurrence insights."""
+    pending_complaints: int = 0
+    in_progress_complaints: int = 0
+    sla_compliance_rate: float = 0.0
+    bureau_breakdown: List[InstitutionBureauStat] = []
+    recurring_categories: List[RecurringCategoryStat] = []
     complaints: List[InstitutionComplaintItem] = []
     active_bureaus: List[str] = []
     category_distribution: Dict[str, int] = {}
@@ -58,6 +86,8 @@ class InstitutionSummaryStats(BaseModel):
     total_institutions: int = 0
     total_complaints: int = 0
     open_complaints: int = 0
+    pending_complaints: int = 0
+    in_progress_complaints: int = 0
     overdue_complaints: int = 0
     resolved_complaints: int = 0
 

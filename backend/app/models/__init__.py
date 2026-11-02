@@ -9,6 +9,7 @@ Exports all 6 schema-backed ORM models:
 - ResolutionEvidence
 """
 
+from app.models.attachment import Attachment
 from app.models.case_overlap import CaseOverlap
 from app.models.complaint import Complaint
 from app.models.institution import Institution
@@ -23,4 +24,5 @@ __all__ = [
     "CaseOverlap",
     "ProblemPattern",
     "ResolutionEvidence",
+    "Attachment",
 ]

@@ -20,6 +20,7 @@ class UserOut(BaseModel):
     full_name: str
     bureau: str
     role: str
+    institution_id: Optional[int] = None
     designation: Optional[str] = None
     is_active: bool = True
     created_at: Optional[datetime] = None
@@ -41,5 +42,6 @@ class UserCreateRequest(BaseModel):
     full_name: str
     bureau: str
     role: str = "officer"
+    institution_id: Optional[int] = None
     designation: Optional[str] = None
 

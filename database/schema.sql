@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password VARCHAR(255) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
     bureau VARCHAR(100) NOT NULL, -- e.g. 'Approval Bureau', 'Anti-Ragging Cell', 'Faculty & Staff'
-    role VARCHAR(50) DEFAULT 'officer', -- 'admin', 'bureau_head', 'officer', 'viewer'
+    role VARCHAR(50) DEFAULT 'officer', -- 'admin', 'bureau_head', 'officer', 'viewer', 'institute'
+    institution_id INTEGER REFERENCES institutions(id) ON DELETE SET NULL,
     designation VARCHAR(150),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -125,3 +126,19 @@ CREATE TABLE IF NOT EXISTS resolution_evidence (
 );
 
 CREATE INDEX IF NOT EXISTS idx_evidence_complaint_id ON resolution_evidence (complaint_id);
+
+-- 7. ATTACHMENTS TABLE (Official Complaint Attachments & Proof)
+CREATE TABLE IF NOT EXISTS attachments (
+    id SERIAL PRIMARY KEY,
+    complaint_id INTEGER NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100) NOT NULL,
+    file_size INTEGER NOT NULL,
+    storage_path VARCHAR(500) NOT NULL,
+    label VARCHAR(100) DEFAULT 'Supporting Evidence',
+    uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_complaint_id ON attachments (complaint_id);
+

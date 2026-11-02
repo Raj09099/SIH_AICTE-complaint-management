@@ -4,13 +4,13 @@ Analytics and telemetry API routes for SIH26264 AICTE Complaint Intelligence.
 
 from datetime import date
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status as http_status
 from sqlalchemy import func, inspect
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_db
+from app.dependencies import get_current_user, get_db
 from app.models.case_overlap import CaseOverlap
 from app.models.complaint import Complaint
 from app.models.institution import Institution
@@ -39,11 +39,13 @@ MONTH_NAMES = [
 ]
 
 
-def _build_bureau_stats(db: Session) -> List[BureauStatItem]:
+def _build_bureau_stats(db: Session, institution_id: Optional[int] = None) -> List[BureauStatItem]:
     """Helper to aggregate per-bureau workload and SLA resolution rates."""
+    query = db.query(Complaint.bureau, Complaint.status, func.count(Complaint.id))
+    if institution_id is not None:
+        query = query.filter(Complaint.institution_id == institution_id)
     bureau_rows = (
-        db.query(Complaint.bureau, Complaint.status, func.count(Complaint.id))
-        .group_by(Complaint.bureau, Complaint.status)
+        query.group_by(Complaint.bureau, Complaint.status)
         .all()
     )
 
@@ -77,21 +79,26 @@ def _build_bureau_stats(db: Session) -> List[BureauStatItem]:
     return items
 
 
-def _build_monthly_trends(db: Session) -> List[MonthlyTrendItem]:
+def _build_monthly_trends(db: Session, institution_id: Optional[int] = None) -> List[MonthlyTrendItem]:
     """Helper to aggregate monthly inflow and resolution velocity."""
-    inflow_rows = (
+    inflow_q = (
         db.query(
             func.extract("year", Complaint.filing_date).label("year_num"),
             func.extract("month", Complaint.filing_date).label("month_num"),
             func.count(Complaint.id),
         )
         .filter(Complaint.filing_date.isnot(None))
-        .group_by("year_num", "month_num")
+    )
+    if institution_id is not None:
+        inflow_q = inflow_q.filter(Complaint.institution_id == institution_id)
+
+    inflow_rows = (
+        inflow_q.group_by("year_num", "month_num")
         .order_by("year_num", "month_num")
         .all()
     )
 
-    resolved_rows = (
+    resolved_q = (
         db.query(
             func.extract("year", Complaint.filing_date).label("year_num"),
             func.extract("month", Complaint.filing_date).label("month_num"),
@@ -101,7 +108,12 @@ def _build_monthly_trends(db: Session) -> List[MonthlyTrendItem]:
             Complaint.filing_date.isnot(None),
             Complaint.status == "Resolved",
         )
-        .group_by("year_num", "month_num")
+    )
+    if institution_id is not None:
+        resolved_q = resolved_q.filter(Complaint.institution_id == institution_id)
+
+    resolved_rows = (
+        resolved_q.group_by("year_num", "month_num")
         .order_by("year_num", "month_num")
         .all()
     )
@@ -137,25 +149,110 @@ def _build_monthly_trends(db: Session) -> List[MonthlyTrendItem]:
     response_model=DashboardSummaryOut,
     summary="Get aggregated institutional dashboard telemetry",
 )
-def get_dashboard_summary(db: Session = Depends(get_db)) -> DashboardSummaryOut:
+def get_dashboard_summary(
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user),
+) -> DashboardSummaryOut:
     """
     Returns aggregated dashboard statistics calculated directly from the live database:
     - Complaint volume, active vs resolved, escalated, and overdue counts
     - Registered institution count
-    - Council-wide SLA compliance percentage
+    - Council-wide or campus-specific SLA compliance percentage
     - Honest AI engine metrics from case overlaps, problem patterns, and evidence records
     - Monthly inflow/resolution trends and bureau workload distribution
     """
     try:
-        total_complaints = db.query(func.count(Complaint.id)).scalar() or 0
-        total_institutions = db.query(func.count(Institution.id)).scalar() or 0
+        inst_id = None
+        is_institute = False
+        if current_user and current_user.get("role") == "institute":
+            is_institute = True
+            inst_id = current_user.get("institution_id")
 
-        # Status distribution
-        status_rows = (
-            db.query(Complaint.status, func.count(Complaint.id))
-            .group_by(Complaint.status)
-            .all()
-        )
+        if is_institute:
+            total_complaints = (
+                db.query(func.count(Complaint.id))
+                .filter(Complaint.institution_id == inst_id)
+                .scalar()
+                or 0
+            ) if inst_id else 0
+            total_institutions = 1 if inst_id else 0
+
+            # Status distribution
+            status_rows = (
+                db.query(Complaint.status, func.count(Complaint.id))
+                .filter(Complaint.institution_id == inst_id)
+                .group_by(Complaint.status)
+                .all()
+            ) if inst_id else []
+
+            # Priority distribution
+            priority_rows = (
+                db.query(Complaint.priority, func.count(Complaint.id))
+                .filter(Complaint.institution_id == inst_id)
+                .group_by(Complaint.priority)
+                .all()
+            ) if inst_id else []
+
+            # Escalated complaints
+            escalated_complaints = (
+                db.query(func.count(Complaint.id))
+                .filter(Complaint.institution_id == inst_id, Complaint.is_escalated.is_(True))
+                .scalar()
+                or 0
+            ) if inst_id else 0
+
+            # Overdue complaints
+            today = date.today()
+            overdue_complaints = (
+                db.query(func.count(Complaint.id))
+                .filter(
+                    Complaint.institution_id == inst_id,
+                    Complaint.status != "Resolved",
+                    Complaint.deadline_date.isnot(None),
+                    Complaint.deadline_date < today,
+                )
+                .scalar()
+                or 0
+            ) if inst_id else 0
+        else:
+            total_complaints = db.query(func.count(Complaint.id)).scalar() or 0
+            total_institutions = db.query(func.count(Institution.id)).scalar() or 0
+
+            # Status distribution
+            status_rows = (
+                db.query(Complaint.status, func.count(Complaint.id))
+                .group_by(Complaint.status)
+                .all()
+            )
+
+            # Priority distribution
+            priority_rows = (
+                db.query(Complaint.priority, func.count(Complaint.id))
+                .group_by(Complaint.priority)
+                .all()
+            )
+
+            # Escalated complaints
+            escalated_complaints = (
+                db.query(func.count(Complaint.id))
+                .filter(Complaint.is_escalated.is_(True))
+                .scalar()
+                or 0
+            )
+
+            # Overdue complaints
+            today = date.today()
+            overdue_complaints = (
+                db.query(func.count(Complaint.id))
+                .filter(
+                    Complaint.status != "Resolved",
+                    Complaint.deadline_date.isnot(None),
+                    Complaint.deadline_date < today,
+                )
+                .scalar()
+                or 0
+            )
+
         status_distribution = {
             row[0] or "Unknown": row[1] for row in status_rows
         }
@@ -164,45 +261,18 @@ def get_dashboard_summary(db: Session = Depends(get_db)) -> DashboardSummaryOut:
             cnt for st, cnt in status_distribution.items() if st != "Resolved"
         )
 
-        # Priority distribution
-        priority_rows = (
-            db.query(Complaint.priority, func.count(Complaint.id))
-            .group_by(Complaint.priority)
-            .all()
-        )
         priority_distribution = {
             row[0] or "Medium": row[1] for row in priority_rows
         }
 
-        # Escalated complaints
-        escalated_complaints = (
-            db.query(func.count(Complaint.id))
-            .filter(Complaint.is_escalated.is_(True))
-            .scalar()
-            or 0
-        )
-
-        # Overdue complaints
-        today = date.today()
-        overdue_complaints = (
-            db.query(func.count(Complaint.id))
-            .filter(
-                Complaint.status != "Resolved",
-                Complaint.deadline_date.isnot(None),
-                Complaint.deadline_date < today,
-            )
-            .scalar()
-            or 0
-        )
-
-        # Council SLA compliance rate
+        # SLA compliance rate
         if total_complaints > 0:
             compliant_count = max(0, total_complaints - overdue_complaints)
             sla_compliance_rate = round((compliant_count / total_complaints) * 100, 1)
         else:
             sla_compliance_rate = 0.0
 
-        # AI Engine counts (safe against unpopulated or lightweight test schemas)
+        # AI Engine counts
         total_overlaps = 0
         high_confidence_overlaps = 0
         total_patterns = 0
@@ -215,18 +285,30 @@ def get_dashboard_summary(db: Session = Depends(get_db)) -> DashboardSummaryOut:
 
         if inspector.has_table("case_overlaps"):
             try:
-                total_overlaps = db.query(func.count(CaseOverlap.id)).scalar() or 0
-                if total_overlaps > 0:
-                    high_confidence_overlaps = (
+                if is_institute and inst_id:
+                    comp_subq = db.query(Complaint.id).filter(Complaint.institution_id == inst_id).subquery()
+                    total_overlaps = (
                         db.query(func.count(CaseOverlap.id))
-                        .filter(CaseOverlap.similarity_score >= 0.85)
+                        .filter(
+                            (CaseOverlap.primary_complaint_id.in_(comp_subq))
+                            | (CaseOverlap.related_complaint_id.in_(comp_subq))
+                        )
                         .scalar()
                         or 0
                     )
+                elif not is_institute:
+                    total_overlaps = db.query(func.count(CaseOverlap.id)).scalar() or 0
+                    if total_overlaps > 0:
+                        high_confidence_overlaps = (
+                            db.query(func.count(CaseOverlap.id))
+                            .filter(CaseOverlap.similarity_score >= 0.85)
+                            .scalar()
+                            or 0
+                        )
             except Exception as overlap_err:
                 logger.debug("CaseOverlap table query omitted: %s", overlap_err)
 
-        if inspector.has_table("problem_patterns"):
+        if not is_institute and inspector.has_table("problem_patterns"):
             try:
                 total_patterns = db.query(func.count(ProblemPattern.id)).scalar() or 0
             except Exception as pattern_err:
@@ -234,11 +316,16 @@ def get_dashboard_summary(db: Session = Depends(get_db)) -> DashboardSummaryOut:
 
         if inspector.has_table("resolution_evidence"):
             try:
-                evidence_total = db.query(func.count(ResolutionEvidence.id)).scalar() or 0
+                ev_query = db.query(ResolutionEvidence)
+                if is_institute and inst_id:
+                    ev_query = ev_query.join(Complaint, ResolutionEvidence.complaint_id == Complaint.id).filter(
+                        Complaint.institution_id == inst_id
+                    )
+                evidence_total = ev_query.with_entities(func.count(ResolutionEvidence.id)).scalar() or 0
                 if evidence_total > 0:
                     evidence_verified_count = (
-                        db.query(func.count(ResolutionEvidence.id))
-                        .filter(ResolutionEvidence.verification_status == "Verified")
+                        ev_query.filter(ResolutionEvidence.verification_status == "Verified")
+                        .with_entities(func.count(ResolutionEvidence.id))
                         .scalar()
                         or 0
                     )
@@ -248,9 +335,9 @@ def get_dashboard_summary(db: Session = Depends(get_db)) -> DashboardSummaryOut:
             except Exception as evidence_err:
                 logger.debug("ResolutionEvidence table query omitted: %s", evidence_err)
 
-        # Inflow trends & bureau distribution
-        monthly_trends = _build_monthly_trends(db)
-        bureau_distribution = _build_bureau_stats(db)
+        # Inflow trends & bureau distribution (filtered for institute if applicable)
+        monthly_trends = _build_monthly_trends(db, institution_id=inst_id)
+        bureau_distribution = _build_bureau_stats(db, institution_id=inst_id)
 
         return DashboardSummaryOut(
             total_complaints=total_complaints,

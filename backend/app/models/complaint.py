@@ -20,6 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
+    from app.models.attachment import Attachment
     from app.models.case_overlap import CaseOverlap
     from app.models.institution import Institution
     from app.models.resolution_evidence import ResolutionEvidence
@@ -113,6 +114,12 @@ class Complaint(Base):
     )
     evidences: Mapped[List["ResolutionEvidence"]] = relationship(
         "ResolutionEvidence",
+        back_populates="complaint",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    attachments: Mapped[List["Attachment"]] = relationship(
+        "Attachment",
         back_populates="complaint",
         cascade="all, delete-orphan",
         passive_deletes=True,

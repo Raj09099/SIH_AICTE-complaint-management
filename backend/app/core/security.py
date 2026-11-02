@@ -35,6 +35,7 @@ def create_access_token(
     subject: Union[str, Any],
     role: Optional[str] = None,
     bureau: Optional[str] = None,
+    institution_id: Optional[int] = None,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
     """Generate a signed JWT access token with role and bureau metadata."""
@@ -54,6 +55,8 @@ def create_access_token(
         to_encode["role"] = role
     if bureau:
         to_encode["bureau"] = bureau
+    if institution_id is not None:
+        to_encode["institution_id"] = institution_id
 
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM

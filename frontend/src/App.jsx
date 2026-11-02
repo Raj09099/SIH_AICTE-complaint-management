@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -16,6 +16,14 @@ import ProblemPatterns from './pages/ProblemPatterns';
 import EvidenceChecker from './pages/EvidenceChecker';
 import Analytics from './pages/Analytics';
 import NotFound from './pages/NotFound';
+
+function OfficerOnlyRoute({ children }) {
+  const { user } = useAuth();
+  if (user?.role === 'institute') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+}
 
 export function App() {
   return (
@@ -36,8 +44,22 @@ export function App() {
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="institutions" element={<Institutions />} />
-            <Route path="institutions/:id" element={<InstitutionDetails />} />
+            <Route
+              path="institutions"
+              element={
+                <OfficerOnlyRoute>
+                  <Institutions />
+                </OfficerOnlyRoute>
+              }
+            />
+            <Route
+              path="institutions/:id"
+              element={
+                <OfficerOnlyRoute>
+                  <InstitutionDetails />
+                </OfficerOnlyRoute>
+              }
+            />
             <Route path="complaints" element={<Complaints />} />
             <Route path="complaints/:id" element={<ComplaintDetails />} />
             <Route path="case-overlap" element={<CaseOverlap />} />

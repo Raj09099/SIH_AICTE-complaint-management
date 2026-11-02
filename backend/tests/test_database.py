@@ -92,6 +92,7 @@ class TestModelMetadata:
             "full_name",
             "bureau",
             "role",
+            "institution_id",
             "designation",
             "is_active",
             "created_at",

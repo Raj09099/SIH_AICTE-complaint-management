@@ -20,6 +20,20 @@ export const complaintService = {
     const response = await apiClient.patch(`/complaints/${id}/status`, statusData);
     return response.data;
   },
+
+  uploadAttachments: async (complaintId, formData) => {
+    const response = await apiClient.post(`/complaints/${complaintId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  getAttachments: async (complaintId) => {
+    const response = await apiClient.get(`/complaints/${complaintId}/attachments`);
+    return response.data;
+  },
 };
 
 export default complaintService;
