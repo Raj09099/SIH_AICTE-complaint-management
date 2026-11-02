@@ -101,19 +101,19 @@ export function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#36454F] border-r border-[#28343C] flex flex-col justify-between transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#364650] border-r border-[#2b3840] flex flex-col justify-between transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Institutional Brand Header */}
-          <div className="h-16 px-5 flex items-center justify-between border-b border-[#28343C] bg-[#2E3B43]">
+          <div className="h-16 px-5 flex items-center justify-between border-b border-[#2b3840] bg-[#2f3d46]">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0F766E] flex items-center justify-center text-white shadow-sm shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-[#087F75] flex items-center justify-center text-white shadow-sm shrink-0">
                 <Shield className="w-4 h-4" />
               </div>
               <div className="overflow-hidden">
-                <span className="text-[9px] font-bold tracking-widest text-teal-300 uppercase block leading-tight">
+                <span className="text-[9px] font-bold tracking-widest text-[#2DD4BF] uppercase block leading-tight">
                   Govt. of India • AICTE
                 </span>
                 <span className="text-xs font-bold text-white tracking-tight truncate block leading-tight">
@@ -126,7 +126,7 @@ export function Sidebar({ isOpen, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-[#28343C] lg:hidden"
+              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-[#2b3840] lg:hidden"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -153,8 +153,8 @@ export function Sidebar({ isOpen, onClose }) {
                         className={({ isActive }) =>
                           `group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                             isActive
-                              ? 'bg-[#0F766E] text-white font-semibold shadow-sm'
-                              : 'text-slate-300 hover:text-white hover:bg-[#28343C]'
+                              ? 'bg-[#087F75] text-white font-semibold shadow-sm'
+                              : 'text-slate-200 hover:text-white hover:bg-[#2b3840]'
                           }`
                         }
                       >
@@ -173,8 +173,8 @@ export function Sidebar({ isOpen, onClose }) {
                               <span
                                 className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border shrink-0 ${
                                   isActive
-                                    ? 'bg-teal-900/60 text-teal-100 border-teal-500'
-                                    : 'bg-[#28343C] text-slate-300 border-slate-600/60'
+                                    ? 'bg-[#044a45] text-teal-100 border-[#087F75]'
+                                    : 'bg-[#2b3840] text-slate-300 border-slate-600/60'
                                 }`}
                               >
                                 {item.badge}
@@ -192,11 +192,11 @@ export function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* Footer System Status Card */}
-        <div className="p-3 border-t border-[#28343C] bg-[#2E3B43]">
-          <div className="rounded-lg p-2.5 bg-[#28343C] border border-slate-600/40 space-y-1.5 text-xs">
+        <div className="p-3 border-t border-[#2b3840] bg-[#2f3d46]">
+          <div className="rounded-lg p-2.5 bg-[#2b3840] border border-slate-600/40 space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-white">System Status</span>
-              <span className="text-[10px] font-medium text-teal-300">Operational</span>
+              <span className="text-[10px] font-medium text-[#2DD4BF]">Operational</span>
             </div>
             <div className="text-[10px] text-slate-300 space-y-1">
               <div className="flex items-center justify-between">
@@ -204,7 +204,7 @@ export function Sidebar({ isOpen, onClose }) {
                   <Database className="w-3 h-3 text-slate-400" />
                   <span>PostgreSQL</span>
                 </span>
-                <span className="text-[#14B8A6] font-medium">Ready</span>
+                <span className="text-[#198754] font-medium">Ready</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center space-x-1">

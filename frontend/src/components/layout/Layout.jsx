@@ -7,8 +7,8 @@ export function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-white text-[#374151] antialiased selection:bg-[#0F766E] selection:text-white">
-      {/* Charcoal Grey Sidebar */}
+    <div className="flex min-h-screen bg-white text-[#263746] antialiased selection:bg-[#087F75] selection:text-white">
+      {/* Dark Slate Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}

@@ -129,11 +129,11 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#374151] flex flex-col font-sans selection:bg-[#0F766E] selection:text-white">
+    <div className="min-h-screen bg-white text-[#263746] flex flex-col font-sans selection:bg-[#087F75] selection:text-white">
       {/* Top Institutional Banner */}
-      <header className="border-b border-[#28343C] bg-[#36454F] px-4 sm:px-8 py-3 flex items-center justify-between text-white">
+      <header className="border-b border-[#28343C] bg-[#263746] px-4 sm:px-8 py-3 flex items-center justify-between text-white">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-[#0F766E] flex items-center justify-center text-white shadow-sm shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#087F75] flex items-center justify-center text-white shadow-sm shrink-0">
             <Shield className="w-4 h-4" />
           </div>
           <div>
@@ -160,9 +160,9 @@ export function Login() {
 
       {/* Main Split Authentication Layout */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-12">
-        <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-[#E5E7EB] shadow-lg overflow-hidden bg-white">
+        <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 rounded-2xl border border-[#D9DEE3] shadow-lg overflow-hidden bg-white">
           {/* Left Panel: Charcoal Grey Background with Dynamic Context */}
-          <div className="lg:col-span-5 bg-[#36454F] text-white p-6 sm:p-10 flex flex-col justify-between space-y-8 border-b lg:border-b-0 lg:border-r border-[#28343C]">
+          <div className="lg:col-span-5 bg-[#263746] text-white p-6 sm:p-10 flex flex-col justify-between space-y-8 border-b lg:border-b-0 lg:border-r border-[#28343C]">
             <div className="space-y-6">
               {/* Authorized Access Label */}
               <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#28343C] border border-slate-600/50 text-xs font-medium text-teal-200">
@@ -289,7 +289,7 @@ export function Login() {
                   onClick={() => handleDemoLogin('officer')}
                   className={`p-2 rounded-lg text-xs font-medium text-left border transition cursor-pointer disabled:opacity-50 ${
                     selectedRole === 'officer'
-                      ? 'bg-[#0F766E] text-white border-teal-400 font-semibold shadow-xs'
+                      ? 'bg-[#087F75] text-white border-teal-400 font-semibold shadow-xs'
                       : 'bg-[#1F2930] text-slate-300 border-slate-700 hover:text-white hover:bg-slate-800'
                   }`}
                 >
@@ -311,7 +311,7 @@ export function Login() {
                   onClick={() => handleDemoLogin('institute')}
                   className={`p-2 rounded-lg text-xs font-medium text-left border transition cursor-pointer disabled:opacity-50 ${
                     selectedRole === 'institute'
-                      ? 'bg-[#0F766E] text-white border-teal-400 font-semibold shadow-xs'
+                      ? 'bg-[#087F75] text-white border-teal-400 font-semibold shadow-xs'
                       : 'bg-[#1F2930] text-slate-300 border-slate-700 hover:text-white hover:bg-slate-800'
                   }`}
                 >
@@ -334,17 +334,17 @@ export function Login() {
           <div className="lg:col-span-7 bg-white p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
             {/* Role Tab Selector at Top of Form */}
             <div className="mb-6">
-              <div className="flex rounded-lg border border-[#E5E7EB] bg-[#F5F7F7] p-1 text-xs font-medium mb-4">
+              <div className="flex rounded-lg border border-[#D9DEE3] bg-[#F5F7F7] p-1 text-xs font-medium mb-4">
                 <button
                   type="button"
                   onClick={() => handleRoleSelect('officer')}
                   className={`flex-1 py-2 rounded-md flex items-center justify-center space-x-1.5 transition ${
                     selectedRole === 'officer'
-                      ? 'bg-white text-[#36454F] font-bold shadow-xs border border-[#E5E7EB]'
-                      : 'text-[#6B7280] hover:text-[#36454F]'
+                      ? 'bg-white text-[#263746] font-bold shadow-xs border border-[#D9DEE3]'
+                      : 'text-[#718096] hover:text-[#263746]'
                   }`}
                 >
-                  <Shield className="w-3.5 h-3.5 text-[#0F766E]" />
+                  <Shield className="w-3.5 h-3.5 text-[#087F75]" />
                   <span>AICTE Central Officer</span>
                 </button>
 
@@ -353,21 +353,21 @@ export function Login() {
                   onClick={() => handleRoleSelect('institute')}
                   className={`flex-1 py-2 rounded-md flex items-center justify-center space-x-1.5 transition ${
                     selectedRole === 'institute'
-                      ? 'bg-white text-[#36454F] font-bold shadow-xs border border-[#E5E7EB]'
-                      : 'text-[#6B7280] hover:text-[#36454F]'
+                      ? 'bg-white text-[#263746] font-bold shadow-xs border border-[#D9DEE3]'
+                      : 'text-[#718096] hover:text-[#263746]'
                   }`}
                 >
-                  <Building2 className="w-3.5 h-3.5 text-[#0F766E]" />
+                  <Building2 className="w-3.5 h-3.5 text-[#087F75]" />
                   <span>Technical Institute Portal</span>
                 </button>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-bold text-[#36454F] tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#263746] tracking-tight">
                 {selectedRole === 'officer'
                   ? 'Council Officer Sign In'
                   : 'Institute Representative Sign In'}
               </h2>
-              <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
+              <p className="text-xs sm:text-sm text-[#718096] mt-1">
                 {selectedRole === 'officer'
                   ? 'Access the Central AICTE Grievance Intelligence & Monitoring Grid.'
                   : 'Access the college dashboard to send complaints and track resolution with AICTE.'}
@@ -378,7 +378,7 @@ export function Login() {
             {errorMessage && (
               <div
                 role="alert"
-                className="mb-5 p-3.5 rounded-xl bg-[#B91C1C]/10 border border-[#B91C1C]/25 text-[#B91C1C] flex items-start space-x-2.5 text-xs animate-in fade-in"
+                className="mb-5 p-3.5 rounded-xl bg-[#DC3545]/10 border border-[#DC3545]/25 text-[#DC3545] flex items-start space-x-2.5 text-xs animate-in fade-in"
               >
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span className="leading-relaxed font-medium">{errorMessage}</span>
@@ -390,14 +390,14 @@ export function Login() {
               <div>
                 <label
                   htmlFor="user-email"
-                  className="block text-xs font-semibold text-[#374151] mb-1.5"
+                  className="block text-xs font-semibold text-[#263746] mb-1.5"
                 >
                   {selectedRole === 'officer'
                     ? 'Official AICTE Email Address'
                     : 'Institutional Email Address'}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6B7280]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#718096]">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
@@ -414,7 +414,7 @@ export function Login() {
                         : 'institute@apex.edu.in'
                     }
                     disabled={loading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-[#6B7280] focus:outline-hidden focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors disabled:opacity-50"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#D9DEE3] rounded-lg text-sm text-[#263746] placeholder-[#718096] focus:outline-hidden focus:border-[#087F75] focus:ring-1 focus:ring-[#087F75] transition-colors disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -424,14 +424,14 @@ export function Login() {
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="user-password"
-                    className="block text-xs font-semibold text-[#374151]"
+                    className="block text-xs font-semibold text-[#263746]"
                   >
                     Password
                   </label>
-                  <span className="text-[11px] text-[#6B7280]">Case-sensitive</span>
+                  <span className="text-[11px] text-[#718096]">Case-sensitive</span>
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6B7280]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#718096]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -444,14 +444,14 @@ export function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     disabled={loading}
-                    className="w-full pl-10 pr-11 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-[#6B7280] focus:outline-hidden focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors disabled:opacity-50"
+                    className="w-full pl-10 pr-11 py-2.5 bg-white border border-[#D9DEE3] rounded-lg text-sm text-[#263746] placeholder-[#718096] focus:outline-hidden focus:border-[#087F75] focus:ring-1 focus:ring-[#087F75] transition-colors disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={0}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#6B7280] hover:text-[#374151] focus:outline-hidden"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#718096] hover:text-[#263746] focus:outline-hidden"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -467,7 +467,7 @@ export function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-medium text-sm transition-colors shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#0F766E] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-lg bg-[#087F75] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-medium text-sm transition-colors shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#087F75] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -489,13 +489,13 @@ export function Login() {
             </form>
 
             {/* 1-Click Instant Demo Login Buttons for Both Roles */}
-            <div className="mt-6 pt-5 border-t border-[#E5E7EB] space-y-3">
+            <div className="mt-6 pt-5 border-t border-[#D9DEE3] space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-[#36454F] uppercase tracking-wider">
-                  <Zap className="w-3.5 h-3.5 text-[#0F766E] fill-[#0F766E]" />
+                <div className="flex items-center space-x-1.5 text-xs font-bold text-[#263746] uppercase tracking-wider">
+                  <Zap className="w-3.5 h-3.5 text-[#087F75] fill-[#087F75]" />
                   <span>Instant 1-Click Demo Login</span>
                 </div>
-                <span className="text-[10px] font-semibold text-[#0F766E] bg-teal-50 border border-teal-200 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-semibold text-[#087F75] bg-teal-50 border border-teal-200 px-2 py-0.5 rounded">
                   No Typing Required
                 </span>
               </div>
@@ -508,7 +508,7 @@ export function Login() {
                   onClick={() => handleDemoLogin('officer')}
                   className="p-3 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-50 hover:border-teal-400 text-left transition flex items-start space-x-2.5 group cursor-pointer disabled:opacity-50 shadow-2xs"
                 >
-                  <div className="p-2 rounded-lg bg-[#0F766E] text-white shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                  <div className="p-2 rounded-lg bg-[#087F75] text-white shrink-0 group-hover:scale-105 transition-transform shadow-xs">
                     {demoLoadingRole === 'officer' ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
@@ -517,15 +517,15 @@ export function Login() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#36454F] group-hover:text-[#0F766E]">
+                      <span className="text-xs font-bold text-[#263746] group-hover:text-[#087F75]">
                         AICTE Officer
                       </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#0F766E] group-hover:translate-x-0.5 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 text-[#087F75] group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                    <p className="text-[10px] text-[#6B7280] truncate mt-0.5">
+                    <p className="text-[10px] text-[#718096] truncate mt-0.5">
                       officer@aicte-india.org
                     </p>
-                    <span className="inline-block mt-1 text-[9px] font-semibold text-[#0F766E] bg-white border border-teal-200 px-1.5 py-0.5 rounded">
+                    <span className="inline-block mt-1 text-[9px] font-semibold text-[#087F75] bg-white border border-teal-200 px-1.5 py-0.5 rounded">
                       Approval Bureau • Case Grid
                     </span>
                   </div>
@@ -538,7 +538,7 @@ export function Login() {
                   onClick={() => handleDemoLogin('institute')}
                   className="p-3 rounded-xl border border-slate-200 bg-[#F5F7F7] hover:bg-slate-100 hover:border-slate-300 text-left transition flex items-start space-x-2.5 group cursor-pointer disabled:opacity-50 shadow-2xs"
                 >
-                  <div className="p-2 rounded-lg bg-[#36454F] text-white shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                  <div className="p-2 rounded-lg bg-[#263746] text-white shrink-0 group-hover:scale-105 transition-transform shadow-xs">
                     {demoLoadingRole === 'institute' ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
@@ -547,15 +547,15 @@ export function Login() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#36454F] group-hover:text-[#0F766E]">
+                      <span className="text-xs font-bold text-[#263746] group-hover:text-[#087F75]">
                         Institute Portal
                       </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#36454F] group-hover:translate-x-0.5 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 text-[#263746] group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                    <p className="text-[10px] text-[#6B7280] truncate mt-0.5">
+                    <p className="text-[10px] text-[#718096] truncate mt-0.5">
                       institute@apex.edu.in
                     </p>
-                    <span className="inline-block mt-1 text-[9px] font-semibold text-[#36454F] bg-white border border-slate-300 px-1.5 py-0.5 rounded">
+                    <span className="inline-block mt-1 text-[9px] font-semibold text-[#263746] bg-white border border-slate-300 px-1.5 py-0.5 rounded">
                       Apex Institute • Send Cases
                     </span>
                   </div>
@@ -564,9 +564,9 @@ export function Login() {
             </div>
 
             {/* Subtle Footer */}
-            <div className="mt-8 pt-4 border-t border-[#E5E7EB] text-center space-y-1">
-              <div className="flex items-center justify-center space-x-1.5 text-xs font-medium text-[#36454F]">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#0F766E]" />
+            <div className="mt-8 pt-4 border-t border-[#D9DEE3] text-center space-y-1">
+              <div className="flex items-center justify-center space-x-1.5 text-xs font-medium text-[#263746]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#087F75]" />
                 <span>
                   Active Role Mode:{' '}
                   <strong>
@@ -574,7 +574,7 @@ export function Login() {
                   </strong>
                 </span>
               </div>
-              <p className="text-[11px] text-[#6B7280]">
+              <p className="text-[11px] text-[#718096]">
                 Protected under IT Act & AICTE Redressal Regulations. Unauthorized attempts are logged.
               </p>
             </div>
@@ -583,7 +583,7 @@ export function Login() {
       </main>
 
       {/* Global Footer */}
-      <footer className="border-t border-[#E5E7EB] bg-white py-3 px-4 text-center text-xs text-[#6B7280]">
+      <footer className="border-t border-[#D9DEE3] bg-white py-3 px-4 text-center text-xs text-[#718096]">
         AICTE Multi-Bureau Complaint Intelligence • Smart India Hackathon 2026
       </footer>
     </div>

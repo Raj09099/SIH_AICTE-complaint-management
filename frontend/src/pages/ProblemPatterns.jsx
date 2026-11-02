@@ -197,16 +197,16 @@ export function ProblemPatterns() {
   return (
     <div className="space-y-6 bg-white min-h-[calc(100vh-80px)] pb-12">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#E5E7EB] pb-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#D9DEE3] pb-5">
         <div>
-          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20 mb-2">
+          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#087F75]/10 text-[#087F75] border border-[#087F75]/20 mb-2">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Feature 2: Multi-Institution Intelligence</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#36454F]">
+          <h1 className="text-2xl font-bold tracking-tight text-[#263746]">
             Multi-Institution Problem Pattern Detector
           </h1>
-          <p className="text-sm text-[#6B7280] mt-1">
+          <p className="text-sm text-[#718096] mt-1">
             Unsupervised scikit-learn TF-IDF and cosine similarity clustering to identify systemic
             grievance trends across technical institutions.
           </p>
@@ -217,10 +217,10 @@ export function ProblemPatterns() {
             type="button"
             onClick={() => fetchPatterns(true)}
             disabled={loading || isRefreshing || isClustering}
-            className="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-medium text-[#374151] bg-[#F5F7F7] hover:bg-[#E5E7EB] border border-[#E5E7EB] rounded-lg transition-colors disabled:opacity-50"
+            className="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-medium text-[#263746] bg-[#F5F7F7] hover:bg-[#D9DEE3] border border-[#D9DEE3] rounded-lg transition-colors disabled:opacity-50"
             title="Refresh current patterns"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#0F766E]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#087F75]' : ''}`} />
             <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
 
@@ -228,7 +228,7 @@ export function ProblemPatterns() {
             type="button"
             onClick={handleRunClustering}
             disabled={loading || isClustering}
-            className="inline-flex items-center space-x-2 px-4 py-2 text-xs font-medium text-white bg-[#0F766E] hover:bg-[#0D655E] rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            className="inline-flex items-center space-x-2 px-4 py-2 text-xs font-medium text-white bg-[#087F75] hover:bg-[#0D655E] rounded-lg shadow-sm transition-colors disabled:opacity-50"
           >
             {isClustering ? (
               <>
@@ -247,7 +247,7 @@ export function ProblemPatterns() {
 
       {/* Action / Error Feedback Notifications */}
       {feedback && (
-        <div className="p-3.5 rounded-lg border border-[#15803D]/30 bg-[#15803D]/10 text-[#15803D] flex items-center justify-between text-xs font-medium">
+        <div className="p-3.5 rounded-lg border border-[#198754]/30 bg-[#198754]/10 text-[#198754] flex items-center justify-between text-xs font-medium">
           <div className="flex items-center space-x-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{feedback}</span>
@@ -255,7 +255,7 @@ export function ProblemPatterns() {
           <button
             type="button"
             onClick={() => setFeedback(null)}
-            className="text-[#15803D] hover:underline text-[11px]"
+            className="text-[#198754] hover:underline text-[11px]"
           >
             Dismiss
           </button>
@@ -263,7 +263,7 @@ export function ProblemPatterns() {
       )}
 
       {error && (
-        <div className="p-3.5 rounded-lg border border-[#B91C1C]/30 bg-[#B91C1C]/10 text-[#B91C1C] flex items-center justify-between text-xs font-medium">
+        <div className="p-3.5 rounded-lg border border-[#DC3545]/30 bg-[#DC3545]/10 text-[#DC3545] flex items-center justify-between text-xs font-medium">
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
@@ -271,7 +271,7 @@ export function ProblemPatterns() {
           <button
             type="button"
             onClick={() => fetchPatterns()}
-            className="text-[#B91C1C] hover:underline text-[11px]"
+            className="text-[#DC3545] hover:underline text-[11px]"
           >
             Retry
           </button>
@@ -280,79 +280,79 @@ export function ProblemPatterns() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#E5E7EB] shadow-xs">
+        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#D9DEE3] shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#6B7280]">Discovered Patterns</span>
-            <div className="p-2 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+            <span className="text-xs font-medium text-[#718096]">Discovered Patterns</span>
+            <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
               <Layers className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-[#36454F]">{summaryData.total}</span>
-            <span className="text-[11px] text-[#6B7280]">systemic groups</span>
+            <span className="text-2xl font-bold text-[#263746]">{summaryData.total}</span>
+            <span className="text-[11px] text-[#718096]">systemic groups</span>
           </div>
-          <p className="text-[11px] text-[#6B7280] mt-1">Cross-institution qualified</p>
+          <p className="text-[11px] text-[#718096] mt-1">Cross-institution qualified</p>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#E5E7EB] shadow-xs">
+        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#D9DEE3] shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#6B7280]">Affected Institutions</span>
-            <div className="p-2 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+            <span className="text-xs font-medium text-[#718096]">Affected Institutions</span>
+            <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-[#36454F]">
+            <span className="text-2xl font-bold text-[#263746]">
               {summaryData.totalInstitutions}
             </span>
-            <span className="text-[11px] text-[#6B7280]">colleges involved</span>
+            <span className="text-[11px] text-[#718096]">colleges involved</span>
           </div>
-          <p className="text-[11px] text-[#6B7280] mt-1">Under AICTE jurisdiction</p>
+          <p className="text-[11px] text-[#718096] mt-1">Under AICTE jurisdiction</p>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#E5E7EB] shadow-xs">
+        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#D9DEE3] shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#6B7280]">Grievances in Patterns</span>
-            <div className="p-2 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+            <span className="text-xs font-medium text-[#718096]">Grievances in Patterns</span>
+            <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
               <FileText className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-[#36454F]">{totalGrievancesInPatterns}</span>
-            <span className="text-[11px] text-[#6B7280]">
+            <span className="text-2xl font-bold text-[#263746]">{totalGrievancesInPatterns}</span>
+            <span className="text-[11px] text-[#718096]">
               of {summaryData.totalAnalyzed} analyzed
             </span>
           </div>
-          <p className="text-[11px] text-[#6B7280] mt-1">Filtered by topical cohesion</p>
+          <p className="text-[11px] text-[#718096] mt-1">Filtered by topical cohesion</p>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#E5E7EB] shadow-xs">
+        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-[#D9DEE3] shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#6B7280]">TF-IDF Similarity Cutoff</span>
-            <div className="p-2 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+            <span className="text-xs font-medium text-[#718096]">TF-IDF Similarity Cutoff</span>
+            <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
               <SlidersHorizontal className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-[#36454F]">
+            <span className="text-2xl font-bold text-[#263746]">
               {formatPercentage(summaryData.thresholdUsed)}
             </span>
-            <span className="text-[11px] text-[#6B7280]">
+            <span className="text-[11px] text-[#718096]">
               (avg conf: {formatPercentage(avgClusterConfidence)})
             </span>
           </div>
-          <p className="text-[11px] text-[#6B7280] mt-1">Min {minInstitutions} distinct institutions</p>
+          <p className="text-[11px] text-[#718096] mt-1">Min {minInstitutions} distinct institutions</p>
         </div>
       </div>
 
       {/* Filter and Configuration Toolbar */}
-      <div className="bg-[#F5F7F7] p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+      <div className="bg-[#F5F7F7] p-4 rounded-xl border border-[#D9DEE3] space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-[#36454F]">
-            <SlidersHorizontal className="w-4 h-4 text-[#0F766E]" />
+          <div className="flex items-center space-x-2 text-xs font-semibold text-[#263746]">
+            <SlidersHorizontal className="w-4 h-4 text-[#087F75]" />
             <span>Clustering Parameters & Category Filters</span>
           </div>
-          <div className="text-[11px] text-[#6B7280]">
+          <div className="text-[11px] text-[#718096]">
             Adjust threshold and constraints to calibrate pattern discovery sensitivity.
           </div>
         </div>
@@ -360,13 +360,13 @@ export function ProblemPatterns() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {/* Category Filter */}
           <div>
-            <label className="block text-[11px] font-medium text-[#6B7280] mb-1">
+            <label className="block text-[11px] font-medium text-[#718096] mb-1">
               Grievance Category
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full text-xs bg-white text-[#374151] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#0F766E]"
+              className="w-full text-xs bg-white text-[#263746] border border-[#D9DEE3] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#087F75]"
             >
               {CATEGORY_OPTIONS.map((cat) => (
                 <option key={cat} value={cat}>
@@ -378,13 +378,13 @@ export function ProblemPatterns() {
 
           {/* Bureau Filter */}
           <div>
-            <label className="block text-[11px] font-medium text-[#6B7280] mb-1">
+            <label className="block text-[11px] font-medium text-[#718096] mb-1">
               AICTE Bureau / Cell
             </label>
             <select
               value={selectedBureau}
               onChange={(e) => setSelectedBureau(e.target.value)}
-              className="w-full text-xs bg-white text-[#374151] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#0F766E]"
+              className="w-full text-xs bg-white text-[#263746] border border-[#D9DEE3] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#087F75]"
             >
               {BUREAU_OPTIONS.map((bur) => (
                 <option key={bur} value={bur}>
@@ -396,9 +396,9 @@ export function ProblemPatterns() {
 
           {/* Similarity Threshold Slider */}
           <div>
-            <div className="flex items-center justify-between text-[11px] font-medium text-[#6B7280] mb-1">
+            <div className="flex items-center justify-between text-[11px] font-medium text-[#718096] mb-1">
               <span>Similarity Threshold:</span>
-              <span className="font-semibold text-[#0F766E]">
+              <span className="font-semibold text-[#087F75]">
                 {(threshold * 100).toFixed(0)}%
               </span>
             </div>
@@ -409,19 +409,19 @@ export function ProblemPatterns() {
               step="0.05"
               value={threshold}
               onChange={(e) => setThreshold(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-[#E5E7EB] rounded-lg appearance-none cursor-pointer accent-[#0F766E]"
+              className="w-full h-1.5 bg-[#D9DEE3] rounded-lg appearance-none cursor-pointer accent-[#087F75]"
             />
           </div>
 
           {/* Min Institutions Selector */}
           <div>
-            <label className="block text-[11px] font-medium text-[#6B7280] mb-1">
+            <label className="block text-[11px] font-medium text-[#718096] mb-1">
               Min Distinct Institutions
             </label>
             <select
               value={minInstitutions}
               onChange={(e) => setMinInstitutions(parseInt(e.target.value, 10))}
-              className="w-full text-xs bg-white text-[#374151] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#0F766E]"
+              className="w-full text-xs bg-white text-[#263746] border border-[#D9DEE3] rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:border-[#087F75]"
             >
               <option value={2}>2+ Technical Institutions</option>
               <option value={3}>3+ Technical Institutions</option>
@@ -435,25 +435,25 @@ export function ProblemPatterns() {
       {/* Discovered Patterns List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#36454F] flex items-center space-x-2">
+          <h2 className="text-base font-semibold text-[#263746] flex items-center space-x-2">
             <span>Discovered Multi-Institution Patterns</span>
-            <span className="text-xs font-normal text-[#6B7280]">
+            <span className="text-xs font-normal text-[#718096]">
               ({patterns.length} pattern{patterns.length === 1 ? '' : 's'})
             </span>
           </h2>
-          <span className="text-xs text-[#6B7280]">
+          <span className="text-xs text-[#718096]">
             Ranked by Systemic Severity (Institutions × Volume)
           </span>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="p-12 text-center bg-white rounded-xl border border-[#E5E7EB] space-y-3">
-            <RefreshCw className="w-8 h-8 text-[#0F766E] animate-spin mx-auto" />
-            <h3 className="text-sm font-semibold text-[#36454F]">
+          <div className="p-12 text-center bg-white rounded-xl border border-[#D9DEE3] space-y-3">
+            <RefreshCw className="w-8 h-8 text-[#087F75] animate-spin mx-auto" />
+            <h3 className="text-sm font-semibold text-[#263746]">
               Executing Unsupervised Pattern Discovery...
             </h3>
-            <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+            <p className="text-xs text-[#718096] max-w-sm mx-auto">
               Analyzing complaint texts, institutional affiliations, and categories using scikit-learn
               TF-IDF and cosine distance clustering.
             </p>
@@ -462,14 +462,14 @@ export function ProblemPatterns() {
 
         {/* Empty State */}
         {!loading && patterns.length === 0 && (
-          <div className="p-12 text-center bg-[#F5F7F7] rounded-xl border border-[#E5E7EB] space-y-3">
-            <div className="w-12 h-12 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center mx-auto text-[#6B7280]">
+          <div className="p-12 text-center bg-[#F5F7F7] rounded-xl border border-[#D9DEE3] space-y-3">
+            <div className="w-12 h-12 rounded-full bg-white border border-[#D9DEE3] flex items-center justify-center mx-auto text-[#718096]">
               <Layers className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-semibold text-[#36454F]">
+            <h3 className="text-sm font-semibold text-[#263746]">
               No Multi-Institution Patterns Discovered
             </h3>
-            <p className="text-xs text-[#6B7280] max-w-md mx-auto">
+            <p className="text-xs text-[#718096] max-w-md mx-auto">
               No complaint groups meet the current similarity threshold of{' '}
               {(threshold * 100).toFixed(0)}% across {minInstitutions} or more distinct institutions.
               Try lowering the threshold or clearing category/bureau filters.
@@ -482,7 +482,7 @@ export function ProblemPatterns() {
                 setSelectedCategory('All Categories');
                 setSelectedBureau('All Bureaus');
               }}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-[#0F766E] bg-white border border-[#0F766E]/30 rounded-lg hover:bg-[#0F766E]/5"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-[#087F75] bg-white border border-[#087F75]/30 rounded-lg hover:bg-[#087F75]/5"
             >
               <span>Reset Filters to Relaxed Threshold (20%)</span>
             </button>
@@ -497,7 +497,7 @@ export function ProblemPatterns() {
             return (
               <div
                 key={pattern.pattern_code}
-                className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden transition-all duration-200 hover:border-[#0F766E]/40"
+                className="bg-white rounded-xl border border-[#D9DEE3] shadow-xs overflow-hidden transition-all duration-200 hover:border-[#087F75]/40"
               >
                 {/* Card Header & Summary Bar */}
                 <div
@@ -507,11 +507,11 @@ export function ProblemPatterns() {
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-[#087F75]/10 text-[#087F75] border border-[#087F75]/20">
                           {pattern.pattern_code}
                         </span>
 
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#36454F]/10 text-[#36454F] border border-[#36454F]/20">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#263746]/10 text-[#263746] border border-[#263746]/20">
                           {pattern.category}
                         </span>
 
@@ -519,10 +519,10 @@ export function ProblemPatterns() {
                           <span
                             className={`px-2 py-0.5 rounded-full text-[11px] font-medium border flex items-center space-x-1 ${
                               pattern.trend_direction === 'Surging'
-                                ? 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/30'
+                                ? 'bg-[#D97736]/10 text-[#D97736] border-[#D97736]/30'
                                 : pattern.trend_direction === 'Emerging'
-                                ? 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/30'
-                                : 'bg-[#6B7280]/10 text-[#6B7280] border-[#E5E7EB]'
+                                ? 'bg-[#087F75]/10 text-[#087F75] border-[#087F75]/30'
+                                : 'bg-[#718096]/10 text-[#718096] border-[#D9DEE3]'
                             }`}
                           >
                             <TrendingUp className="w-3 h-3" />
@@ -531,48 +531,48 @@ export function ProblemPatterns() {
                         )}
 
                         {pattern.bureau && (
-                          <span className="text-[11px] text-[#6B7280] hidden sm:inline">
+                          <span className="text-[11px] text-[#718096] hidden sm:inline">
                             • {pattern.bureau}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-base font-semibold text-[#36454F] leading-snug">
+                      <h3 className="text-base font-semibold text-[#263746] leading-snug">
                         {pattern.title}
                       </h3>
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
                       {/* Metric summary pills */}
-                      <div className="flex items-center space-x-3 text-xs text-[#374151]">
+                      <div className="flex items-center space-x-3 text-xs text-[#263746]">
                         <div
-                          className="flex items-center space-x-1 px-2 py-1 rounded bg-[#F5F7F7] border border-[#E5E7EB]"
+                          className="flex items-center space-x-1 px-2 py-1 rounded bg-[#F5F7F7] border border-[#D9DEE3]"
                           title="Distinct technical colleges reporting this grievance"
                         >
-                          <Building2 className="w-3.5 h-3.5 text-[#0F766E]" />
-                          <span className="font-semibold text-[#36454F]">
+                          <Building2 className="w-3.5 h-3.5 text-[#087F75]" />
+                          <span className="font-semibold text-[#263746]">
                             {pattern.affected_institutions_count}
                           </span>
-                          <span className="text-[#6B7280]">Colleges</span>
+                          <span className="text-[#718096]">Colleges</span>
                         </div>
 
                         <div
-                          className="flex items-center space-x-1 px-2 py-1 rounded bg-[#F5F7F7] border border-[#E5E7EB]"
+                          className="flex items-center space-x-1 px-2 py-1 rounded bg-[#F5F7F7] border border-[#D9DEE3]"
                           title="Total complaints clustered in this pattern"
                         >
-                          <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
-                          <span className="font-semibold text-[#36454F]">
+                          <FileText className="w-3.5 h-3.5 text-[#087F75]" />
+                          <span className="font-semibold text-[#263746]">
                             {pattern.complaint_count}
                           </span>
-                          <span className="text-[#6B7280]">Cases</span>
+                          <span className="text-[#718096]">Cases</span>
                         </div>
 
                         <div
-                          className="hidden sm:flex items-center space-x-1 px-2 py-1 rounded bg-[#F5F7F7] border border-[#E5E7EB]"
+                          className="hidden sm:flex items-center space-x-1 px-2 py-1 rounded bg-[#F5F7F7] border border-[#D9DEE3]"
                           title="Average TF-IDF Cosine Semantic Cohesion"
                         >
-                          <span className="text-[#6B7280]">Cohesion:</span>
-                          <span className="font-semibold text-[#0F766E]">
+                          <span className="text-[#718096]">Cohesion:</span>
+                          <span className="font-semibold text-[#087F75]">
                             {(pattern.cluster_score * 100).toFixed(0)}%
                           </span>
                         </div>
@@ -581,7 +581,7 @@ export function ProblemPatterns() {
                       <button
                         type="button"
                         aria-label="Toggle pattern details"
-                        className="p-1 rounded-md text-[#6B7280] hover:bg-[#E5E7EB] transition-colors"
+                        className="p-1 rounded-md text-[#718096] hover:bg-[#D9DEE3] transition-colors"
                       >
                         {isExpanded ? (
                           <ChevronUp className="w-4 h-4" />
@@ -593,21 +593,21 @@ export function ProblemPatterns() {
                   </div>
 
                   {/* Summary Narrative snippet */}
-                  <p className="text-xs text-[#6B7280] mt-2 line-clamp-2">
+                  <p className="text-xs text-[#718096] mt-2 line-clamp-2">
                     {pattern.description}
                   </p>
 
                   {/* Keywords chips preview */}
                   {pattern.keywords && pattern.keywords.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-                      <span className="text-[11px] text-[#6B7280] mr-1 flex items-center space-x-1">
-                        <Tag className="w-3 h-3 text-[#0F766E]" />
+                      <span className="text-[11px] text-[#718096] mr-1 flex items-center space-x-1">
+                        <Tag className="w-3 h-3 text-[#087F75]" />
                         <span>Key Terms:</span>
                       </span>
                       {pattern.keywords.map((kw) => (
                         <span
                           key={kw}
-                          className="px-2 py-0.5 rounded text-[11px] bg-[#F5F7F7] text-[#374151] border border-[#E5E7EB]"
+                          className="px-2 py-0.5 rounded text-[11px] bg-[#F5F7F7] text-[#263746] border border-[#D9DEE3]"
                         >
                           {kw}
                         </span>
@@ -618,15 +618,15 @@ export function ProblemPatterns() {
 
                 {/* Expanded Details Body */}
                 {isExpanded && (
-                  <div className="border-t border-[#E5E7EB] bg-[#FFFFFF] p-4 sm:p-5 space-y-5">
+                  <div className="border-t border-[#D9DEE3] bg-[#FFFFFF] p-4 sm:p-5 space-y-5">
                     {/* Representative Complaint Quote Box */}
                     {pattern.representative_text && (
-                      <div className="p-3.5 rounded-lg bg-[#F5F7F7] border border-[#E5E7EB] space-y-1">
-                        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#36454F]">
-                          <Info className="w-3.5 h-3.5 text-[#0F766E]" />
+                      <div className="p-3.5 rounded-lg bg-[#F5F7F7] border border-[#D9DEE3] space-y-1">
+                        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#263746]">
+                          <Info className="w-3.5 h-3.5 text-[#087F75]" />
                           <span>Representative Grievance Narrative (Cluster Medoid)</span>
                         </div>
-                        <p className="text-xs text-[#374151] italic leading-relaxed">
+                        <p className="text-xs text-[#263746] italic leading-relaxed">
                           "{pattern.representative_text}"
                         </p>
                       </div>
@@ -635,20 +635,20 @@ export function ProblemPatterns() {
                     {/* Affected Institutions Table */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-[#36454F] flex items-center space-x-1.5">
-                          <Building2 className="w-3.5 h-3.5 text-[#0F766E]" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-[#263746] flex items-center space-x-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-[#087F75]" />
                           <span>
                             Affected Technical Institutions ({pattern.affected_institutions?.length || 0})
                           </span>
                         </h4>
-                        <span className="text-[11px] text-[#6B7280]">
+                        <span className="text-[11px] text-[#718096]">
                           Must span 2+ colleges to qualify as a multi-institution pattern
                         </span>
                       </div>
 
-                      <div className="overflow-x-auto rounded-lg border border-[#E5E7EB]">
-                        <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-xs">
-                          <thead className="bg-[#F5F7F7] text-[#374151] font-semibold">
+                      <div className="overflow-x-auto rounded-lg border border-[#D9DEE3]">
+                        <table className="min-w-full divide-y divide-[#D9DEE3] text-left text-xs">
+                          <thead className="bg-[#F5F7F7] text-[#263746] font-semibold">
                             <tr>
                               <th className="py-2 px-3">AICTE ID</th>
                               <th className="py-2 px-3">Institution Name</th>
@@ -657,26 +657,26 @@ export function ProblemPatterns() {
                               <th className="py-2 px-3 text-right">Directory</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-[#E5E7EB] bg-white text-[#374151]">
+                          <tbody className="divide-y divide-[#D9DEE3] bg-white text-[#263746]">
                             {pattern.affected_institutions?.map((inst) => (
                               <tr key={inst.id} className="hover:bg-[#F5F7F7]/50 transition-colors">
-                                <td className="py-2 px-3 font-mono font-medium text-[#0F766E]">
+                                <td className="py-2 px-3 font-mono font-medium text-[#087F75]">
                                   {inst.aicte_id}
                                 </td>
-                                <td className="py-2 px-3 font-medium text-[#36454F]">
+                                <td className="py-2 px-3 font-medium text-[#263746]">
                                   {inst.name}
                                 </td>
-                                <td className="py-2 px-3 text-[#6B7280]">
+                                <td className="py-2 px-3 text-[#718096]">
                                   {inst.city ? `${inst.city}, ` : ''}
                                   {inst.state || '—'}
                                 </td>
-                                <td className="py-2 px-3 text-right font-semibold text-[#36454F]">
+                                <td className="py-2 px-3 text-right font-semibold text-[#263746]">
                                   {inst.complaint_count}
                                 </td>
                                 <td className="py-2 px-3 text-right">
                                   <Link
                                     to={`/institutions/${inst.id}`}
-                                    className="inline-flex items-center space-x-1 text-xs text-[#0F766E] hover:underline"
+                                    className="inline-flex items-center space-x-1 text-xs text-[#087F75] hover:underline"
                                   >
                                     <span>Profile</span>
                                     <ExternalLink className="w-3 h-3" />
@@ -692,18 +692,18 @@ export function ProblemPatterns() {
                     {/* Linked Complaints Table */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-[#36454F] flex items-center space-x-1.5">
-                          <FileText className="w-3.5 h-3.5 text-[#0F766E]" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-[#263746] flex items-center space-x-1.5">
+                          <FileText className="w-3.5 h-3.5 text-[#087F75]" />
                           <span>Associated Case Complaints ({pattern.complaints?.length || 0})</span>
                         </h4>
-                        <span className="text-[11px] text-[#6B7280]">
+                        <span className="text-[11px] text-[#718096]">
                           Individual records mapped to this recurring theme
                         </span>
                       </div>
 
-                      <div className="overflow-x-auto rounded-lg border border-[#E5E7EB]">
-                        <table className="min-w-full divide-y divide-[#E5E7EB] text-left text-xs">
-                          <thead className="bg-[#F5F7F7] text-[#374151] font-semibold">
+                      <div className="overflow-x-auto rounded-lg border border-[#D9DEE3]">
+                        <table className="min-w-full divide-y divide-[#D9DEE3] text-left text-xs">
+                          <thead className="bg-[#F5F7F7] text-[#263746] font-semibold">
                             <tr>
                               <th className="py-2 px-3">Complaint No</th>
                               <th className="py-2 px-3">Institution</th>
@@ -714,19 +714,19 @@ export function ProblemPatterns() {
                               <th className="py-2 px-3 text-right">Action</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-[#E5E7EB] bg-white text-[#374151]">
+                          <tbody className="divide-y divide-[#D9DEE3] bg-white text-[#263746]">
                             {pattern.complaints?.map((c) => (
                               <tr key={c.id} className="hover:bg-[#F5F7F7]/50 transition-colors">
-                                <td className="py-2 px-3 font-mono font-medium text-[#0F766E]">
+                                <td className="py-2 px-3 font-mono font-medium text-[#087F75]">
                                   {c.complaint_no}
                                 </td>
-                                <td className="py-2 px-3 max-w-[180px] truncate text-[#36454F]" title={c.institution_name}>
+                                <td className="py-2 px-3 max-w-[180px] truncate text-[#263746]" title={c.institution_name}>
                                   {c.institution_name || `College #${c.institution_id}`}
                                 </td>
-                                <td className="py-2 px-3 max-w-[260px] truncate text-[#374151]" title={c.subject}>
+                                <td className="py-2 px-3 max-w-[260px] truncate text-[#263746]" title={c.subject}>
                                   {c.subject}
                                 </td>
-                                <td className="py-2 px-3 text-[#6B7280] whitespace-nowrap">
+                                <td className="py-2 px-3 text-[#718096] whitespace-nowrap">
                                   {formatDate(c.filing_date)}
                                 </td>
                                 <td className="py-2 px-3">
@@ -738,7 +738,7 @@ export function ProblemPatterns() {
                                 <td className="py-2 px-3 text-right">
                                   <Link
                                     to={`/complaints/${c.id}`}
-                                    className="inline-flex items-center space-x-1 text-xs text-[#0F766E] hover:underline"
+                                    className="inline-flex items-center space-x-1 text-xs text-[#087F75] hover:underline"
                                   >
                                     <span>Details</span>
                                     <ArrowRight className="w-3 h-3" />
@@ -753,23 +753,23 @@ export function ProblemPatterns() {
 
                     {/* Timeline & Monthly Distribution Summary */}
                     {pattern.trend_distribution && pattern.trend_distribution.length > 0 && (
-                      <div className="p-3 rounded-lg bg-[#F5F7F7] border border-[#E5E7EB] flex flex-wrap items-center justify-between gap-3 text-xs">
-                        <div className="flex items-center space-x-2 text-[#374151]">
-                          <Calendar className="w-4 h-4 text-[#0F766E]" />
+                      <div className="p-3 rounded-lg bg-[#F5F7F7] border border-[#D9DEE3] flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center space-x-2 text-[#263746]">
+                          <Calendar className="w-4 h-4 text-[#087F75]" />
                           <span className="font-medium">Incident Timeline:</span>
-                          <span className="text-[#6B7280]">
+                          <span className="text-[#718096]">
                             {formatDate(pattern.earliest_filing_date)} to{' '}
                             {formatDate(pattern.latest_filing_date)}
                           </span>
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <span className="text-[11px] text-[#6B7280]">Monthly Spread:</span>
+                          <span className="text-[11px] text-[#718096]">Monthly Spread:</span>
                           <div className="flex items-center space-x-1.5">
                             {pattern.trend_distribution.map((t) => (
                               <span
                                 key={t.month}
-                                className="px-2 py-0.5 rounded text-[11px] font-mono bg-white text-[#36454F] border border-[#E5E7EB]"
+                                className="px-2 py-0.5 rounded text-[11px] font-mono bg-white text-[#263746] border border-[#D9DEE3]"
                               >
                                 {t.month}: <strong>{t.count}</strong>
                               </span>

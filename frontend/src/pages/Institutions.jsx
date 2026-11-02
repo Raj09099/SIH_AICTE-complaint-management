@@ -151,19 +151,19 @@ export function Institutions() {
   return (
     <div className="space-y-6 bg-white min-h-screen">
       {/* 1. Page Header */}
-      <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white rounded-xl p-5 border border-[#D9DEE3] shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#0F766E] border border-teal-200">
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#087F75] border border-teal-200">
               Institutional Directory
             </span>
-            <span className="text-[#6B7280]">•</span>
-            <span className="text-xs font-mono text-[#6B7280]">Registry Grid</span>
+            <span className="text-[#718096]">•</span>
+            <span className="text-xs font-mono text-[#718096]">Registry Grid</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#36454F] mt-1.5">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#263746] mt-1.5">
             Institutions Directory
           </h1>
-          <p className="text-xs sm:text-sm text-[#6B7280] mt-0.5">
+          <p className="text-xs sm:text-sm text-[#718096] mt-0.5">
             Search and monitor AICTE approved institutions, grievance density, and cross-bureau compliance statuses.
           </p>
         </div>
@@ -172,104 +172,104 @@ export function Institutions() {
           type="button"
           onClick={() => fetchInstitutions(true)}
           disabled={loading || isRefreshing}
-          className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-white border border-[#E5E7EB] hover:bg-[#F5F7F7] text-[#6B7280] hover:text-[#36454F] text-xs font-medium transition shadow-sm disabled:opacity-50"
+          className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-white border border-[#D9DEE3] hover:bg-[#F5F7F7] text-[#718096] hover:text-[#263746] text-xs font-medium transition shadow-sm disabled:opacity-50"
           title="Sync from Database"
           aria-label="Sync from Database"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#0F766E]' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#087F75]' : ''}`} />
           <span>{isRefreshing ? 'Syncing...' : 'Sync Registry'}</span>
         </button>
       </div>
 
       {/* 2. KPI Telemetry Cards (Backed by actual API response) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm">
-          <div className="flex items-center justify-between text-[#6B7280] mb-2">
+        <div className="bg-white p-4 rounded-xl border border-[#D9DEE3] shadow-sm">
+          <div className="flex items-center justify-between text-[#718096] mb-2">
             <span className="text-xs font-semibold">Total Institutions</span>
-            <div className="p-1.5 rounded-lg bg-[#36454F]/10 text-[#36454F]">
+            <div className="p-1.5 rounded-lg bg-[#263746]/10 text-[#263746]">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#36454F] font-mono">
+          <p className="text-2xl font-bold text-[#263746] font-mono">
             {stats ? stats.total_institutions : total || '—'}
           </p>
-          <p className="text-[11px] text-[#6B7280] mt-1">AICTE Redressal Grid</p>
+          <p className="text-[11px] text-[#718096] mt-1">AICTE Redressal Grid</p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm">
-          <div className="flex items-center justify-between text-[#6B7280] mb-2">
+        <div className="bg-white p-4 rounded-xl border border-[#D9DEE3] shadow-sm">
+          <div className="flex items-center justify-between text-[#718096] mb-2">
             <span className="text-xs font-semibold">Total Grievances</span>
-            <div className="p-1.5 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+            <div className="p-1.5 rounded-lg bg-[#087F75]/10 text-[#087F75]">
               <FileText className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#36454F] font-mono">
+          <p className="text-2xl font-bold text-[#263746] font-mono">
             {stats ? stats.total_complaints : '—'}
           </p>
-          <p className="text-[11px] text-[#0F766E] mt-1">Cross-Bureau Inflow</p>
+          <p className="text-[11px] text-[#087F75] mt-1">Cross-Bureau Inflow</p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm">
-          <div className="flex items-center justify-between text-[#6B7280] mb-2">
+        <div className="bg-white p-4 rounded-xl border border-[#D9DEE3] shadow-sm">
+          <div className="flex items-center justify-between text-[#718096] mb-2">
             <span className="text-xs font-semibold">Open / In-Review</span>
-            <div className="p-1.5 rounded-lg bg-[#B45309]/10 text-[#B45309]">
+            <div className="p-1.5 rounded-lg bg-[#D97736]/10 text-[#D97736]">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#B45309] font-mono">
+          <p className="text-2xl font-bold text-[#D97736] font-mono">
             {stats ? stats.open_complaints : '—'}
           </p>
-          <p className="text-[11px] text-[#6B7280] mt-1">Pending Resolution</p>
+          <p className="text-[11px] text-[#718096] mt-1">Pending Resolution</p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm">
-          <div className="flex items-center justify-between text-[#6B7280] mb-2">
+        <div className="bg-white p-4 rounded-xl border border-[#D9DEE3] shadow-sm">
+          <div className="flex items-center justify-between text-[#718096] mb-2">
             <span className="text-xs font-semibold">SLA Overdue</span>
-            <div className="p-1.5 rounded-lg bg-[#B91C1C]/10 text-[#B91C1C]">
+            <div className="p-1.5 rounded-lg bg-[#DC3545]/10 text-[#DC3545]">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#B91C1C] font-mono">
+          <p className="text-2xl font-bold text-[#DC3545] font-mono">
             {stats ? stats.overdue_complaints : '—'}
           </p>
-          <p className="text-[11px] text-[#B91C1C] mt-1">Exceeded Resolution SLA</p>
+          <p className="text-[11px] text-[#DC3545] mt-1">Exceeded Resolution SLA</p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm col-span-2 sm:col-span-1">
-          <div className="flex items-center justify-between text-[#6B7280] mb-2">
+        <div className="bg-white p-4 rounded-xl border border-[#D9DEE3] shadow-sm col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between text-[#718096] mb-2">
             <span className="text-xs font-semibold">Resolved Cases</span>
-            <div className="p-1.5 rounded-lg bg-[#15803D]/10 text-[#15803D]">
+            <div className="p-1.5 rounded-lg bg-[#198754]/10 text-[#198754]">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#15803D] font-mono">
+          <p className="text-2xl font-bold text-[#198754] font-mono">
             {stats ? stats.resolved_complaints : '—'}
           </p>
-          <p className="text-[11px] text-[#15803D] mt-1">Closed with Proof</p>
+          <p className="text-[11px] text-[#198754] mt-1">Closed with Proof</p>
         </div>
       </div>
 
       {/* 3. Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm flex flex-col md:flex-row gap-3">
+      <div className="bg-white p-4 rounded-xl border border-[#D9DEE3] shadow-sm flex flex-col md:flex-row gap-3">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#718096]" />
           <input
             type="text"
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder="Search by Institution Name, AICTE Permanent ID, or City..."
-            className="w-full pl-9 pr-3 py-2 bg-[#F5F7F7] border border-[#E5E7EB] rounded-lg text-xs text-[#374151] placeholder-[#6B7280] focus:outline-none focus:border-[#0F766E] transition"
+            className="w-full pl-9 pr-3 py-2 bg-[#F5F7F7] border border-[#D9DEE3] rounded-lg text-xs text-[#263746] placeholder-[#718096] focus:outline-none focus:border-[#087F75] transition"
           />
         </div>
 
         {/* State Filter */}
         <div className="flex items-center space-x-2">
-          <Filter className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />
+          <Filter className="w-3.5 h-3.5 text-[#718096] shrink-0" />
           <select
             value={selectedState}
             onChange={handleStateChange}
-            className="bg-[#F5F7F7] border border-[#E5E7EB] rounded-lg text-xs text-[#374151] py-2 px-2.5 focus:outline-none focus:border-[#0F766E]"
+            className="bg-[#F5F7F7] border border-[#D9DEE3] rounded-lg text-xs text-[#263746] py-2 px-2.5 focus:outline-none focus:border-[#087F75]"
           >
             {INDIAN_STATES.map((st) => (
               <option key={st} value={st}>
@@ -283,7 +283,7 @@ export function Institutions() {
         <select
           value={selectedType}
           onChange={handleTypeChange}
-          className="bg-[#F5F7F7] border border-[#E5E7EB] rounded-lg text-xs text-[#374151] py-2 px-2.5 focus:outline-none focus:border-[#0F766E]"
+          className="bg-[#F5F7F7] border border-[#D9DEE3] rounded-lg text-xs text-[#263746] py-2 px-2.5 focus:outline-none focus:border-[#087F75]"
         >
           {INSTITUTION_TYPES.map((t) => (
             <option key={t} value={t}>
@@ -297,17 +297,17 @@ export function Institutions() {
       {error && (
         <div
           role="alert"
-          className="p-4 rounded-xl bg-red-50 border border-red-200 text-[#B91C1C] flex items-start space-x-3 text-xs shadow-sm"
+          className="p-4 rounded-xl bg-red-50 border border-red-200 text-[#DC3545] flex items-start space-x-3 text-xs shadow-sm"
         >
-          <AlertCircle className="w-4 h-4 text-[#B91C1C] shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-[#DC3545] shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-semibold text-[#B91C1C]">Unable to load institutions directory</p>
-            <p className="mt-0.5 text-[#374151]">{error}</p>
+            <p className="font-semibold text-[#DC3545]">Unable to load institutions directory</p>
+            <p className="mt-0.5 text-[#263746]">{error}</p>
           </div>
           <button
             type="button"
             onClick={() => fetchInstitutions(false)}
-            className="px-3 py-1.5 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white font-semibold text-xs transition"
+            className="px-3 py-1.5 rounded-lg bg-[#087F75] hover:bg-[#115E59] text-white font-semibold text-xs transition"
           >
             Retry Request
           </button>
@@ -316,35 +316,35 @@ export function Institutions() {
 
       {/* 5. Table & Content Area */}
       {loading && !isRefreshing ? (
-        <div className="bg-white p-12 rounded-xl border border-[#E5E7EB] text-center space-y-3 shadow-sm">
-          <RefreshCw className="w-7 h-7 animate-spin text-[#0F766E] mx-auto" />
-          <p className="text-sm font-semibold text-[#36454F]">Loading AICTE technical institutions from database...</p>
+        <div className="bg-white p-12 rounded-xl border border-[#D9DEE3] text-center space-y-3 shadow-sm">
+          <RefreshCw className="w-7 h-7 animate-spin text-[#087F75] mx-auto" />
+          <p className="text-sm font-semibold text-[#263746]">Loading AICTE technical institutions from database...</p>
         </div>
       ) : institutions.length === 0 ? (
-        <div className="bg-white p-12 rounded-xl border border-[#E5E7EB] text-center space-y-3 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20 flex items-center justify-center mx-auto">
+        <div className="bg-white p-12 rounded-xl border border-[#D9DEE3] text-center space-y-3 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-[#087F75]/10 text-[#087F75] border border-[#087F75]/20 flex items-center justify-center mx-auto">
             <Building2 className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-[#36454F]">No Institutions Match Your Query</h3>
-          <p className="text-xs text-[#6B7280] max-w-md mx-auto">
+          <h3 className="text-base font-bold text-[#263746]">No Institutions Match Your Query</h3>
+          <p className="text-xs text-[#718096] max-w-md mx-auto">
             Try adjusting your search keywords, state selection, or filter parameters.
           </p>
           {hasActiveFilters && (
             <button
               type="button"
               onClick={handleClearFilters}
-              className="mt-2 px-3.5 py-1.5 rounded-lg bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-semibold transition"
+              className="mt-2 px-3.5 py-1.5 rounded-lg bg-[#087F75] hover:bg-[#115E59] text-white text-xs font-semibold transition"
             >
               Clear All Filters
             </button>
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-[#D9DEE3] overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-[#E5E7EB] bg-[#F5F7F7] text-[#6B7280] font-semibold uppercase tracking-wider text-[10px]">
+                <tr className="border-b border-[#D9DEE3] bg-[#F5F7F7] text-[#718096] font-semibold uppercase tracking-wider text-[10px]">
                   <th className="py-3.5 px-4">Permanent AICTE ID</th>
                   <th className="py-3.5 px-4">Institution Name & Location</th>
                   <th className="py-3.5 px-4 hidden md:table-cell">Type</th>
@@ -353,7 +353,7 @@ export function Institutions() {
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB] text-[#374151]">
+              <tbody className="divide-y divide-[#D9DEE3] text-[#263746]">
                 {institutions.map((inst) => {
                   const hasOverdue = (inst.overdue_complaints || 0) > 0;
                   const totalComp = inst.total_complaints || 0;
@@ -365,17 +365,17 @@ export function Institutions() {
                       className="hover:bg-[#F5F7F7]/80 transition-colors cursor-pointer group"
                     >
                       {/* AICTE ID */}
-                      <td className="py-3.5 px-4 font-mono text-[#0F766E] font-semibold whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-mono text-[#087F75] font-semibold whitespace-nowrap">
                         {inst.aicte_id}
                       </td>
 
                       {/* Name & City */}
                       <td className="py-3.5 px-4">
-                        <p className="font-semibold text-[#36454F] group-hover:text-[#0F766E] transition-colors">
+                        <p className="font-semibold text-[#263746] group-hover:text-[#087F75] transition-colors">
                           {inst.name}
                         </p>
-                        <p className="text-[11px] text-[#6B7280] flex items-center space-x-1 mt-0.5">
-                          <MapPin className="w-3 h-3 text-[#6B7280] shrink-0" />
+                        <p className="text-[11px] text-[#718096] flex items-center space-x-1 mt-0.5">
+                          <MapPin className="w-3 h-3 text-[#718096] shrink-0" />
                           <span>
                             {inst.city}, {inst.state}
                           </span>
@@ -383,8 +383,8 @@ export function Institutions() {
                       </td>
 
                       {/* Type */}
-                      <td className="py-3.5 px-4 hidden md:table-cell text-[#6B7280]">
-                        <span className="px-2 py-0.5 rounded-md bg-[#F5F7F7] border border-[#E5E7EB] text-[11px] text-[#374151]">
+                      <td className="py-3.5 px-4 hidden md:table-cell text-[#718096]">
+                        <span className="px-2 py-0.5 rounded-md bg-[#F5F7F7] border border-[#D9DEE3] text-[11px] text-[#263746]">
                           {inst.institution_type || 'Technical Institute'}
                         </span>
                       </td>
@@ -394,10 +394,10 @@ export function Institutions() {
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-mono font-semibold text-xs border ${
                             totalComp === 0
-                              ? 'bg-[#F5F7F7] text-[#6B7280] border-[#E5E7EB]'
+                              ? 'bg-[#F5F7F7] text-[#718096] border-[#D9DEE3]'
                               : hasOverdue
-                              ? 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/25'
-                              : 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/25'
+                              ? 'bg-[#DC3545]/10 text-[#DC3545] border-[#DC3545]/25'
+                              : 'bg-[#087F75]/10 text-[#087F75] border-[#087F75]/25'
                           }`}
                         >
                           {totalComp} {totalComp === 1 ? 'case' : 'cases'}
@@ -407,20 +407,20 @@ export function Institutions() {
                       {/* Status Breakdown */}
                       <td className="py-3.5 px-4 hidden lg:table-cell">
                         {totalComp === 0 ? (
-                          <span className="text-[11px] text-[#6B7280] italic">No active grievances</span>
+                          <span className="text-[11px] text-[#718096] italic">No active grievances</span>
                         ) : (
                           <div className="flex items-center space-x-1.5 text-[11px]">
-                            <span className="text-[#B45309] font-medium font-mono">
+                            <span className="text-[#D97736] font-medium font-mono">
                               {inst.open_complaints || 0} Open
                             </span>
-                            <span className="text-[#6B7280]">•</span>
-                            <span className="text-[#15803D] font-medium font-mono">
+                            <span className="text-[#718096]">•</span>
+                            <span className="text-[#198754] font-medium font-mono">
                               {inst.resolved_complaints || 0} Resolved
                             </span>
                             {hasOverdue && (
                               <>
-                                <span className="text-[#6B7280]">•</span>
-                                <span className="text-[#B91C1C] font-semibold font-mono">
+                                <span className="text-[#718096]">•</span>
+                                <span className="text-[#DC3545] font-semibold font-mono">
                                   {inst.overdue_complaints} Overdue
                                 </span>
                               </>
@@ -437,7 +437,7 @@ export function Institutions() {
                             e.stopPropagation();
                             navigate(`/institutions/${inst.id}`);
                           }}
-                          className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-white hover:bg-[#F5F7F7] text-[#374151] hover:text-[#0F766E] border border-[#E5E7EB] text-xs font-semibold transition"
+                          className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-white hover:bg-[#F5F7F7] text-[#263746] hover:text-[#087F75] border border-[#D9DEE3] text-xs font-semibold transition"
                         >
                           <span>View Details</span>
                           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -451,11 +451,11 @@ export function Institutions() {
           </div>
 
           {/* Pagination Controls */}
-          <div className="p-4 border-t border-[#E5E7EB] bg-[#F5F7F7] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[#6B7280]">
+          <div className="p-4 border-t border-[#D9DEE3] bg-[#F5F7F7] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[#718096]">
             <div>
-              Showing <span className="font-semibold text-[#36454F]">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-              <span className="font-semibold text-[#36454F]">{Math.min(currentPage * pageSize, total)}</span> of{' '}
-              <span className="font-semibold text-[#36454F]">{total}</span> approved institutions
+              Showing <span className="font-semibold text-[#263746]">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+              <span className="font-semibold text-[#263746]">{Math.min(currentPage * pageSize, total)}</span> of{' '}
+              <span className="font-semibold text-[#263746]">{total}</span> approved institutions
             </div>
 
             <div className="flex items-center space-x-2">
@@ -463,13 +463,13 @@ export function Institutions() {
                 type="button"
                 disabled={currentPage <= 1 || loading}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 rounded-lg bg-white border border-[#E5E7EB] text-[#374151] hover:bg-[#F5F7F7] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="p-1.5 rounded-lg bg-white border border-[#D9DEE3] text-[#263746] hover:bg-[#F5F7F7] disabled:opacity-40 disabled:cursor-not-allowed transition"
                 aria-label="Previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <span className="font-mono px-2 text-[#374151] font-semibold">
+              <span className="font-mono px-2 text-[#263746] font-semibold">
                 Page {currentPage} of {totalPages}
               </span>
 
@@ -477,7 +477,7 @@ export function Institutions() {
                 type="button"
                 disabled={currentPage >= totalPages || loading}
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="p-1.5 rounded-lg bg-white border border-[#E5E7EB] text-[#374151] hover:bg-[#F5F7F7] disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="p-1.5 rounded-lg bg-white border border-[#D9DEE3] text-[#263746] hover:bg-[#F5F7F7] disabled:opacity-40 disabled:cursor-not-allowed transition"
                 aria-label="Next page"
               >
                 <ChevronRight className="w-4 h-4" />

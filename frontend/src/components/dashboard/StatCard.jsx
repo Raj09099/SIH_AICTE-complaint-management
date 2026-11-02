@@ -4,29 +4,29 @@ import { Link } from 'react-router-dom';
 
 const colorStyles = {
   teal: {
-    iconBg: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
-    bar: 'bg-[#0F766E]',
-    tag: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
+    iconBg: 'bg-[#087F75]/10 text-[#087F75] border-[#087F75]/20',
+    bar: 'bg-[#087F75]',
+    tag: 'bg-[#087F75]/10 text-[#087F75] border-[#087F75]/20',
   },
   green: {
-    iconBg: 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/20',
-    bar: 'bg-[#15803D]',
-    tag: 'bg-[#15803D]/10 text-[#15803D] border-[#15803D]/20',
+    iconBg: 'bg-[#198754]/10 text-[#198754] border-[#198754]/20',
+    bar: 'bg-[#198754]',
+    tag: 'bg-[#198754]/10 text-[#198754] border-[#198754]/20',
   },
   amber: {
-    iconBg: 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/20',
-    bar: 'bg-[#B45309]',
-    tag: 'bg-[#B45309]/10 text-[#B45309] border-[#B45309]/20',
+    iconBg: 'bg-[#D97736]/10 text-[#D97736] border-[#D97736]/20',
+    bar: 'bg-[#D97736]',
+    tag: 'bg-[#D97736]/10 text-[#D97736] border-[#D97736]/20',
   },
   red: {
-    iconBg: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/20',
-    bar: 'bg-[#B91C1C]',
-    tag: 'bg-[#B91C1C]/10 text-[#B91C1C] border-[#B91C1C]/20',
+    iconBg: 'bg-[#DC3545]/10 text-[#DC3545] border-[#DC3545]/20',
+    bar: 'bg-[#DC3545]',
+    tag: 'bg-[#DC3545]/10 text-[#DC3545] border-[#DC3545]/20',
   },
   charcoal: {
-    iconBg: 'bg-[#36454F]/10 text-[#36454F] border-[#36454F]/20',
-    bar: 'bg-[#36454F]',
-    tag: 'bg-[#36454F]/10 text-[#36454F] border-[#36454F]/20',
+    iconBg: 'bg-[#364650]/10 text-[#364650] border-[#364650]/20',
+    bar: 'bg-[#364650]',
+    tag: 'bg-[#364650]/10 text-[#364650] border-[#364650]/20',
   },
 };
 
@@ -43,17 +43,17 @@ export function StatCard({
   const scheme = colorStyles[color] || colorStyles.teal;
 
   const CardContent = (
-    <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm hover:shadow transition-shadow duration-150 flex flex-col justify-between h-full">
+    <div className="bg-white rounded-xl p-5 border border-[#D9DEE3] shadow-sm hover:shadow transition-shadow duration-150 flex flex-col justify-between h-full">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-[#6B7280]">
+          <p className="text-xs font-medium uppercase tracking-wider text-[#718096]">
             {title}
           </p>
-          <div className="text-2xl sm:text-3xl font-bold text-[#36454F] tracking-tight">
+          <div className="text-2xl sm:text-3xl font-bold text-[#263746] tracking-tight">
             {value}
           </div>
           {subtitle && (
-            <p className="text-xs text-[#6B7280] leading-snug">
+            <p className="text-xs text-[#718096] leading-snug">
               {subtitle}
             </p>
           )}
@@ -67,10 +67,10 @@ export function StatCard({
       </div>
 
       {(progress != null || tag || to) && (
-        <div className="mt-4 pt-3 border-t border-[#E5E7EB] flex items-center justify-between text-xs">
+        <div className="mt-4 pt-3 border-t border-[#D9DEE3] flex items-center justify-between text-xs">
           {progress != null && (
             <div className="flex-1 mr-3">
-              <div className="w-full bg-[#E5E7EB] h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#D9DEE3] h-1.5 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${scheme.bar}`}
                   style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -86,7 +86,7 @@ export function StatCard({
           )}
 
           {to && (
-            <span className="inline-flex items-center text-xs font-medium text-[#0F766E] hover:underline ml-auto">
+            <span className="inline-flex items-center text-xs font-medium text-[#087F75] hover:underline ml-auto">
               <span>View</span>
               <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" />
             </span>
@@ -98,7 +98,7 @@ export function StatCard({
 
   if (to) {
     return (
-      <Link to={to} className="block group focus:outline-none focus:ring-2 focus:ring-[#0F766E] rounded-xl">
+      <Link to={to} className="block group focus:outline-none focus:ring-2 focus:ring-[#087F75] rounded-xl">
         {CardContent}
       </Link>
     );

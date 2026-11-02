@@ -290,21 +290,21 @@ export function Dashboard() {
   return (
     <div className="space-y-6 bg-white min-h-screen">
       {/* 1. Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#D9DEE3]">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#0F766E] border border-teal-200">
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase bg-teal-50 text-[#087F75] border border-teal-200">
               {isInstitute ? 'Technical Institute Redressal Portal' : 'AICTE Central Command'}
             </span>
-            <span className="text-[#6B7280]">•</span>
-            <span className="text-xs font-mono text-[#6B7280]">
+            <span className="text-[#718096]">•</span>
+            <span className="text-xs font-mono text-[#718096]">
               {isInstitute ? (user?.bureau || 'Apex Institute of Technology') : 'All India Monitoring Grid'}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#36454F] tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#263746] tracking-tight mt-1">
             {isInstitute ? 'Campus Grievance Console' : 'Complaint Intelligence Dashboard'}
           </h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">
+          <p className="text-sm text-[#718096] mt-0.5">
             {isInstitute
               ? 'Lodge institutional disputes, track redressal milestones, and interface directly with AICTE Bureaus.'
               : 'Overview of complaint cases, resolution progress, and cross-bureau overlap telemetry.'}
@@ -316,21 +316,21 @@ export function Dashboard() {
           {isInstitute && (
             <Link
               to="/complaints?action=new"
-              className="inline-flex items-center space-x-2 px-3.5 py-2 bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-semibold rounded-lg text-xs transition shadow-sm"
+              className="inline-flex items-center space-x-2 px-3.5 py-2 bg-[#087F75] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-semibold rounded-lg text-xs transition shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Send Grievance to AICTE</span>
             </Link>
           )}
 
-          <div className="inline-flex rounded-lg border border-[#E5E7EB] bg-[#F5F7F7] p-0.5 text-xs font-medium">
+          <div className="inline-flex rounded-lg border border-[#D9DEE3] bg-[#F5F7F7] p-0.5 text-xs font-medium">
             <button
               type="button"
               onClick={() => setPresentationMode('live')}
               className={`px-3 py-1.5 rounded-md transition ${
                 presentationMode === 'live'
-                  ? 'bg-white text-[#36454F] font-semibold shadow-sm border border-[#E5E7EB]'
-                  : 'text-[#6B7280] hover:text-[#36454F]'
+                  ? 'bg-white text-[#263746] font-semibold shadow-sm border border-[#D9DEE3]'
+                  : 'text-[#718096] hover:text-[#263746]'
               }`}
             >
               Live Database
@@ -340,8 +340,8 @@ export function Dashboard() {
               onClick={() => setPresentationMode('demo')}
               className={`px-3 py-1.5 rounded-md transition ${
                 presentationMode === 'demo'
-                  ? 'bg-white text-[#36454F] font-semibold shadow-sm border border-[#E5E7EB]'
-                  : 'text-[#6B7280] hover:text-[#36454F]'
+                  ? 'bg-white text-[#263746] font-semibold shadow-sm border border-[#D9DEE3]'
+                  : 'text-[#718096] hover:text-[#263746]'
               }`}
             >
               Demo Set
@@ -352,11 +352,11 @@ export function Dashboard() {
             type="button"
             onClick={handleRefreshAll}
             disabled={isRefreshing}
-            className="p-2 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#36454F] hover:bg-[#F5F7F7] transition"
+            className="p-2 rounded-lg border border-[#D9DEE3] bg-white text-[#718096] hover:text-[#263746] hover:bg-[#F5F7F7] transition"
             title="Refresh Dashboard Data"
             aria-label="Refresh Dashboard Data"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#0F766E]' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#087F75]' : ''}`} />
           </button>
         </div>
       </div>
@@ -365,19 +365,19 @@ export function Dashboard() {
       {isInstitute && (
         <div className="p-4 rounded-xl bg-gradient-to-r from-teal-50 to-[#F5F7F7] border border-teal-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start space-x-3">
-            <div className="p-2.5 rounded-lg bg-[#0F766E] text-white shrink-0 shadow-sm">
+            <div className="p-2.5 rounded-lg bg-[#087F75] text-white shrink-0 shadow-sm">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-sm font-bold text-[#36454F]">
+                <h3 className="text-sm font-bold text-[#263746]">
                   {user?.bureau || 'Apex Institute of Technology'} (AICTE Permanent ID: 1-001)
                 </h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#0F766E] border border-teal-200">
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#087F75] border border-teal-200">
                   Affiliated Technical Institute
                 </span>
               </div>
-              <p className="text-xs text-[#6B7280] mt-0.5">
+              <p className="text-xs text-[#718096] mt-0.5">
                 Logged in as <strong>{user?.full_name || 'Institute Grievance Officer'}</strong> ({user?.email}). You have authorized dispatch access to transmit institutional grievances directly to AICTE Central Bureaus.
               </p>
             </div>
@@ -385,7 +385,7 @@ export function Dashboard() {
           <div className="flex items-center space-x-2 shrink-0">
             <Link
               to="/complaints?action=new"
-              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#0F766E] hover:bg-[#115E59] text-white font-medium rounded-lg text-xs transition shadow-sm"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#087F75] hover:bg-[#115E59] text-white font-medium rounded-lg text-xs transition shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Dispatch New Grievance</span>
@@ -396,7 +396,7 @@ export function Dashboard() {
 
       {/* Live Error Banner if any */}
       {liveError && presentationMode === 'live' && (
-        <div className="p-3.5 rounded-xl bg-[#B91C1C]/10 border border-[#B91C1C]/25 text-[#B91C1C] flex items-start space-x-2.5 text-xs">
+        <div className="p-3.5 rounded-xl bg-[#DC3545]/10 border border-[#DC3545]/25 text-[#DC3545] flex items-start space-x-2.5 text-xs">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <div>
             <span className="font-semibold">Backend Connection Alert: </span>
@@ -501,17 +501,17 @@ export function Dashboard() {
       {/* 3. Analytics Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Trend Area Chart */}
-        <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+        <div className="bg-white rounded-xl p-5 border border-[#D9DEE3] shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D9DEE3]">
             <div>
-              <h2 className="text-sm font-bold text-[#36454F] uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
                 Monthly Inflow vs. Resolution
               </h2>
-              <p className="text-xs text-[#6B7280]">
+              <p className="text-xs text-[#718096]">
                 Monthly filing volume and redressal velocity
               </p>
             </div>
-            <span className="text-[11px] font-medium text-[#0F766E] bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+            <span className="text-[11px] font-medium text-[#087F75] bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
               Council Telemetry
             </span>
           </div>
@@ -521,24 +521,24 @@ export function Dashboard() {
               <AreaChart data={monthlyTrendsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorReceived" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0F766E" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#0F766E" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#087F75" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#087F75" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#15803D" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#15803D" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#198754" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#198754" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                <XAxis dataKey="month" stroke="#6B7280" fontSize={11} tickLine={false} />
-                <YAxis stroke="#6B7280" fontSize={11} tickLine={false} />
+                <XAxis dataKey="month" stroke="#718096" fontSize={11} tickLine={false} />
+                <YAxis stroke="#718096" fontSize={11} tickLine={false} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
+                    border: '1px solid #D9DEE3',
                     borderRadius: '8px',
                     fontSize: '12px',
-                    color: '#374151',
+                    color: '#263746',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                   }}
                 />
@@ -547,7 +547,7 @@ export function Dashboard() {
                   type="monotone"
                   dataKey="received"
                   name="Cases Inflow"
-                  stroke="#0F766E"
+                  stroke="#087F75"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorReceived)"
@@ -556,7 +556,7 @@ export function Dashboard() {
                   type="monotone"
                   dataKey="resolved"
                   name="Cases Resolved"
-                  stroke="#15803D"
+                  stroke="#198754"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorResolved)"
@@ -567,19 +567,19 @@ export function Dashboard() {
         </div>
 
         {/* Bureau Distribution Bar Chart */}
-        <div className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+        <div className="bg-white rounded-xl p-5 border border-[#D9DEE3] shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D9DEE3]">
             <div>
-              <h2 className="text-sm font-bold text-[#36454F] uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
                 Cross-Bureau Workload
               </h2>
-              <p className="text-xs text-[#6B7280]">
+              <p className="text-xs text-[#718096]">
                 Active cases and SLA resolution rates by bureau/cell
               </p>
             </div>
             <Link
               to="/analytics"
-              className="text-xs text-[#0F766E] font-medium hover:underline flex items-center space-x-1"
+              className="text-xs text-[#087F75] font-medium hover:underline flex items-center space-x-1"
             >
               <span>Detailed</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -590,20 +590,20 @@ export function Dashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={bureauStatsData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={false} />
-                <XAxis type="number" stroke="#6B7280" fontSize={11} tickLine={false} />
-                <YAxis dataKey="name" type="category" stroke="#36454F" fontSize={11} tickLine={false} width={100} />
+                <XAxis type="number" stroke="#718096" fontSize={11} tickLine={false} />
+                <YAxis dataKey="name" type="category" stroke="#263746" fontSize={11} tickLine={false} width={100} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
+                    border: '1px solid #D9DEE3',
                     borderRadius: '8px',
                     fontSize: '12px',
-                    color: '#374151',
+                    color: '#263746',
                   }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Bar dataKey="active" name="Active Cases" fill="#36454F" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="resolved" name="Resolved Cases" fill="#0F766E" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="active" name="Active Cases" fill="#263746" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="resolved" name="Resolved Cases" fill="#087F75" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -614,25 +614,25 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           to="/case-overlap"
-          className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow hover:border-[#0F766E]/40 transition group flex flex-col justify-between"
+          className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#087F75]/40 transition group flex flex-col justify-between"
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-[#0F766E]/10 text-[#0F766E]">
+              <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
                 <GitCompare className="w-4 h-4" />
               </div>
-              <span className="text-[10px] font-semibold text-[#0F766E] uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+              <span className="text-[10px] font-semibold text-[#087F75] uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
                 Core Feature 1
               </span>
             </div>
-            <h3 className="text-sm font-bold text-[#36454F] group-hover:text-[#0F766E] transition">
+            <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
               Case Overlap Detection
             </h3>
-            <p className="text-xs text-[#6B7280] leading-relaxed">
+            <p className="text-xs text-[#718096] leading-relaxed">
               TF-IDF text similarity & cross-bureau matching. Identify duplicate or related complaints.
             </p>
           </div>
-          <div className="mt-3 pt-2 border-t border-[#E5E7EB] flex items-center justify-between text-xs font-medium text-[#0F766E]">
+          <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#087F75]">
             <span>Explore Matches ({summaryData?.total_overlaps || 50})</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
           </div>
@@ -640,25 +640,25 @@ export function Dashboard() {
 
         <Link
           to="/problem-patterns"
-          className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow hover:border-[#36454F]/40 transition group flex flex-col justify-between"
+          className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#263746]/40 transition group flex flex-col justify-between"
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-[#36454F]/10 text-[#36454F]">
+              <div className="p-2 rounded-lg bg-[#263746]/10 text-[#263746]">
                 <Network className="w-4 h-4" />
               </div>
-              <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#E5E7EB]">
+              <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
                 Core Feature 2
               </span>
             </div>
-            <h3 className="text-sm font-bold text-[#36454F] group-hover:text-[#0F766E] transition">
+            <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
               Problem Pattern Detector
             </h3>
-            <p className="text-xs text-[#6B7280] leading-relaxed">
+            <p className="text-xs text-[#718096] leading-relaxed">
               Unsupervised clustering pipeline across technical institutions to discover systemic themes.
             </p>
           </div>
-          <div className="mt-3 pt-2 border-t border-[#E5E7EB] flex items-center justify-between text-xs font-medium text-[#36454F]">
+          <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#263746]">
             <span>View Clustering Grid</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
           </div>
@@ -666,25 +666,25 @@ export function Dashboard() {
 
         <Link
           to="/evidence-checker"
-          className="bg-white rounded-xl p-4 border border-[#E5E7EB] shadow-sm hover:shadow hover:border-[#36454F]/40 transition group flex flex-col justify-between"
+          className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#263746]/40 transition group flex flex-col justify-between"
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-[#36454F]/10 text-[#36454F]">
+              <div className="p-2 rounded-lg bg-[#263746]/10 text-[#263746]">
                 <FileCheck2 className="w-4 h-4" />
               </div>
-              <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#E5E7EB]">
+              <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
                 Core Feature 3
               </span>
             </div>
-            <h3 className="text-sm font-bold text-[#36454F] group-hover:text-[#0F766E] transition">
+            <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
               Evidence Relevance Checker
             </h3>
-            <p className="text-xs text-[#6B7280] leading-relaxed">
+            <p className="text-xs text-[#718096] leading-relaxed">
               PyMuPDF compliance verification assessing affidavit text against claimed complaint resolutions.
             </p>
           </div>
-          <div className="mt-3 pt-2 border-t border-[#E5E7EB] flex items-center justify-between text-xs font-medium text-[#36454F]">
+          <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#263746]">
             <span>Open Evidence Review</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
           </div>
@@ -692,13 +692,13 @@ export function Dashboard() {
       </div>
 
       {/* 5. Recent Complaints Card & Table */}
-      <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-sm overflow-hidden space-y-4 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#E5E7EB]">
+      <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm overflow-hidden space-y-4 p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#D9DEE3]">
           <div>
-            <h2 className="text-base font-bold text-[#36454F]">
+            <h2 className="text-base font-bold text-[#263746]">
               Recent Complaints
             </h2>
-            <p className="text-xs text-[#6B7280]">
+            <p className="text-xs text-[#718096]">
               Active grievances submitted across AICTE affiliated institutions
             </p>
           </div>
@@ -706,7 +706,7 @@ export function Dashboard() {
           <div className="flex items-center space-x-3">
             <Link
               to="/complaints"
-              className="text-xs font-semibold text-[#0F766E] hover:underline flex items-center space-x-1"
+              className="text-xs font-semibold text-[#087F75] hover:underline flex items-center space-x-1"
             >
               <span>View all complaints</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -717,13 +717,13 @@ export function Dashboard() {
         {/* Filter Controls Bar */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#718096] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search by ID, institution, or keyword..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-[#E5E7EB] text-xs text-[#374151] placeholder-[#6B7280] focus:outline-none focus:ring-1 focus:ring-[#0F766E] focus:border-[#0F766E]"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-[#D9DEE3] text-xs text-[#263746] placeholder-[#718096] focus:outline-none focus:ring-1 focus:ring-[#087F75] focus:border-[#087F75]"
             />
           </div>
 
@@ -731,7 +731,7 @@ export function Dashboard() {
             <select
               value={selectedBureau}
               onChange={(e) => setSelectedBureau(e.target.value)}
-              className="py-1.5 px-3 rounded-lg border border-[#E5E7EB] bg-white text-xs text-[#374151] focus:outline-none focus:ring-1 focus:ring-[#0F766E]"
+              className="py-1.5 px-3 rounded-lg border border-[#D9DEE3] bg-white text-xs text-[#263746] focus:outline-none focus:ring-1 focus:ring-[#087F75]"
             >
               {bureauOptions.map((b) => (
                 <option key={b} value={b}>
@@ -743,7 +743,7 @@ export function Dashboard() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="py-1.5 px-3 rounded-lg border border-[#E5E7EB] bg-white text-xs text-[#374151] focus:outline-none focus:ring-1 focus:ring-[#0F766E]"
+              className="py-1.5 px-3 rounded-lg border border-[#D9DEE3] bg-white text-xs text-[#263746] focus:outline-none focus:ring-1 focus:ring-[#087F75]"
             >
               <option value="All">All Statuses</option>
               <option value="New">New</option>
@@ -757,18 +757,18 @@ export function Dashboard() {
 
         {/* Table / Results */}
         {loadingLive && presentationMode === 'live' ? (
-          <div className="py-12 flex flex-col items-center justify-center space-y-2 text-[#6B7280]">
-            <RefreshCw className="w-5 h-5 animate-spin text-[#0F766E]" />
+          <div className="py-12 flex flex-col items-center justify-center space-y-2 text-[#718096]">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#087F75]" />
             <span className="text-xs">Loading live complaint cases from database...</span>
           </div>
         ) : filteredComplaints.length === 0 ? (
-          <div className="py-12 text-center text-xs text-[#6B7280]">
+          <div className="py-12 text-center text-xs text-[#718096]">
             No complaint cases found matching current search or filters.
           </div>
         ) : (
-          <div className="overflow-x-auto border border-[#E5E7EB] rounded-lg">
-            <table className="w-full text-left text-xs text-[#374151]">
-              <thead className="bg-[#F5F7F7] border-b border-[#E5E7EB] text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">
+          <div className="overflow-x-auto border border-[#D9DEE3] rounded-lg">
+            <table className="w-full text-left text-xs text-[#263746]">
+              <thead className="bg-[#F5F7F7] border-b border-[#D9DEE3] text-[11px] font-semibold text-[#718096] uppercase tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Tracking ID</th>
                   <th className="py-3 px-4">Subject</th>
@@ -779,17 +779,17 @@ export function Dashboard() {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB]">
+              <tbody className="divide-y divide-[#D9DEE3]">
                 {filteredComplaints.slice(0, 10).map((item) => (
                   <tr key={item.id} className="hover:bg-[#F5F7F7]/60 transition">
-                    <td className="py-3 px-4 font-mono font-medium text-[#0F766E]">
+                    <td className="py-3 px-4 font-mono font-medium text-[#087F75]">
                       {item.id}
                     </td>
                     <td className="py-3 px-4 max-w-xs">
-                      <p className="font-semibold text-[#36454F] truncate">{item.summary}</p>
-                      <p className="text-[11px] text-[#6B7280] truncate">{item.institution}</p>
+                      <p className="font-semibold text-[#263746] truncate">{item.summary}</p>
+                      <p className="text-[11px] text-[#718096] truncate">{item.institution}</p>
                     </td>
-                    <td className="py-3 px-4 text-[#374151]">
+                    <td className="py-3 px-4 text-[#263746]">
                       {item.bureau}
                     </td>
                     <td className="py-3 px-4">
@@ -798,14 +798,14 @@ export function Dashboard() {
                     <td className="py-3 px-4">
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="py-3 px-4 text-[#6B7280] font-mono text-[11px]">
+                    <td className="py-3 px-4 text-[#718096] font-mono text-[11px]">
                       {formatDate(item.submittedDate)}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <button
                         type="button"
                         onClick={() => setSelectedCaseDetail(item)}
-                        className="p-1 rounded text-[#0F766E] hover:bg-teal-50 hover:text-[#115E59] transition"
+                        className="p-1 rounded text-[#087F75] hover:bg-teal-50 hover:text-[#115E59] transition"
                         title="Quick View"
                         aria-label="Quick View"
                       >
@@ -823,70 +823,70 @@ export function Dashboard() {
       {/* 6. Case Detail Quick Inspection Modal */}
       {selectedCaseDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xl max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+          <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D9DEE3]">
               <div>
-                <span className="text-xs font-mono font-bold text-[#0F766E]">
+                <span className="text-xs font-mono font-bold text-[#087F75]">
                   {selectedCaseDetail.id}
                 </span>
-                <h3 className="text-base font-bold text-[#36454F] mt-0.5">
+                <h3 className="text-base font-bold text-[#263746] mt-0.5">
                   Case Details
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedCaseDetail(null)}
-                className="text-[#6B7280] hover:text-[#36454F] p-1 rounded-md"
+                className="text-[#718096] hover:text-[#263746] p-1 rounded-md"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-[#374151]">
+            <div className="space-y-3 text-xs text-[#263746]">
               <div>
-                <span className="text-[#6B7280] block font-medium">Grievance Subject</span>
-                <p className="font-semibold text-sm text-[#36454F] mt-0.5">{selectedCaseDetail.summary}</p>
+                <span className="text-[#718096] block font-medium">Grievance Subject</span>
+                <p className="font-semibold text-sm text-[#263746] mt-0.5">{selectedCaseDetail.summary}</p>
               </div>
 
               <div>
-                <span className="text-[#6B7280] block font-medium">Full Narrative Description</span>
-                <p className="mt-1 p-2.5 rounded-lg bg-[#F5F7F7] border border-[#E5E7EB] text-[#374151] leading-relaxed">
+                <span className="text-[#718096] block font-medium">Full Narrative Description</span>
+                <p className="mt-1 p-2.5 rounded-lg bg-[#F5F7F7] border border-[#D9DEE3] text-[#263746] leading-relaxed">
                   {selectedCaseDetail.description}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div>
-                  <span className="text-[#6B7280] block">Jurisdiction Bureau</span>
-                  <span className="font-semibold text-[#36454F]">{selectedCaseDetail.bureau}</span>
+                  <span className="text-[#718096] block">Jurisdiction Bureau</span>
+                  <span className="font-semibold text-[#263746]">{selectedCaseDetail.bureau}</span>
                 </div>
                 <div>
-                  <span className="text-[#6B7280] block">Institution</span>
-                  <span className="font-semibold text-[#36454F]">{selectedCaseDetail.institution}</span>
+                  <span className="text-[#718096] block">Institution</span>
+                  <span className="font-semibold text-[#263746]">{selectedCaseDetail.institution}</span>
                 </div>
                 <div>
-                  <span className="text-[#6B7280] block">Current Status</span>
+                  <span className="text-[#718096] block">Current Status</span>
                   <StatusBadge status={selectedCaseDetail.status} />
                 </div>
                 <div>
-                  <span className="text-[#6B7280] block">Priority Level</span>
+                  <span className="text-[#718096] block">Priority Level</span>
                   <StatusBadge status={selectedCaseDetail.priority} />
                 </div>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#E5E7EB] flex items-center justify-end space-x-2">
+            <div className="pt-3 border-t border-[#D9DEE3] flex items-center justify-end space-x-2">
               <button
                 type="button"
                 onClick={() => setSelectedCaseDetail(null)}
-                className="px-3 py-1.5 rounded-lg border border-[#E5E7EB] text-xs font-medium text-[#6B7280] hover:bg-[#F5F7F7]"
+                className="px-3 py-1.5 rounded-lg border border-[#D9DEE3] text-xs font-medium text-[#718096] hover:bg-[#F5F7F7]"
               >
                 Close
               </button>
               {selectedCaseDetail.rawItem?.id && (
                 <Link
                   to={`/complaints/${selectedCaseDetail.rawItem.id}`}
-                  className="px-3 py-1.5 rounded-lg bg-[#0F766E] text-white text-xs font-medium hover:bg-[#115E59] transition"
+                  className="px-3 py-1.5 rounded-lg bg-[#087F75] text-white text-xs font-medium hover:bg-[#115E59] transition"
                 >
                   Open Full Case File →
                 </Link>
