@@ -86,13 +86,13 @@ class ComplaintTextPreprocessor:
         """
         # Supports dict, Pydantic model, or SQLAlchemy ORM model
         if isinstance(item, dict):
-            subject = item.get("subject", "") or ""
+            subject = item.get("translated_subject") or item.get("subject", "") or ""
             category = item.get("category", "") or ""
-            description = item.get("description", "") or ""
+            description = item.get("translated_description") or item.get("description", "") or ""
         else:
-            subject = getattr(item, "subject", "") or ""
+            subject = getattr(item, "translated_subject", None) or getattr(item, "subject", "") or ""
             category = getattr(item, "category", "") or ""
-            description = getattr(item, "description", "") or ""
+            description = getattr(item, "translated_description", None) or getattr(item, "description", "") or ""
 
         # Double-weight subject and category for stronger semantic matching
         raw_combined = f"{subject} {subject} {category} {description}"

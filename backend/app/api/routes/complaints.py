@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+from app.services.translation_service import TranslationService
 """
 Complaints management API routes for SIH26264 AICTE Complaint Intelligence.
 Provides end-to-end lifecycle operations:
@@ -248,6 +250,13 @@ def create_complaint(
     deadline_date_val = payload.deadline_date or (filing_date_val + timedelta(days=30))
 
     try:
+        # Feature 3.6: Multilingual processing and translation for AI analysis
+        multi_info = TranslationService.process_complaint_multilingual(
+            subject=payload.subject.strip(),
+            description=payload.description.strip(),
+            preferred_lang=payload.detected_language,
+        )
+
         new_complaint = Complaint(
             complaint_no=complaint_no,
             institution_id=payload.institution_id,
@@ -264,6 +273,12 @@ def create_complaint(
             assigned_to=payload.assigned_to,
             resolution_summary=payload.resolution_summary,
             is_escalated=payload.is_escalated or False,
+            detected_language=multi_info["detected_language"],
+            translated_subject=multi_info["translated_subject"],
+            translated_description=multi_info["translated_description"],
+            translation_status=multi_info["translation_status"],
+            translation_provider=multi_info["translation_provider"],
+            translated_at=multi_info["translated_at"],
         )
         db.add(new_complaint)
         db.commit()
@@ -661,3 +676,83 @@ def update_complaint(
         complaint.deadline_date = payload.deadline_date
 
     return update_complaint_status(identifier, status_update, db, current_user)
+
+
+class ComplaintTranslateRequest(BaseModel):
+    target_language: Optional[str] = "en"
+
+
+class ComplaintTranslateResponse(BaseModel):
+    complaint_id: int
+    complaint_no: str
+    detected_language: str
+    target_language: str
+    original_subject: str
+    original_description: str
+    translated_subject: str
+    translated_description: str
+    translation_status: str
+    translation_provider: str
+
+
+@router.post(
+    "/{identifier}/translate",
+    response_model=ComplaintTranslateResponse,
+    summary="On-demand translation of complaint narrative and subject (Feature 3.6)",
+)
+def translate_complaint_content(
+    identifier: str,
+    payload: Optional[ComplaintTranslateRequest] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user),
+) -> ComplaintTranslateResponse:
+    """
+    On-demand translation endpoint for AICTE complaint narratives (Feature 3.6).
+    Translates Indic complaints to normalized English representation while preserving original text.
+    """
+    complaint = _find_complaint_by_identifier(identifier, db)
+    if not complaint:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Complaint record '{identifier}' not found.",
+        )
+
+    # Institute authorization check
+    if current_user and current_user.get("role") == "institute":
+        inst_id = current_user.get("institution_id")
+        if inst_id is not None and complaint.institution_id != inst_id:
+            raise HTTPException(
+                status_code=http_status.HTTP_403_FORBIDDEN,
+                detail="Institute accounts are not authorized to access records belonging to other institutions.",
+            )
+
+    target_lang = payload.target_language if payload else "en"
+
+    multi_info = TranslationService.process_complaint_multilingual(
+        subject=complaint.subject,
+        description=complaint.description,
+        preferred_lang=complaint.detected_language,
+    )
+
+    if not complaint.translated_subject or not complaint.translated_description:
+        complaint.detected_language = multi_info["detected_language"]
+        complaint.translated_subject = multi_info["translated_subject"]
+        complaint.translated_description = multi_info["translated_description"]
+        complaint.translation_status = multi_info["translation_status"]
+        complaint.translation_provider = multi_info["translation_provider"]
+        complaint.translated_at = multi_info["translated_at"]
+        db.commit()
+        db.refresh(complaint)
+
+    return ComplaintTranslateResponse(
+        complaint_id=complaint.id,
+        complaint_no=complaint.complaint_no,
+        detected_language=complaint.detected_language or multi_info["detected_language"] or "en",
+        target_language=target_lang,
+        original_subject=complaint.subject,
+        original_description=complaint.description,
+        translated_subject=complaint.translated_subject or multi_info["translated_subject"] or complaint.subject,
+        translated_description=complaint.translated_description or multi_info["translated_description"] or complaint.description,
+        translation_status=complaint.translation_status or "translated",
+        translation_provider=complaint.translation_provider or "internal_indic",
+    )

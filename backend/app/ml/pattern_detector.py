@@ -171,8 +171,8 @@ class ProblemPatternDetector:
         valid_complaints: List[Any] = []
         composite_texts: List[str] = []
         for c in bucket_complaints:
-            subj = (_extract_val(c, "subject") or "").strip()
-            desc = (_extract_val(c, "description") or "").strip()
+            subj = (_extract_val(c, "translated_subject") or _extract_val(c, "subject") or "").strip()
+            desc = (_extract_val(c, "translated_description") or _extract_val(c, "description") or "").strip()
             # Skip complaints with no substantive subject or description
             if not subj and not desc:
                 continue

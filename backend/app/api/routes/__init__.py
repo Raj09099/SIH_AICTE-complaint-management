@@ -7,9 +7,13 @@ from app.api.routes import (
     auth,
     complaints,
     evidence,
+    institution_risk,
     institutions,
+    notifications,
     overlap,
     patterns,
+    priority,
+    recurrence,
 )
 
 __all__ = [
@@ -17,7 +21,11 @@ __all__ = [
     "auth",
     "complaints",
     "evidence",
+    "institution_risk",
     "institutions",
+    "notifications",
     "overlap",
     "patterns",
+    "priority",
+    "recurrence",
 ]

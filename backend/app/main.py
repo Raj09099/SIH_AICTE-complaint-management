@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
@@ -8,15 +9,16 @@ from app.api.routes import (
     auth,
     complaints,
     evidence,
+    institution_risk,
     institutions,
     notifications,
     overlap,
     patterns,
+    priority,
+    recurrence,
 )
 from app.core.scheduler import shutdown_scheduler, start_scheduler
 
-
-import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -55,11 +57,12 @@ app.add_middleware(
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     """
-    Basic health check endpoint returning service status.
+    Lightweight health check endpoint for monitoring uptime and deployment status.
     """
     return {
         "status": "ok",
         "app": settings.PROJECT_NAME,
+        "service": settings.PROJECT_NAME,
         "version": "0.1.0",
         "environment": settings.ENVIRONMENT,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -77,6 +80,9 @@ app.include_router(patterns.router, prefix=api_prefix)
 app.include_router(evidence.router, prefix=api_prefix)
 app.include_router(analytics.router, prefix=api_prefix)
 app.include_router(notifications.router, prefix=api_prefix)
+app.include_router(recurrence.router, prefix=api_prefix)
+app.include_router(priority.router, prefix=api_prefix)
+app.include_router(institution_risk.router, prefix=api_prefix)
 
 
 @app.get("/", tags=["Root"])

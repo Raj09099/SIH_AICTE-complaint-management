@@ -129,6 +129,12 @@ class TestModelMetadata:
             "assigned_to",
             "resolution_summary",
             "is_escalated",
+            "detected_language",
+            "translated_subject",
+            "translated_description",
+            "translation_status",
+            "translation_provider",
+            "translated_at",
             "created_at",
             "updated_at",
         }

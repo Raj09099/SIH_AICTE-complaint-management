@@ -25,6 +25,12 @@ class ComplaintBase(BaseModel):
     assigned_to: Optional[int] = Field(None, description="Officer user ID assigned to case")
     resolution_summary: Optional[str] = Field(None, description="Summary notes upon resolution")
     is_escalated: Optional[bool] = Field(False, description="Flag indicating executive escalation")
+    detected_language: Optional[str] = Field("en", description="Detected language: en, hi, mr")
+    translated_subject: Optional[str] = Field(None, description="English translation of subject for AI analysis")
+    translated_description: Optional[str] = Field(None, description="English translation of description for AI analysis")
+    translation_status: Optional[str] = Field("original", description="Translation status: original, translated, failed")
+    translation_provider: Optional[str] = Field("internal_indic", description="Translation engine provider")
+    translated_at: Optional[datetime] = Field(None, description="Timestamp of translation")
 
 
 class ComplaintCreate(ComplaintBase):
