@@ -23,6 +23,7 @@ import {
   ArrowRight,
   Send,
   Shield,
+  User,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -41,6 +42,7 @@ import StatCard from '../components/dashboard/StatCard';
 import StatusBadge from '../components/common/StatusBadge';
 import { analyticsService } from '../services/analytics';
 import { complaintService } from '../services/complaints';
+import { notificationService } from '../services/notifications';
 import { API_BASE_URL } from '../services/api';
 import { formatDate } from '../utils/formatters';
 
@@ -143,6 +145,111 @@ const demoBureauStats = [
   { name: 'Finance Cell', active: 36, resolved: 87, total: 123, slaOnTime: 91.0 },
 ];
 
+const demoDeadlines = {
+  upcoming_count: 2,
+  due_today_count: 1,
+  overdue_count: 3,
+  total_monitored: 6,
+  items: [
+    {
+      complaint_id: 1,
+      complaint_no: 'AICTE-2026-0612',
+      institution_id: 4,
+      institution_name: 'Shri Ram Technical Campus',
+      assigned_officer_id: 10,
+      assigned_officer_name: 'Dr. S. Kumar',
+      bureau: 'Faculty & Staff Cell',
+      category: 'Salary Non-Payment & Arrears',
+      priority: 'Critical',
+      status: 'Escalated',
+      deadline_date: '2026-10-28',
+      days_remaining: -5,
+      urgency_level: 'OVERDUE',
+      pending_action: 'Immediate Redressal / Escalation Hearing',
+    },
+    {
+      complaint_id: 2,
+      complaint_no: 'AICTE-2026-0771',
+      institution_id: 3,
+      institution_name: 'National Engineering College',
+      assigned_officer_id: null,
+      assigned_officer_name: 'Unassigned',
+      bureau: 'Approval Bureau',
+      category: 'Laboratory Deficiencies',
+      priority: 'Urgent',
+      status: 'Evidence Requested',
+      deadline_date: '2026-10-30',
+      days_remaining: -3,
+      urgency_level: 'OVERDUE',
+      pending_action: 'Verify Compliance Affidavits',
+    },
+    {
+      complaint_id: 3,
+      complaint_no: 'AICTE-2026-0914',
+      institution_id: 1,
+      institution_name: 'Apex Institute of Technology',
+      assigned_officer_id: 10,
+      assigned_officer_name: 'Dr. S. Kumar',
+      bureau: 'Approval Bureau',
+      category: 'Arbitrary Fee Surcharges',
+      priority: 'High',
+      status: 'Under Review',
+      deadline_date: '2026-11-02',
+      days_remaining: 0,
+      urgency_level: 'DUE_TODAY',
+      pending_action: 'Statutory Resolution Deadline Today',
+    },
+    {
+      complaint_id: 4,
+      complaint_no: 'AICTE-2026-0842',
+      institution_id: 1,
+      institution_name: 'Apex Institute of Technology',
+      assigned_officer_id: 20,
+      assigned_officer_name: 'Prof. M. Verma',
+      bureau: 'Anti-Ragging Cell',
+      category: 'Hostel Harassment & Coercion',
+      priority: 'Critical',
+      status: 'Under Review',
+      deadline_date: '2026-11-05',
+      days_remaining: 3,
+      urgency_level: 'UPCOMING',
+      pending_action: 'Conduct Bureau Inquiry',
+    },
+    {
+      complaint_id: 5,
+      complaint_no: 'AICTE-2026-0520',
+      institution_id: 2,
+      institution_name: 'Greenfield Institute of Management',
+      assigned_officer_id: 10,
+      assigned_officer_name: 'Dr. S. Kumar',
+      bureau: 'Finance & Scholarships',
+      category: 'PMSSS Scholarship Withholding',
+      priority: 'High',
+      status: 'Under Review',
+      deadline_date: '2026-11-04',
+      days_remaining: 2,
+      urgency_level: 'UPCOMING',
+      pending_action: 'Review Verification Affidavits',
+    },
+    {
+      complaint_id: 6,
+      complaint_no: 'AICTE-2026-0419',
+      institution_id: 5,
+      institution_name: 'St. Xavier Polytechnic',
+      assigned_officer_id: 20,
+      assigned_officer_name: 'Prof. M. Verma',
+      bureau: 'Grievance Cell',
+      category: 'Admission Cancellation & Refund',
+      priority: 'Medium',
+      status: 'New',
+      deadline_date: '2026-10-25',
+      days_remaining: -8,
+      urgency_level: 'OVERDUE',
+      pending_action: 'Initial Triage & Officer Assignment',
+    },
+  ],
+};
+
 export function Dashboard() {
   const { user } = useAuth();
   const isInstitute = user?.role === 'institute';
@@ -160,6 +267,15 @@ export function Dashboard() {
   const [liveComplaints, setLiveComplaints] = useState([]);
   const [loadingLive, setLoadingLive] = useState(true);
   const [liveError, setLiveError] = useState(null);
+
+  // Automated Deadline & Reminder States
+  const [deadlinesData, setDeadlinesData] = useState(null);
+  const [loadingDeadlines, setLoadingDeadlines] = useState(true);
+  const [deadlineFilter, setDeadlineFilter] = useState('all'); // 'all' | 'overdue' | 'due_today' | 'upcoming'
+  const [deadlineSearch, setDeadlineSearch] = useState('');
+  const [deadlineBureau, setDeadlineBureau] = useState('All');
+  const [isTriggeringCheck, setIsTriggeringCheck] = useState(false);
+  const [triggerCheckSuccess, setTriggerCheckSuccess] = useState(null);
 
   const fetchHealth = useCallback(async () => {
     try {
@@ -185,12 +301,19 @@ export function Dashboard() {
     setLiveError(null);
 
     try {
-      const [summaryRes, complaintsRes] = await Promise.all([
+      const [summaryRes, complaintsRes, deadlinesRes] = await Promise.all([
         analyticsService.getSummary(),
         complaintService.getComplaints({ limit: 50 }),
+        notificationService.getDeadlines().catch((err) => {
+          console.warn('Unable to load deadlines telemetry:', err);
+          return null;
+        }),
       ]);
       setSummaryData(summaryRes);
       setLiveComplaints(Array.isArray(complaintsRes) ? complaintsRes : []);
+      if (deadlinesRes) {
+        setDeadlinesData(deadlinesRes);
+      }
     } catch (err) {
       console.error('Failed to load live dashboard telemetry:', err);
       setLiveError(
@@ -286,6 +409,60 @@ export function Dashboard() {
     }
     return demoBureauStats;
   }, [presentationMode, summaryData]);
+
+  // Active deadlines dataset (live or demo)
+  const activeDeadlines = useMemo(() => {
+    if (presentationMode === 'demo') return demoDeadlines;
+    return deadlinesData || demoDeadlines;
+  }, [presentationMode, deadlinesData]);
+
+  // Filtered deadline monitored items
+  const filteredDeadlineItems = useMemo(() => {
+    let list = activeDeadlines?.items || [];
+
+    if (deadlineFilter === 'overdue') {
+      list = list.filter((it) => it.urgency_level === 'OVERDUE');
+    } else if (deadlineFilter === 'due_today') {
+      list = list.filter((it) => it.urgency_level === 'DUE_TODAY');
+    } else if (deadlineFilter === 'upcoming') {
+      list = list.filter((it) => it.urgency_level === 'UPCOMING');
+    }
+
+    if (deadlineBureau !== 'All') {
+      list = list.filter((it) => it.bureau.toLowerCase() === deadlineBureau.toLowerCase());
+    }
+
+    if (deadlineSearch.trim()) {
+      const q = deadlineSearch.trim().toLowerCase();
+      list = list.filter(
+        (it) =>
+          it.complaint_no.toLowerCase().includes(q) ||
+          it.institution_name.toLowerCase().includes(q) ||
+          (it.assigned_officer_name && it.assigned_officer_name.toLowerCase().includes(q)) ||
+          it.category.toLowerCase().includes(q)
+      );
+    }
+
+    return list;
+  }, [activeDeadlines, deadlineFilter, deadlineBureau, deadlineSearch]);
+
+  const handleTriggerDeadlineCheck = async () => {
+    setIsTriggeringCheck(true);
+    setTriggerCheckSuccess(null);
+    try {
+      const res = await notificationService.triggerCheck();
+      setTriggerCheckSuccess(
+        `Automated check executed: ${res.processed} complaints evaluated, ${res.new_notifications_created} reminder alert(s) dispatched.`
+      );
+      const refreshed = await notificationService.getDeadlines();
+      setDeadlinesData(refreshed);
+      setTimeout(() => setTriggerCheckSuccess(null), 6000);
+    } catch (err) {
+      console.error('Failed to trigger deadline check:', err);
+    } finally {
+      setIsTriggeringCheck(false);
+    }
+  };
 
   return (
     <div className="space-y-6 bg-white min-h-screen">
@@ -691,7 +868,328 @@ export function Dashboard() {
         </Link>
       </div>
 
-      {/* 5. Recent Complaints Card & Table */}
+      {/* 5. Automatic Reminder & Deadline Management Section */}
+      <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm p-5 space-y-5">
+        {/* Header & Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#D9DEE3]">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="p-1 rounded-md bg-teal-50 text-[#087F75] border border-teal-200">
+                <Clock className="w-4 h-4" />
+              </span>
+              <h2 className="text-base font-bold text-[#263746]">
+                Automatic Reminder & Statutory Deadline Grid
+              </h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-[#198754] border border-emerald-200">
+                APScheduler Active
+              </span>
+            </div>
+            <p className="text-xs text-[#718096] mt-0.5">
+              Automated hourly evaluation tracking 3-day approaching deadlines, due-today cases, and daily overdue escalations.
+            </p>
+          </div>
+
+          {!isInstitute && (
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleTriggerDeadlineCheck}
+                disabled={isTriggeringCheck}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold rounded-lg shadow-sm transition disabled:opacity-60"
+                title="Execute manual check and generate reminders"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isTriggeringCheck ? 'animate-spin' : ''}`} />
+                <span>{isTriggeringCheck ? 'Checking Deadlines...' : 'Run Deadline Check Now'}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Trigger check success notification alert */}
+        {triggerCheckSuccess && (
+          <div className="p-3 rounded-lg bg-teal-50 border border-teal-200 text-[#087F75] text-xs flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-[#087F75]" />
+            <span>{triggerCheckSuccess}</span>
+          </div>
+        )}
+
+        {/* 3 Deadline Telemetry Cards: Upcoming, Due Today, Overdue */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Card 1: Upcoming Deadlines (3-Day Window) */}
+          <div
+            onClick={() => setDeadlineFilter(deadlineFilter === 'upcoming' ? 'all' : 'upcoming')}
+            className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-xs ${
+              deadlineFilter === 'upcoming'
+                ? 'bg-amber-50/70 border-amber-400 ring-2 ring-amber-300'
+                : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center space-x-1.5 text-xs text-[#D97736] font-semibold">
+                <Clock className="w-4 h-4" />
+                <span>Upcoming Deadlines</span>
+              </div>
+              <div className="text-2xl font-bold text-[#263746]">
+                {activeDeadlines?.upcoming_count || 0}
+              </div>
+              <p className="text-[11px] text-[#718096]">Due within 1–3 days • Notice Sent</p>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-[#D97736] border border-amber-200">
+              3-Day Notice
+            </span>
+          </div>
+
+          {/* Card 2: Due Today */}
+          <div
+            onClick={() => setDeadlineFilter(deadlineFilter === 'due_today' ? 'all' : 'due_today')}
+            className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-xs ${
+              deadlineFilter === 'due_today'
+                ? 'bg-orange-50/70 border-orange-400 ring-2 ring-orange-300'
+                : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center space-x-1.5 text-xs text-orange-600 font-semibold">
+                <AlertCircle className="w-4 h-4" />
+                <span>Due Today</span>
+              </div>
+              <div className="text-2xl font-bold text-[#263746]">
+                {activeDeadlines?.due_today_count || 0}
+              </div>
+              <p className="text-[11px] text-[#718096]">Statutory SLA expires today</p>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">
+              Immediate
+            </span>
+          </div>
+
+          {/* Card 3: Overdue Complaints */}
+          <div
+            onClick={() => setDeadlineFilter(deadlineFilter === 'overdue' ? 'all' : 'overdue')}
+            className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-xs ${
+              deadlineFilter === 'overdue'
+                ? 'bg-red-50/70 border-red-400 ring-2 ring-red-300'
+                : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center space-x-1.5 text-xs text-[#DC3545] font-semibold">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Overdue Complaints</span>
+              </div>
+              <div className="text-2xl font-bold text-[#DC3545]">
+                {activeDeadlines?.overdue_count || 0}
+              </div>
+              <p className="text-[11px] text-[#718096]">Exceeded SLA • Daily alerts active</p>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#DC3545] border border-red-200">
+              Breached
+            </span>
+          </div>
+        </div>
+
+        {/* Filter Controls Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          {/* Filter Pills */}
+          <div className="inline-flex rounded-lg border border-[#D9DEE3] bg-[#F5F7F7] p-0.5 text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setDeadlineFilter('all')}
+              className={`px-3 py-1 rounded-md transition ${
+                deadlineFilter === 'all'
+                  ? 'bg-white text-[#263746] font-semibold shadow-xs border border-[#D9DEE3]'
+                  : 'text-[#718096] hover:text-[#263746]'
+              }`}
+            >
+              All Deadlines ({activeDeadlines?.total_monitored || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeadlineFilter('overdue')}
+              className={`px-3 py-1 rounded-md transition ${
+                deadlineFilter === 'overdue'
+                  ? 'bg-white text-[#DC3545] font-semibold shadow-xs border border-red-200'
+                  : 'text-[#718096] hover:text-[#DC3545]'
+              }`}
+            >
+              Overdue ({activeDeadlines?.overdue_count || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeadlineFilter('due_today')}
+              className={`px-3 py-1 rounded-md transition ${
+                deadlineFilter === 'due_today'
+                  ? 'bg-white text-orange-700 font-semibold shadow-xs border border-orange-200'
+                  : 'text-[#718096] hover:text-orange-700'
+              }`}
+            >
+              Due Today ({activeDeadlines?.due_today_count || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeadlineFilter('upcoming')}
+              className={`px-3 py-1 rounded-md transition ${
+                deadlineFilter === 'upcoming'
+                  ? 'bg-white text-[#D97736] font-semibold shadow-xs border border-amber-200'
+                  : 'text-[#718096] hover:text-[#D97736]'
+              }`}
+            >
+              Approaching 3 Days ({activeDeadlines?.upcoming_count || 0})
+            </button>
+          </div>
+
+          {/* Search & Bureau Dropdown */}
+          <div className="flex items-center space-x-2 flex-1 sm:flex-initial min-w-[240px]">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 text-[#718096] absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search case, institution, officer..."
+                value={deadlineSearch}
+                onChange={(e) => setDeadlineSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#D9DEE3] text-xs text-[#263746] placeholder-[#718096] focus:outline-none focus:ring-1 focus:ring-[#087F75]"
+              />
+            </div>
+            <select
+              value={deadlineBureau}
+              onChange={(e) => setDeadlineBureau(e.target.value)}
+              className="py-1.5 px-2.5 rounded-lg border border-[#D9DEE3] bg-white text-xs text-[#263746] focus:outline-none focus:ring-1 focus:ring-[#087F75]"
+            >
+              {bureauOptions.map((b) => (
+                <option key={b} value={b}>
+                  {b === 'All' ? 'All Bureaus' : b}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Deadline Monitoring Table */}
+        {filteredDeadlineItems.length === 0 ? (
+          <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
+            <CheckCircle2 className="w-5 h-5 text-[#198754] mx-auto mb-1" />
+            <p className="font-semibold text-[#263746]">No cases match this deadline filter.</p>
+            <p className="text-[11px]">All tracked complaint cases in this category are compliant.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto border border-[#D9DEE3] rounded-lg">
+            <table className="w-full text-left text-xs text-[#263746]">
+              <thead className="bg-[#F5F7F7] border-b border-[#D9DEE3] text-[11px] font-semibold text-[#718096] uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">Tracking No</th>
+                  <th className="py-3 px-4">Referenced Institution</th>
+                  <th className="py-3 px-4">Assigned Officer</th>
+                  <th className="py-3 px-4">Bureau / Cell</th>
+                  <th className="py-3 px-4">Statutory Deadline</th>
+                  <th className="py-3 px-4">SLA Days Remaining</th>
+                  <th className="py-3 px-4">Pending Statutory Action</th>
+                  <th className="py-3 px-4 text-right">Inspect</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9DEE3]">
+                {filteredDeadlineItems.map((c) => {
+                  const isOverdue = c.days_remaining < 0;
+                  const isDueToday = c.days_remaining === 0;
+                  const isUpcoming = c.days_remaining > 0 && c.days_remaining <= 3;
+
+                  return (
+                    <tr key={c.complaint_id || c.complaint_no} className="hover:bg-[#F5F7F7]/70 transition">
+                      {/* Complaint ID */}
+                      <td className="py-3 px-4 whitespace-nowrap font-mono font-bold text-[#087F75]">
+                        <Link
+                          to={`/complaints/${c.complaint_id}`}
+                          className="hover:underline flex items-center space-x-1"
+                        >
+                          <span>{c.complaint_no}</span>
+                        </Link>
+                      </td>
+
+                      {/* Institution */}
+                      <td className="py-3 px-4 max-w-[180px]">
+                        <p className="font-semibold text-[#263746] truncate" title={c.institution_name}>
+                          {c.institution_name}
+                        </p>
+                        <p className="text-[10px] text-[#718096]">ID #{c.institution_id}</p>
+                      </td>
+
+                      {/* Assigned Officer */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {c.assigned_officer_name && c.assigned_officer_name !== 'Unassigned' ? (
+                          <span className="font-medium text-[#263746] flex items-center space-x-1">
+                            <User className="w-3.5 h-3.5 text-[#087F75]" />
+                            <span>{c.assigned_officer_name}</span>
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-[#718096] border border-slate-200">
+                            Unassigned
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Bureau */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded bg-white text-[11px] font-medium text-[#263746] border border-[#D9DEE3]">
+                          {c.bureau}
+                        </span>
+                      </td>
+
+                      {/* Deadline Date */}
+                      <td className="py-3 px-4 whitespace-nowrap font-mono text-[11px] text-[#263746]">
+                        {formatDate(c.deadline_date)}
+                      </td>
+
+                      {/* Days Remaining & Warning Badges */}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {isOverdue ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-red-50 text-[#DC3545] border border-red-200 font-bold text-[10px] font-mono">
+                            <AlertTriangle className="w-3 h-3 text-[#DC3545]" />
+                            <span>Overdue by {Math.abs(c.days_remaining)}d</span>
+                          </span>
+                        ) : isDueToday ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 font-bold text-[10px] font-mono">
+                            <AlertCircle className="w-3 h-3 text-orange-600" />
+                            <span>Due Today</span>
+                          </span>
+                        ) : isUpcoming ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-[#D97736] border border-amber-200 font-bold text-[10px] font-mono">
+                            <Clock className="w-3 h-3 text-[#D97736]" />
+                            <span>{c.days_remaining}d remaining</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-teal-50 text-[#087F75] border border-teal-200 font-medium text-[10px] font-mono">
+                            <span>{c.days_remaining}d remaining</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Pending Statutory Action */}
+                      <td className="py-3 px-4 max-w-[200px]">
+                        <span className="text-[11px] font-medium text-[#263746] bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3] truncate block" title={c.pending_action}>
+                          {c.pending_action}
+                        </span>
+                      </td>
+
+                      {/* Inspect Action */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <Link
+                          to={`/complaints/${c.complaint_id}`}
+                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-white hover:bg-[#F5F7F7] text-[#087F75] border border-[#D9DEE3] text-xs font-semibold transition"
+                          title="Inspect Complaint"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Inspect</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* 6. Recent Complaints Card & Table */}
       <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm overflow-hidden space-y-4 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#D9DEE3]">
           <div>

@@ -9,19 +9,28 @@ from app.api.routes import (
     complaints,
     evidence,
     institutions,
+    notifications,
     overlap,
     patterns,
 )
+from app.core.scheduler import shutdown_scheduler, start_scheduler
 
+
+import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Application lifespan context manager for startup and shutdown events.
     """
-    # Startup: logging and resource setup
+    # Startup: start automated deadline monitoring scheduler (disabled during tests)
+    is_testing = bool(os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("TESTING"))
+    if not is_testing:
+        start_scheduler()
     yield
     # Shutdown: cleanup
+    if not is_testing:
+        shutdown_scheduler()
 
 
 app = FastAPI(
@@ -67,6 +76,7 @@ app.include_router(overlap.router, prefix=api_prefix)
 app.include_router(patterns.router, prefix=api_prefix)
 app.include_router(evidence.router, prefix=api_prefix)
 app.include_router(analytics.router, prefix=api_prefix)
+app.include_router(notifications.router, prefix=api_prefix)
 
 
 @app.get("/", tags=["Root"])

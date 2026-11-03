@@ -142,3 +142,26 @@ CREATE TABLE IF NOT EXISTS attachments (
 
 CREATE INDEX IF NOT EXISTS idx_attachments_complaint_id ON attachments (complaint_id);
 
+
+
+-- 8. NOTIFICATIONS TABLE (Feature 3.3: Automatic Reminder & Deadline System)
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    notification_type VARCHAR(50) NOT NULL,
+    reminder_date DATE NOT NULL,
+    urgency_level VARCHAR(20) DEFAULT 'INFO',
+    pending_action VARCHAR(255),
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_user_complaint_type_reminder_date UNIQUE (user_id, complaint_id, notification_type, reminder_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_complaint_id ON notifications (complaint_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications (is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications (created_at);
