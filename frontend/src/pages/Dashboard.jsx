@@ -26,6 +26,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -252,6 +253,7 @@ const demoDeadlines = {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isInstitute = user?.role === 'institute';
 
   const [backendHealth, setBackendHealth] = useState(null);
@@ -479,7 +481,7 @@ export function Dashboard() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#263746] tracking-tight mt-1">
-            {isInstitute ? 'Campus Grievance Console' : 'Complaint Intelligence Dashboard'}
+            {isInstitute ? 'Campus Grievance Console' : t('dashboard.title', 'Complaint Intelligence Dashboard')}
           </h1>
           <p className="text-sm text-[#718096] mt-0.5">
             {isInstitute
@@ -585,7 +587,7 @@ export function Dashboard() {
       {/* 2. Primary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Cases"
+          title={t('dashboard.totalCases', 'Total Cases')}
           value={
             presentationMode === 'demo'
               ? '1,248'
@@ -609,7 +611,7 @@ export function Dashboard() {
         />
 
         <StatCard
-          title="Pending Cases"
+          title={t('dashboard.pendingCases', 'Pending Cases')}
           value={
             presentationMode === 'demo'
               ? '356'
@@ -633,7 +635,7 @@ export function Dashboard() {
         />
 
         <StatCard
-          title="Resolved Cases"
+          title={t('dashboard.resolvedCases', 'Resolved Cases')}
           value={
             presentationMode === 'demo'
               ? '892'
@@ -657,7 +659,7 @@ export function Dashboard() {
         />
 
         <StatCard
-          title="Overdue Cases"
+          title={t('dashboard.overdueCases', 'Overdue Cases')}
           value={
             presentationMode === 'demo'
               ? '24'

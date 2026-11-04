@@ -60,6 +60,12 @@ CREATE TABLE IF NOT EXISTS complaints (
     assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
     resolution_summary TEXT,
     is_escalated BOOLEAN DEFAULT FALSE,
+    detected_language VARCHAR(10) DEFAULT ''en'',
+    translated_subject VARCHAR(300),
+    translated_description TEXT,
+    translation_status VARCHAR(30) DEFAULT ''original'',
+    translation_provider VARCHAR(50) DEFAULT ''internal_indic'',
+    translated_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -143,25 +149,70 @@ CREATE TABLE IF NOT EXISTS attachments (
 CREATE INDEX IF NOT EXISTS idx_attachments_complaint_id ON attachments (complaint_id);
 
 
-
--- 8. NOTIFICATIONS TABLE (Feature 3.3: Automatic Reminder & Deadline System)
-CREATE TABLE IF NOT EXISTS notifications (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    notification_type VARCHAR(50) NOT NULL,
-    reminder_date DATE NOT NULL,
-    urgency_level VARCHAR(20) DEFAULT 'INFO',
-    pending_action VARCHAR(255),
-    is_read BOOLEAN DEFAULT FALSE,
-    read_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_user_complaint_type_reminder_date UNIQUE (user_id, complaint_id, notification_type, reminder_date)
-);
-
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_complaint_id ON notifications (complaint_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications (is_read);
-CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications (created_at);
+
+
+-- 8. NOTIFICATIONS TABLE (Feature 3.3: Automatic Reminder & Deadline System)
+
+CREATE TABLE IF NOT EXISTS notifications (
+
+    id SERIAL PRIMARY KEY,
+
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE,
+
+    title VARCHAR(255) NOT NULL,
+
+    message TEXT NOT NULL,
+
+    notification_type VARCHAR(50) NOT NULL,
+
+    reminder_date DATE NOT NULL,
+
+    urgency_level VARCHAR(20) DEFAULT 'INFO',
+
+    pending_action VARCHAR(255),
+
+    is_read BOOLEAN DEFAULT FALSE,
+
+    read_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_user_complaint_type_reminder_date UNIQUE (user_id, complaint_id, notification_type, reminder_date)
+
+);
+
+
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_complaint_id ON notifications (complaint_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications (is_read);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications (created_at);
+
+
+
+-- 9. PRIORITY RECOMMENDATIONS TABLE (Feature 3.5: AI-Assisted Priority System)
+CREATE TABLE IF NOT EXISTS priority_recommendations (
+    id SERIAL PRIMARY KEY,
+    complaint_id INTEGER NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
+    recommended_priority VARCHAR(20) NOT NULL, -- 'Critical', 'High', 'Medium', 'Low'
+    score INTEGER NOT NULL, -- 0 to 100
+    factors JSONB, -- { severity_score, ageing_days, deadline_penalty, escalation_bonus }
+    reason TEXT NOT NULL,
+    status VARCHAR(30) DEFAULT 'Pending Review', -- 'Pending Review', 'Accepted', 'Overridden'
+    initial_priority VARCHAR(20),
+    final_priority VARCHAR(20),
+    decision_notes TEXT,
+    decided_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    decided_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_priority_rec_complaint ON priority_recommendations (complaint_id);
+CREATE INDEX IF NOT EXISTS idx_priority_rec_status ON priority_recommendations (status);
+CREATE INDEX IF NOT EXISTS idx_priority_rec_priority ON priority_recommendations (recommended_priority);

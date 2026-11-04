@@ -34,6 +34,14 @@ export const complaintService = {
     const response = await apiClient.get(`/complaints/${complaintId}/attachments`);
     return response.data;
   },
+
+  // Feature 3.6: On-demand multilingual translation
+  translateComplaint: async (id, targetLanguage = 'en') => {
+    const response = await apiClient.post(`/complaints/${id}/translate`, {
+      target_language: targetLanguage,
+    });
+    return response.data;
+  },
 };
 
 export default complaintService;
