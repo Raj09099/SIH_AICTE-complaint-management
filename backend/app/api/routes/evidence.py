@@ -17,10 +17,10 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.dependencies import get_current_active_user, get_db
+from app.dependencies import get_current_active_user, get_current_user, get_db
 from app.ml.evidence_checker import ResolutionEvidenceChecker
 from app.models.complaint import Complaint
 from app.models.institution import Institution
@@ -108,7 +108,7 @@ def get_evidence_complaint_candidates(
     search: Optional[str] = Query(None, description="Search by complaint_no, category, or institution name"),
     status_filter: Optional[str] = Query(None, description="Filter by status (e.g., 'Under Review', 'Evidence Requested')"),
     limit: int = Query(50, ge=1, le=200),
-    current_user: dict = Depends(get_current_active_user),
+    current_user: Optional[dict] = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> List[EvidenceComplaintCandidate]:
     """
@@ -119,17 +119,26 @@ def get_evidence_complaint_candidates(
         .options(joinedload(Complaint.institution))
     )
 
-    if status_filter and status_filter.lower() != "all":
+    # Institutional data isolation: if institute user, restrict to their college
+    if current_user and current_user.get("role") == "institute":
+        inst_id = current_user.get("institution_id")
+        if inst_id:
+            query = query.filter(Complaint.institution_id == inst_id)
+
+    if isinstance(status_filter, str) and status_filter.strip() and status_filter.lower() != "all":
         query = query.filter(Complaint.status.ilike(status_filter.strip()))
 
-    if search:
+    if isinstance(search, str) and search.strip():
         s = f"%{search.strip()}%"
-        query = query.join(Institution, isouter=True).filter(
-            (Complaint.complaint_no.ilike(s))
-            | (Complaint.subject.ilike(s))
-            | (Complaint.category.ilike(s))
-            | (Institution.name.ilike(s))
-        )
+        filter_conds = [
+            Complaint.complaint_no.ilike(s),
+            Complaint.subject.ilike(s),
+            Complaint.category.ilike(s),
+            Institution.name.ilike(s),
+        ]
+        if search.strip().isdigit():
+            filter_conds.append(Complaint.id == int(search.strip()))
+        query = query.join(Institution, isouter=True).filter(or_(*filter_conds))
 
     complaints = query.order_by(Complaint.filing_date.desc().nullslast()).limit(limit).all()
 
@@ -168,7 +177,7 @@ def upload_and_verify_evidence(
     file: UploadFile = File(...),
     complaint_id: int = Form(...),
     officer_notes: Optional[str] = Form(None),
-    current_user: dict = Depends(get_current_active_user),
+    current_user: Optional[dict] = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> EvidenceUploadResponse:
     """
@@ -190,6 +199,15 @@ def upload_and_verify_evidence(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Complaint ID #{complaint_id} was not found.",
         )
+
+    # Institutional isolation: prevent institute representative from submitting evidence for other colleges
+    if current_user and current_user.get("role") == "institute":
+        inst_id = current_user.get("institution_id")
+        if inst_id and complaint.institution_id != inst_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Institutions are authorized to upload evidence only for their own complaints.",
+            )
 
     content = file.file.read()
     if not content or len(content) == 0:
@@ -287,7 +305,7 @@ def upload_and_verify_evidence(
 )
 def get_evidence_by_complaint(
     complaint_id: int,
-    current_user: dict = Depends(get_current_active_user),
+    current_user: Optional[dict] = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> List[EvidenceUploadResponse]:
     """
@@ -299,6 +317,14 @@ def get_evidence_by_complaint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Complaint with ID #{complaint_id} was not found.",
         )
+
+    if current_user and current_user.get("role") == "institute":
+        inst_id = current_user.get("institution_id")
+        if inst_id and complaint.institution_id != inst_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to compliance records for other institutions.",
+            )
 
     evidences = (
         db.query(ResolutionEvidence)

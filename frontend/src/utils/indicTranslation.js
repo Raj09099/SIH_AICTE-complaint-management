@@ -345,3 +345,4 @@ export function translateGrievance(subject = '', description = '', targetLang = 
     status: 'translated',
   };
 }
+

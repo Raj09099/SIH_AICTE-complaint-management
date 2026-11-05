@@ -11,6 +11,11 @@ export const complaintService = {
     return response.data;
   },
 
+  getById: async (id) => {
+    const response = await apiClient.get(`/complaints/${id}`);
+    return response.data;
+  },
+
   createComplaint: async (complaintData) => {
     const response = await apiClient.post('/complaints', complaintData);
     return response.data;

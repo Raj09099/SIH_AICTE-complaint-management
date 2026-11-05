@@ -78,14 +78,58 @@ export function EvidenceChecker() {
   // Confirmation modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Load candidate complaints
+  // Load candidate complaints with automatic fallback
   const fetchCandidates = async (query = '') => {
     setCandidatesLoading(true);
     try {
-      const data = await evidenceService.getCandidates({ search: query, limit: 30 });
-      setCandidates(data || []);
+      const data = await evidenceService.getCandidates({ search: query, limit: 50 });
+      if (Array.isArray(data) && data.length > 0) {
+        setCandidates(data);
+        return;
+      }
+      // If evidence candidate returns empty, query complaints directly
+      const compData = await complaintService.getComplaints({ search: query, limit: 50 });
+      const list = Array.isArray(compData) ? compData : (compData?.items || []);
+      if (list && list.length > 0) {
+        setCandidates(list.map((c) => ({
+          id: c.id,
+          complaint_no: c.complaint_no,
+          category: c.category,
+          bureau: c.bureau,
+          subject: c.subject,
+          description: c.description || '',
+          institution_id: c.institution_id,
+          institution_name: c.institution?.name || `Institution #${c.institution_id}`,
+          status: c.status || 'New',
+          filing_date: c.filing_date,
+          evidence_count: 0,
+        })));
+      } else {
+        setCandidates([]);
+      }
     } catch (err) {
-      console.error('Failed to load candidate complaints:', err);
+      console.warn('Could not fetch candidate complaints via evidenceService, falling back:', err);
+      try {
+        const compData = await complaintService.getComplaints({ search: query, limit: 50 });
+        const list = Array.isArray(compData) ? compData : (compData?.items || []);
+        if (list && list.length > 0) {
+          setCandidates(list.map((c) => ({
+            id: c.id,
+            complaint_no: c.complaint_no,
+            category: c.category,
+            bureau: c.bureau,
+            subject: c.subject,
+            description: c.description || '',
+            institution_id: c.institution_id,
+            institution_name: c.institution?.name || `Institution #${c.institution_id}`,
+            status: c.status || 'New',
+            filing_date: c.filing_date,
+            evidence_count: 0,
+          })));
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback candidates fetch also failed:', fallbackErr);
+      }
     } finally {
       setCandidatesLoading(false);
     }
@@ -97,7 +141,18 @@ export function EvidenceChecker() {
 
   // When selectedComplaintId changes, load complaint details and its evidence dossiers
   useEffect(() => {
-    if (!selectedComplaintId) return;
+    if (!selectedComplaintId) {
+      setSelectedComplaint(null);
+      setEvidenceList([]);
+      setActiveEvidence(null);
+      return;
+    }
+
+    // Immediately resolve known candidate from cache for instantaneous UI feedback
+    const candidateMatch = candidates.find((c) => c.id === selectedComplaintId);
+    if (candidateMatch) {
+      setSelectedComplaint((prev) => prev?.id === selectedComplaintId ? prev : candidateMatch);
+    }
 
     const loadComplaintAndEvidence = async () => {
       setIsLoadingEvidence(true);
@@ -105,14 +160,29 @@ export function EvidenceChecker() {
       setReviewSuccessMsg(null);
       setReviewErrorMsg(null);
       try {
-        const comp = await complaintService.getById(selectedComplaintId);
-        setSelectedComplaint(comp);
+        const getFn = complaintService.getComplaintById || complaintService.getById;
+        let comp = null;
+        try {
+          comp = await getFn(selectedComplaintId);
+        } catch (compErr) {
+          console.warn('complaintService.getComplaintById failed, using cached candidate:', compErr);
+          comp = candidateMatch;
+        }
+        if (comp) {
+          setSelectedComplaint(comp);
+        }
 
-        const evidences = await evidenceService.getByComplaint(selectedComplaintId);
-        setEvidenceList(evidences || []);
-        if (evidences && evidences.length > 0) {
-          setActiveEvidence(evidences[0]);
-        } else {
+        try {
+          const evidences = await evidenceService.getByComplaint(selectedComplaintId);
+          setEvidenceList(evidences || []);
+          if (evidences && evidences.length > 0) {
+            setActiveEvidence(evidences[0]);
+          } else {
+            setActiveEvidence(null);
+          }
+        } catch (evErr) {
+          console.warn('Could not load evidence list for complaint:', evErr);
+          setEvidenceList([]);
           setActiveEvidence(null);
         }
       } catch (err) {
@@ -153,13 +223,15 @@ export function EvidenceChecker() {
 
   // Submit upload and verification
   const handleUploadAndVerify = async (e) => {
-    e.preventDefault();
-    if (!selectedFile) {
-      setUploadError('Please select a PDF or DOCX evidence file from your device.');
-      return;
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
     }
     if (!selectedComplaintId) {
-      setUploadError('Please select a target complaint to verify against.');
+      setUploadError('Please select a target complaint from the dropdown above to verify against.');
+      return;
+    }
+    if (!selectedFile) {
+      setUploadError('Please choose or drop a PDF or DOCX resolution evidence file from your device.');
       return;
     }
 
@@ -220,8 +292,15 @@ export function EvidenceChecker() {
       );
 
       // Refresh selected complaint to reflect status changes
-      const comp = await complaintService.getById(selectedComplaintId);
-      setSelectedComplaint(comp);
+      try {
+        const getFn = complaintService.getComplaintById || complaintService.getById;
+        const comp = await getFn(selectedComplaintId);
+        if (comp) {
+          setSelectedComplaint(comp);
+        }
+      } catch (err) {
+        console.warn('Could not refresh complaint status after review:', err);
+      }
 
       setReviewSuccessMsg(
         reviewDecision === 'approved'
@@ -300,6 +379,17 @@ export function EvidenceChecker() {
   const matchedKeywords = breakdown.matched_keywords || [];
   const missingElements = breakdown.missing_elements || [];
 
+  const filteredCandidates = candidates.filter((c) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const cNo = (c.complaint_no || '').toLowerCase();
+    const cCat = (c.category || '').toLowerCase();
+    const cInst = (c.institution_name || '').toLowerCase();
+    const cSubj = (c.subject || '').toLowerCase();
+    const cId = String(c.id || '');
+    return cNo.includes(q) || cCat.includes(q) || cInst.includes(q) || cSubj.includes(q) || cId.includes(q);
+  });
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Header Banner */}
@@ -360,15 +450,25 @@ export function EvidenceChecker() {
             <div>
               <select
                 value={selectedComplaintId || ''}
-                onChange={(e) => setSelectedComplaintId(parseInt(e.target.value, 10))}
-                className="w-full p-2 text-xs border border-[#D9DEE3] rounded-lg bg-slate-50 text-[#263746] focus:outline-none focus:border-[#087F75]"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedComplaintId(val ? parseInt(val, 10) : null);
+                }}
+                disabled={candidatesLoading && candidates.length === 0}
+                className="w-full p-2.5 text-xs border border-[#D9DEE3] rounded-lg bg-slate-50 text-[#263746] focus:outline-none focus:border-[#087F75] disabled:opacity-60 font-medium"
               >
                 <option value="">-- Choose a Complaint to Verify --</option>
-                {candidates.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.complaint_no} • {c.category} ({c.institution_name}) [{c.status}]
-                  </option>
-                ))}
+                {candidatesLoading && candidates.length === 0 ? (
+                  <option disabled>Loading candidate complaints...</option>
+                ) : filteredCandidates.length === 0 ? (
+                  <option disabled>No candidate complaints match your search query</option>
+                ) : (
+                  filteredCandidates.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.complaint_no} • {c.category} ({c.institution_name}) [{c.status}]
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -509,8 +609,14 @@ export function EvidenceChecker() {
             <button
               type="button"
               onClick={handleUploadAndVerify}
-              disabled={isUploading || !selectedFile || !selectedComplaintId}
-              className="w-full py-2.5 px-4 bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-bold rounded-lg transition shadow-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+              disabled={isUploading}
+              className={`w-full py-2.5 px-4 text-white text-xs font-bold rounded-lg transition shadow-sm flex items-center justify-center space-x-2 ${
+                isUploading
+                  ? 'bg-slate-400 cursor-not-allowed opacity-75'
+                  : !selectedComplaintId || !selectedFile
+                  ? 'bg-[#087F75] hover:bg-[#06635c] cursor-pointer'
+                  : 'bg-[#087F75] hover:bg-[#06635c] cursor-pointer shadow-md'
+              }`}
             >
               {isUploading ? (
                 <>
@@ -524,6 +630,22 @@ export function EvidenceChecker() {
                 </>
               )}
             </button>
+
+            {/* Step-by-Step Helper Guidance */}
+            {!selectedComplaintId ? (
+              <p className="text-[11px] text-amber-800 bg-amber-50/80 p-2 rounded-lg border border-amber-200 text-center font-medium">
+                👉 Step 1: Select a grievance case from the dropdown above.
+              </p>
+            ) : !selectedFile ? (
+              <p className="text-[11px] text-[#087F75] bg-teal-50/80 p-2 rounded-lg border border-teal-200 text-center font-medium">
+                👉 Step 2: Choose or drop a PDF or DOCX resolution proof file above.
+              </p>
+            ) : (
+              <p className="text-[11px] text-emerald-800 bg-emerald-50/80 p-2 rounded-lg border border-emerald-200 text-center font-medium flex items-center justify-center space-x-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline mr-1 shrink-0" />
+                <span>Ready to extract text with PyMuPDF and calculate 6-factor score.</span>
+              </p>
+            )}
           </div>
 
           {/* Previous Evidence Files for this Complaint */}
