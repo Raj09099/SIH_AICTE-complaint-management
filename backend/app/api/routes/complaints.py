@@ -288,6 +288,20 @@ def create_complaint(
         db.commit()
         db.refresh(new_complaint)
 
+        # Dispatch institution intake notification
+        try:
+            from app.services.reminder_service import ReminderService
+            ReminderService.create_complaint_status_notification(
+                db=db,
+                complaint=new_complaint,
+                old_status=None,
+                new_status=new_complaint.status or "New",
+                old_bureau=None,
+                new_bureau=new_complaint.bureau,
+            )
+        except Exception as notif_err:
+            logger.warning("Could not dispatch intake notification for %s: %s", complaint_no, notif_err)
+
         logger.info(
             "Complaint %s created successfully for institution %s (Actor: %s)",
             complaint_no,

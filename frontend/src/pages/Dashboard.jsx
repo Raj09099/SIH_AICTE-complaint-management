@@ -303,6 +303,8 @@ export function Dashboard() {
   const [instReminders, setInstReminders] = useState([]);
   const [instHistory, setInstHistory] = useState([]);
   const [loadingInstCompliance, setLoadingInstCompliance] = useState(false);
+  const [instComplianceError, setInstComplianceError] = useState(null);
+  const [refreshSuccessFeedback, setRefreshSuccessFeedback] = useState(false);
   const [instTab, setInstTab] = useState('deadlines'); // 'deadlines' | 'reminders' | 'history'
   const [instDeadlineFilter, setInstDeadlineFilter] = useState('all'); // 'all' | 'pending' | 'completed' | 'overdue' | 'upcoming'
   const [instReminderFilter, setInstReminderFilter] = useState('all'); // 'all' | 'unread'
@@ -319,6 +321,7 @@ export function Dashboard() {
   const fetchInstituteComplianceData = useCallback(async () => {
     if (!isInstitute) return;
     setLoadingInstCompliance(true);
+    setInstComplianceError(null);
     try {
       const [summaryRes, deadlinesRes, remindersRes, historyRes] = await Promise.all([
         complianceService.getComplianceSummary().catch((e) => {
@@ -339,16 +342,43 @@ export function Dashboard() {
         }),
       ]);
 
-      if (summaryRes) setInstSummary(summaryRes);
+      if (summaryRes) {
+        setInstSummary(summaryRes);
+      } else if (Array.isArray(deadlinesRes) && deadlinesRes.length > 0) {
+        // Resilient fallback derived directly from the loaded deadlines
+        const total = deadlinesRes.length;
+        const completed = deadlinesRes.filter((d) =>
+          ['completed', 'verified', 'approved'].includes(d.status?.toLowerCase())
+        ).length;
+        const upcoming = deadlinesRes.filter((d) => d.is_upcoming).length;
+        const overdue = deadlinesRes.filter((d) => d.is_overdue).length;
+        setInstSummary({
+          total_requirements: total,
+          completed_requirements: completed,
+          upcoming_deadlines: upcoming,
+          overdue_submissions: overdue,
+          institution_id: user?.institution_id || 1,
+          institution_name: user?.bureau || 'Apex Institute of Technology',
+        });
+      }
+
       if (Array.isArray(deadlinesRes)) setInstDeadlines(deadlinesRes);
       if (Array.isArray(remindersRes)) setInstReminders(remindersRes);
       if (Array.isArray(historyRes)) setInstHistory(historyRes);
+
+      if (!summaryRes && (!deadlinesRes || deadlinesRes.length === 0) && (!remindersRes || remindersRes.length === 0)) {
+        setInstComplianceError('Could not fetch latest compliance records. Please verify backend connection.');
+      } else {
+        setRefreshSuccessFeedback(true);
+        setTimeout(() => setRefreshSuccessFeedback(false), 2500);
+      }
     } catch (err) {
       console.error('Error fetching institute compliance data:', err);
+      setInstComplianceError(err.message || 'Error communicating with compliance API service.');
     } finally {
       setLoadingInstCompliance(false);
     }
-  }, [isInstitute, instDeadlineFilter, instReminderFilter]);
+  }, [isInstitute, instDeadlineFilter, instReminderFilter, user]);
 
   useEffect(() => {
     if (isInstitute) {
@@ -1379,7 +1409,7 @@ export function Dashboard() {
                 type="button"
                 onClick={fetchInstituteComplianceData}
                 disabled={loadingInstCompliance}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold rounded-lg shadow-sm transition disabled:opacity-60"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold rounded-lg shadow-sm transition disabled:opacity-60 cursor-pointer"
                 title="Refresh Campus Compliance & Notifications"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loadingInstCompliance ? 'animate-spin' : ''}`} />
@@ -1387,6 +1417,30 @@ export function Dashboard() {
               </button>
             </div>
           </div>
+
+          {/* Feedback & Error Alerts */}
+          {refreshSuccessFeedback && (
+            <div className="px-3.5 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-[#198754] font-medium flex items-center space-x-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Campus statutory requirements, upcoming deadlines, and complaint status alerts refreshed successfully.</span>
+            </div>
+          )}
+
+          {instComplianceError && (
+            <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-[#DC3545] flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-[#DC3545] shrink-0" />
+                <span>{instComplianceError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchInstituteComplianceData}
+                className="px-2.5 py-1 bg-white border border-red-300 rounded font-semibold text-[#DC3545] hover:bg-red-50 text-xs transition"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           {/* 4 Dashboard Statistics: Total, Completed, Upcoming Deadlines, Overdue Submissions */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1408,7 +1462,11 @@ export function Dashboard() {
                   <span>Total Compliance Requirements</span>
                 </div>
                 <div className="text-2xl font-bold text-[#263746]">
-                  {instSummary?.total_requirements ?? 0}
+                  {loadingInstCompliance ? (
+                    <span className="inline-block w-8 h-7 bg-slate-200 animate-pulse rounded" />
+                  ) : (
+                    instSummary?.total_requirements ?? 0
+                  )}
                 </div>
                 <p className="text-[11px] text-[#718096]">Statutory mandates tracked</p>
               </div>
@@ -1435,7 +1493,11 @@ export function Dashboard() {
                   <span>Completed Requirements</span>
                 </div>
                 <div className="text-2xl font-bold text-[#198754]">
-                  {instSummary?.completed_requirements ?? 0}
+                  {loadingInstCompliance ? (
+                    <span className="inline-block w-8 h-7 bg-emerald-200 animate-pulse rounded" />
+                  ) : (
+                    instSummary?.completed_requirements ?? 0
+                  )}
                 </div>
                 <p className="text-[11px] text-[#718096]">Submissions verified</p>
               </div>
@@ -1462,7 +1524,11 @@ export function Dashboard() {
                   <span>Upcoming Deadlines</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-700">
-                  {instSummary?.upcoming_deadlines ?? 0}
+                  {loadingInstCompliance ? (
+                    <span className="inline-block w-8 h-7 bg-blue-200 animate-pulse rounded" />
+                  ) : (
+                    instSummary?.upcoming_deadlines ?? 0
+                  )}
                 </div>
                 <p className="text-[11px] text-[#718096]">Due within 30 days</p>
               </div>
@@ -1489,7 +1555,11 @@ export function Dashboard() {
                   <span>Overdue Submissions</span>
                 </div>
                 <div className="text-2xl font-bold text-[#DC3545]">
-                  {instSummary?.overdue_submissions ?? 0}
+                  {loadingInstCompliance ? (
+                    <span className="inline-block w-8 h-7 bg-red-200 animate-pulse rounded" />
+                  ) : (
+                    instSummary?.overdue_submissions ?? 0
+                  )}
                 </div>
                 <p className="text-[11px] text-[#718096]">Immediate action required</p>
               </div>
@@ -1648,7 +1718,12 @@ export function Dashboard() {
           {/* TAB 1: Compliance Requirements & Uploads */}
           {instTab === 'deadlines' && (
             <div>
-              {instDeadlines.length === 0 ? (
+              {loadingInstCompliance && instDeadlines.length === 0 ? (
+                <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-2">
+                  <RefreshCw className="w-5 h-5 text-[#087F75] animate-spin mx-auto mb-1" />
+                  <p className="font-semibold text-[#263746]">Fetching statutory compliance mandates...</p>
+                </div>
+              ) : instDeadlines.length === 0 ? (
                 <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
                   <CheckCircle2 className="w-5 h-5 text-[#198754] mx-auto mb-1" />
                   <p className="font-semibold text-[#263746]">No compliance requirements match this filter.</p>
@@ -1772,7 +1847,12 @@ export function Dashboard() {
           {/* TAB 2: Upcoming Reminders – Complaint Status Notifications (Section 4) */}
           {instTab === 'reminders' && (
             <div>
-              {instReminders.length === 0 ? (
+              {loadingInstCompliance && instReminders.length === 0 ? (
+                <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-2">
+                  <RefreshCw className="w-5 h-5 text-[#087F75] animate-spin mx-auto mb-1" />
+                  <p className="font-semibold text-[#263746]">Loading complaint status notifications...</p>
+                </div>
+              ) : instReminders.length === 0 ? (
                 <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
                   <Inbox className="w-5 h-5 text-[#087F75] mx-auto mb-1" />
                   <p className="font-semibold text-[#263746]">No complaint status notifications recorded.</p>
@@ -1887,7 +1967,12 @@ export function Dashboard() {
           {/* TAB 3: Compliance History & Audit Trail */}
           {instTab === 'history' && (
             <div>
-              {instHistory.length === 0 ? (
+              {loadingInstCompliance && instHistory.length === 0 ? (
+                <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-2">
+                  <RefreshCw className="w-5 h-5 text-[#087F75] animate-spin mx-auto mb-1" />
+                  <p className="font-semibold text-[#263746]">Loading submission audit trail...</p>
+                </div>
+              ) : instHistory.length === 0 ? (
                 <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
                   <FileText className="w-5 h-5 text-[#718096] mx-auto mb-1" />
                   <p className="font-semibold text-[#263746]">No previous compliance submissions on record.</p>

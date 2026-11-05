@@ -27,17 +27,26 @@ def get_database_url() -> str:
     return url
 
 
-# Engine initialization with connection pooling and health checks.
-# Note: Connection is established lazily on first query/session operation,
-# so importing the engine does not require an active database connection.
-engine: Engine = create_engine(
-    get_database_url(),
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-    pool_recycle=300,
-    echo=False,
-)
+db_url = get_database_url()
+engine_kwargs = {
+    "pool_pre_ping": True,
+    "pool_recycle": 120,
+    "echo": False,
+}
+if "postgresql" in db_url:
+    engine_kwargs.update({
+        "pool_size": 5,
+        "max_overflow": 10,
+        "connect_args": {
+            "connect_timeout": 15,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
+    })
+
+engine: Engine = create_engine(db_url, **engine_kwargs)
 
 # Session factory bound to the engine
 SessionLocal = sessionmaker(
