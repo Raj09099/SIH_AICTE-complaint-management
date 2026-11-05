@@ -949,86 +949,88 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* 4. Decision-Support Feature Highlights */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          to="/case-overlap"
-          className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#087F75]/40 transition group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
-                <GitCompare className="w-4 h-4" />
+      {/* 4. Decision-Support Feature Highlights (Council Officers Only) */}
+      {!isInstitute && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            to="/case-overlap"
+            className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#087F75]/40 transition group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-[#087F75]/10 text-[#087F75]">
+                  <GitCompare className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold text-[#087F75] uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+                  Core Feature 1
+                </span>
               </div>
-              <span className="text-[10px] font-semibold text-[#087F75] uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
-                Core Feature 1
-              </span>
+              <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
+                Case Overlap Detection
+              </h3>
+              <p className="text-xs text-[#718096] leading-relaxed">
+                TF-IDF text similarity & cross-bureau matching. Identify duplicate or related complaints.
+              </p>
             </div>
-            <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
-              Case Overlap Detection
-            </h3>
-            <p className="text-xs text-[#718096] leading-relaxed">
-              TF-IDF text similarity & cross-bureau matching. Identify duplicate or related complaints.
-            </p>
-          </div>
-          <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#087F75]">
-            <span>Explore Matches ({summaryData?.total_overlaps || 50})</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-          </div>
-        </Link>
+            <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#087F75]">
+              <span>Explore Matches ({summaryData?.total_overlaps || 50})</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+            </div>
+          </Link>
 
-        <Link
-          to="/problem-patterns"
-          className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#263746]/40 transition group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-[#263746]/10 text-[#263746]">
-                <Network className="w-4 h-4" />
+          <Link
+            to="/problem-patterns"
+            className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#263746]/40 transition group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-[#263746]/10 text-[#263746]">
+                  <Network className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
+                  Core Feature 2
+                </span>
               </div>
-              <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
-                Core Feature 2
-              </span>
+              <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
+                Problem Pattern Detector
+              </h3>
+              <p className="text-xs text-[#718096] leading-relaxed">
+                Unsupervised clustering pipeline across technical institutions to discover systemic themes.
+              </p>
             </div>
-            <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
-              Problem Pattern Detector
-            </h3>
-            <p className="text-xs text-[#718096] leading-relaxed">
-              Unsupervised clustering pipeline across technical institutions to discover systemic themes.
-            </p>
-          </div>
-          <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#263746]">
-            <span>View Clustering Grid</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-          </div>
-        </Link>
+            <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#263746]">
+              <span>View Clustering Grid</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+            </div>
+          </Link>
 
-        <Link
-          to="/evidence-checker"
-          className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#263746]/40 transition group flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-[#263746]/10 text-[#263746]">
-                <FileCheck2 className="w-4 h-4" />
+          <Link
+            to="/evidence-checker"
+            className="bg-white rounded-xl p-4 border border-[#D9DEE3] shadow-sm hover:shadow hover:border-[#263746]/40 transition group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-[#263746]/10 text-[#263746]">
+                  <FileCheck2 className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
+                  Core Feature 3
+                </span>
               </div>
-              <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
-                Core Feature 3
-              </span>
+              <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
+                Evidence Relevance Checker
+              </h3>
+              <p className="text-xs text-[#718096] leading-relaxed">
+                PyMuPDF compliance verification assessing affidavit text against claimed complaint resolutions.
+              </p>
             </div>
-            <h3 className="text-sm font-bold text-[#263746] group-hover:text-[#087F75] transition">
-              Evidence Relevance Checker
-            </h3>
-            <p className="text-xs text-[#718096] leading-relaxed">
-              PyMuPDF compliance verification assessing affidavit text against claimed complaint resolutions.
-            </p>
-          </div>
-          <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#263746]">
-            <span>Open Evidence Review</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-          </div>
-        </Link>
-      </div>
+            <div className="mt-3 pt-2 border-t border-[#D9DEE3] flex items-center justify-between text-xs font-medium text-[#263746]">
+              <span>Open Evidence Review</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* 5. Automatic Reminder & Statutory Deadline Grid (AICTE vs Institute Mode) */}
       {!isInstitute ? (
