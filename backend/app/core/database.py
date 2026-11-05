@@ -15,10 +15,15 @@ def get_database_url() -> str:
     Retrieve and format the database connection URL from application settings.
     Ensures compatibility with SQLAlchemy PostgreSQL dialect format
     (e.g., handles postgres:// vs postgresql://).
+    Automatically ensures sslmode=require for Supabase pooler connections.
     """
     url = settings.DATABASE_URL
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
+    if "pooler.supabase.com" in url:
+        if "sslmode=" not in url:
+            sep = "&" if "?" in url else "?"
+            url = f"{url}{sep}sslmode=require"
     return url
 
 
@@ -28,8 +33,9 @@ def get_database_url() -> str:
 engine: Engine = create_engine(
     get_database_url(),
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=5,
+    max_overflow=10,
+    pool_recycle=300,
     echo=False,
 )
 

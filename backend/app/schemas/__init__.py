@@ -40,6 +40,13 @@ from app.schemas.pattern import (
     PatternListResponse,
     ProblemPatternOut,
 )
+from app.schemas.evidence import (
+    EvidenceComplaintCandidate,
+    EvidenceListItem,
+    EvidenceRelevanceBreakdown,
+    EvidenceReviewRequest,
+    EvidenceUploadResponse,
+)
 
 __all__ = [
     "ComplaintCreate",

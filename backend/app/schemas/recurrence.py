@@ -1,6 +1,7 @@
 """
 Pydantic Schemas for Feature 3.4: Recurrence Radar in SIH26264.
-Provides data transfer models for institution systemic recurrence, trend analytics, and category metrics.
+Provides data transfer models for institution systemic recurrence, AI-driven agglomerative clustering,
+trend analytics, and category metrics.
 """
 
 from typing import Dict, List, Optional
@@ -28,6 +29,19 @@ class CategoryRecurrenceStat(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AIRecurringCluster(BaseModel):
+    """AI-grouped cluster of semantically similar complaints within an institution."""
+    cluster_id: int
+    title: str
+    category: str
+    complaint_count: int
+    cohesion_score: float  # e.g. 0.85 (85% similarity)
+    complaint_ids: List[int]
+    sample_subjects: List[str]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class InstitutionRecurrenceItem(BaseModel):
     """Institution row in the Recurrence Radar monitoring table."""
     institution_id: int
@@ -42,6 +56,7 @@ class InstitutionRecurrenceItem(BaseModel):
     primary_category_count: int
     trend: str  # 'Increasing', 'Decreasing', 'Stable', 'Insufficient Data'
     monthly_trend: List[MonthlyTrendPoint]
+    recurring_clusters_count: Optional[int] = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -57,6 +72,7 @@ class RecurrenceRadarOverviewResponse(BaseModel):
     bureau_distribution: Dict[str, int]
     overall_monthly_trend: List[MonthlyTrendPoint]
     institutions: List[InstitutionRecurrenceItem]
+    ai_methodology: Optional[str] = "TF-IDF + Cosine Similarity + Agglomerative Clustering"
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -88,6 +104,8 @@ class InstitutionRecurrenceDetailResponse(BaseModel):
     category_breakdown: List[CategoryRecurrenceStat]
     monthly_trend: List[MonthlyTrendPoint]
     complaints: List[InstitutionRecurrenceComplaint]
+    ai_clusters: Optional[List[AIRecurringCluster]] = []
 
     model_config = ConfigDict(from_attributes=True)
+
 

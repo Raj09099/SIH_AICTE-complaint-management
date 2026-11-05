@@ -37,7 +37,8 @@ export const complaintService = {
 
   // Feature 3.6: On-demand multilingual translation
   translateComplaint: async (id, targetLanguage = 'en') => {
-    const response = await apiClient.post(`/complaints/${id}/translate`, {
+    const cleanId = encodeURIComponent(String(id || '').trim());
+    const response = await apiClient.post(`/complaints/${cleanId}/translate`, {
       target_language: targetLanguage,
     });
     return response.data;

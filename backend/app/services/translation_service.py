@@ -25,7 +25,9 @@ class TranslationService:
         "संस्थेने", "पाहिजे", "होते", "होती", "घेऊन", "आणखी", "येथे", "त्यामुळे",
         "कागदपत्रे", "गुणपत्रिका", "रद्द", "प्रवेश", "छळ", "मारहाण", "वसतिगृह",
         "पगार", "प्रयोगशाळा", "ग्रंथालय", "मान्यता", "संस्था", "विद्यार्थ्यांना",
-        "पुस्तके", "पाणी", "अस्वच्छ", "सुविधा", "रोखून", "ठेवली", "देत", "नसून"
+        "पुस्तके", "पाणी", "अस्वच्छ", "सुविधा", "रोखून", "ठेवली", "देत", "नसून",
+        "जास्त", "जादा", "आकारले", "आकारतात", "आकारते", "आकारणी", "आकारण्यात",
+        "जात", "येत", "वसूली", "वसूल", "मागणी", "मागितले", "देणगी", "कॅपीटेशन", "कॅपिटेशन"
     }
 
     # Distinctive Hindi lexical markers and tokens
@@ -36,11 +38,40 @@ class TranslationService:
         "चाहिए", "था", "थी", "थे", "लेकर", "और", "यहाँ", "इसलिए", "हुए", "होगा",
         "दस्तावेज", "अंकतालिका", "दाखिला", "उत्पीड़न", "मारपीट", "हॉस्टल",
         "वेतन", "प्रयोगशाला", "पुस्तकालय", "प्रमाणपत्र", "पानी", "गंदा",
-        "सुविधाएं", "रोक", "रखा", "देते", "बिना", "छात्रवृत्ति", "प्रशासन"
+        "सुविधाएं", "रोक", "रखा", "देते", "बिना", "छात्रवृत्ति", "प्रशासन",
+        "ज्यादा", "अतिरिक्त", "वसूला", "मांगा", "लिया", "ली"
     }
 
     # Educational Grievance Phrase Map (Multi-word matches handled first)
     GRIEVANCE_PHRASE_MAP: Dict[str, str] = {
+        # Fee overcharging & Admission fee issues
+        "जास्त प्रवेश शुल्क आकारले जात आहे": "Excess admission fee is being charged",
+        "जास्त प्रवेश शुल्क आकारण्यात येत आहे": "Excess admission fee is being charged",
+        "जास्त प्रवेश शुल्क आकारले": "Excess admission fee charged",
+        "जास्त प्रवेश शुल्क आकारतात": "Excess admission fee is being charged",
+        "जास्त प्रवेश शुल्क": "Excess admission fee",
+        "अधिक प्रवेश शुल्क आकारले जात आहे": "Excess admission fee is being charged",
+        "अधिक प्रवेश शुल्क": "Excess admission fee",
+        "ज्यादा एडमिशन फीस ली जा रही है": "Excess admission fee is being charged",
+        "ज्यादा प्रवेश शुल्क लिया जा रहा है": "Excess admission fee is being charged",
+        "ज्यादा एडमिशन फीस": "Excess admission fee",
+        "ज्यादा फीस वसूली जा रही है": "Excess fee is being charged",
+        "अतिरिक्त फीस ली जा रही है": "Excess fee is being charged",
+        "आकारले जात आहे": "is being charged",
+        "आकारण्यात येत आहे": "is being levied",
+        "आकारले जात": "is being charged",
+        "घेतले जात आहे": "is being taken",
+        "घेतली जात आहे": "is being taken",
+        "ली जा रही है": "is being charged",
+        "लिया जा रहा है": "is being charged",
+        "वसूली जा रही है": "is being collected",
+        "वसूला जा रहा है": "is being collected",
+        "वसूल केले जात आहे": "is being collected",
+        "वसूल केली जात आहे": "is being collected",
+        "मागितले जात आहे": "is being demanded",
+        "मांगा जा रहा है": "is being demanded",
+        "मागणी केली जात आहे": "is being demanded",
+
         # Withholding certificates / marksheets
         "मूळ प्रमाणपत्रे रोखून ठेवली": "withheld original certificates",
         "मूल प्रमाण पत्र रोक लिए": "withheld original certificates",
@@ -60,6 +91,7 @@ class TranslationService:
         "पावती दिली नाही": "fee receipt not provided",
         "रसीद नहीं दी": "fee receipt not provided",
         "कॅपिटेशन फी": "illegal capitation fee",
+        "कॅपीटेशन फी": "illegal capitation fee",
         "कैपिटेशन फीस": "illegal capitation fee",
         "कॉशन मनी परत नाही": "caution deposit refund refusal",
         "कॉशन मनी वापस नहीं": "caution deposit refund refusal",
@@ -142,6 +174,15 @@ class TranslationService:
         "संचालक": "director",
         "विद्यापीठ": "university",
         "बोर्ड": "board",
+        "महाविद्यालयात": "in college",
+        "कॉलेजमध्ये": "in college",
+        "संस्थेमध्ये": "in institution",
+        "संस्थेत": "in institution",
+        "के लिए": "for",
+        "साठी": "for",
+        "कडून": "by from",
+        "द्वारा": "by",
+        "मध्ये": "in",
         
         # Action & Conditions
         "फीस": "fee",
@@ -207,6 +248,37 @@ class TranslationService:
         "करावी": "should take",
         "पाहिजे": "required needed",
         "चाहिए": "required needed",
+        
+        # Overcharging & Demand Tokens
+        "जास्त": "excessive high",
+        "जादा": "excessive extra",
+        "अधिक": "excessive excess",
+        "ज्यादा": "excessive high",
+        "अतिरिक्त": "excess additional",
+        "कमी": "less deficient",
+        "आकारले": "charged levied",
+        "आकारणी": "charging levy",
+        "आकारण्यात": "charging",
+        "आकारतात": "charge",
+        "आकारते": "charges",
+        "जात": "being",
+        "येत": "being",
+        "रहा": "being",
+        "रही": "being",
+        "रहे": "being",
+        "वसूल": "collected recovered",
+        "वसूली": "collection recovery",
+        "मागणी": "demand",
+        "मागितले": "demanded",
+        "मांग": "demand",
+        "मांगा": "demanded",
+        "देणगी": "donation capitation",
+        "डोनेशन": "donation capitation",
+        "कॅपिटेशन": "capitation fee",
+        "कॅपीटेशन": "capitation fee",
+        "लाच": "bribe bribery",
+        "रिश्वत": "bribe bribery",
+        "भ्रष्टाचार": "corruption",
     }
 
     @classmethod
@@ -307,8 +379,11 @@ class TranslationService:
                 translated_tokens.append(token)
 
         result_text = "".join(translated_tokens)
-        # Clean up double spaces
+        # Clean up double spaces and spaces before punctuation
         result_text = re.sub(r"\s+", " ", result_text).strip()
+        result_text = re.sub(r"\s+([.,;:!?])", r"\1", result_text)
+        if result_text:
+            result_text = result_text[0].upper() + result_text[1:]
 
         return result_text, detected_lang, "translated"
 

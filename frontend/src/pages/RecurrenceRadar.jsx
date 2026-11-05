@@ -125,7 +125,7 @@ export function RecurrenceRadar() {
         <div>
           <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-teal-50 border border-teal-200 text-[#087F75] text-xs font-semibold uppercase tracking-wider mb-2">
             <Activity className="w-3.5 h-3.5" />
-            <span>AICTE Feature 3.4 • Systemic Repeat Grievance Engine</span>
+            <span>AICTE Feature 3.4 • TF-IDF + Cosine Similarity + Agglomerative Clustering</span>
           </div>
           <h1 className="text-2xl font-bold text-[#263746]">
             {isInstitute ? 'Campus Grievance Recurrence Radar' : 'Recurrence Radar: Institutional Repeat Grievance Detector'}
@@ -133,7 +133,7 @@ export function RecurrenceRadar() {
           <p className="text-sm text-[#718096] mt-1 max-w-3xl">
             {isInstitute
               ? 'Real-time detection of repeatedly reported complaint categories and temporal volume trends for your college.'
-              : 'Monitors colleges where the same types of problems are repeatedly reported over time. Classifies institutional trajectories into Increasing, Decreasing, or Stable patterns.'}
+              : 'Analyses complaint data from technical institutions and uses AI (TF-IDF & Agglomerative Clustering) to group similar complaints, identify recurring problems (e.g. repeated fee refunds), and track monthly trajectories.'}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -543,9 +543,16 @@ export function RecurrenceRadar() {
 
                       {/* Primary Category */}
                       <td className="py-3.5 px-4">
-                        <span className="font-medium text-xs text-[#263746] block">
-                          {inst.primary_recurring_category}
-                        </span>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-medium text-xs text-[#263746] block truncate max-w-xs" title={inst.primary_recurring_category}>
+                            {inst.primary_recurring_category}
+                          </span>
+                          {inst.recurring_clusters_count > 0 && (
+                            <span className="inline-flex items-center text-[10px] px-1.5 py-0.2 rounded bg-teal-50 text-[#087F75] border border-teal-200 font-semibold flex-shrink-0">
+                              AI Cluster
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[11px] text-[#718096]">
                           {inst.primary_category_count} reported in this category
                         </span>
@@ -667,6 +674,63 @@ export function RecurrenceRadar() {
                       </span>
                     </div>
                   </div>
+
+                  {/* AI Recurring Problem Clusters (Agglomerative Clustering) */}
+                  {instDetail.ai_clusters && instDetail.ai_clusters.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#263746] flex items-center space-x-1.5">
+                          <Activity className="w-3.5 h-3.5 text-[#087F75]" />
+                          <span>AI-Grouped Recurring Problem Clusters (TF-IDF + Cosine Similarity)</span>
+                        </h4>
+                        <span className="text-[10px] font-semibold text-[#087F75] bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                          Agglomerative Clustering
+                        </span>
+                      </div>
+                      <div className="space-y-2.5">
+                        {instDetail.ai_clusters.map((cluster) => (
+                          <div
+                            key={cluster.cluster_id}
+                            className="p-3.5 rounded-lg border border-[#087F75]/30 bg-teal-50/20 space-y-2"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="font-bold text-xs text-[#263746] block">
+                                  {cluster.title}
+                                </span>
+                                <span className="text-[11px] text-[#718096]">
+                                  Identified category: <strong className="text-[#263746]">{cluster.category}</strong>
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2 flex-shrink-0">
+                                <span className="px-2 py-0.5 rounded bg-teal-100 text-[#087F75] font-bold text-[10px]">
+                                  {Math.round(cluster.cohesion_score * 100)}% Semantic Match
+                                </span>
+                                <span className="px-2 py-0.5 rounded bg-white border border-[#D9DEE3] text-[#263746] font-bold text-[10px]">
+                                  {cluster.complaint_count} Linked Cases
+                                </span>
+                              </div>
+                            </div>
+
+                            {cluster.sample_subjects && cluster.sample_subjects.length > 0 && (
+                              <div className="pt-1 border-t border-[#D9DEE3]/50">
+                                <span className="text-[10px] uppercase font-bold text-[#718096] block mb-1">
+                                  Sample Grouped Grievances:
+                                </span>
+                                <ul className="list-disc list-inside text-xs text-[#4A5568] space-y-0.5">
+                                  {cluster.sample_subjects.map((subj, idx) => (
+                                    <li key={idx} className="truncate" title={subj}>
+                                      {subj}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Category Breakdown Table */}
                   <div>

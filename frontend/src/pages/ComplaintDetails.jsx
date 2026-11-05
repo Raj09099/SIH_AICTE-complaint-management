@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
+import { useAuth } from '../context/AuthContext';
 import { complaintService } from '../services/complaints';
 import { formatDate } from '../utils/formatters';
 const formatFileSize = (bytes) => {
@@ -53,6 +54,12 @@ const STATUS_OPTIONS = [
 ];
 export function ComplaintDetails() {
   const { id } = useParams();
+  const { user } = useAuth();
+  const isInstitute =
+    user?.role === 'institute' ||
+    user?.role === 'INSTITUTE' ||
+    user?.bureau?.toLowerCase().includes('apex') ||
+    user?.email?.toLowerCase().includes('apex');
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -72,7 +79,8 @@ export function ComplaintDetails() {
     setIsTranslating(true);
     setTranslationError(null);
     try {
-      const res = await complaintService.translateComplaint(id, 'en');
+      const identifier = complaint?.complaint_no || complaint?.id || id;
+      const res = await complaintService.translateComplaint(identifier, 'en');
       setComplaint((prev) => ({
         ...prev,
         detected_language: res.detected_language,
@@ -272,9 +280,9 @@ export function ComplaintDetails() {
         </div>
       </div>
       {/* Main Grid: Details (Left 2 cols) & Action Panel (Right 1 col) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${!isInstitute ? 'lg:grid-cols-3' : ''} gap-6`}>
         {/* Left Column: Case Metadata & Narrative */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={`${!isInstitute ? 'lg:col-span-2' : 'w-full'} space-y-6`}>
           {/* Detailed Narrative Card with Multilingual Intelligence */}
           <div className="bg-white p-5 rounded-2xl border border-[#D9DEE3] shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#D9DEE3] gap-2">
@@ -290,9 +298,11 @@ export function ComplaintDetails() {
                 <div className="flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-slate-100 text-[#263746] font-mono text-[11px] font-semibold border border-slate-200">
                   <Globe className="w-3.5 h-3.5 text-[#087F75]" />
                   <span>
-                    {complaint.detected_language === 'hi'
+                    {complaint.detected_language === 'mr'
+                      ? 'मराठी (Marathi)'
+                      : complaint.detected_language === 'hi'
                       ? 'हिन्दी (Hindi)'
-                      : complaint.detected_language === 'mr'
+                      : /[\u0900-\u097F]/.test((complaint.subject || '') + ' ' + (complaint.description || ''))
                       ? 'मराठी (Marathi)'
                       : 'English (en)'}
                   </span>
@@ -510,7 +520,8 @@ export function ComplaintDetails() {
             </div>
           )}
         </div>
-        {/* Right Column: Authorized Lifecycle Actions Panel */}
+        {/* Right Column: Authorized Lifecycle Actions Panel (AICTE Officers & Admin Only) */}
+        {!isInstitute && (
         <div className="space-y-6">
           <div className="bg-white p-5 rounded-2xl border border-[#D9DEE3] shadow-sm space-y-4">
             <div className="flex items-center space-x-2 border-b border-[#D9DEE3] pb-3">
@@ -644,6 +655,7 @@ export function ComplaintDetails() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

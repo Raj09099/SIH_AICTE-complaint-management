@@ -507,7 +507,7 @@ def test_14_unread_notification_count(client, sqlite_db_session, test_setup):
 
 def test_15_dashboard_metrics_and_pending_action(client, sqlite_db_session, test_setup):
     """15. Dashboard telemetry returns metrics and lifecycle pending action."""
-    today = date(2026, 11, 2)
+    today = date.today()
     c1 = Complaint(
         complaint_no="AICTE-2026-M001",
         institution_id=1,

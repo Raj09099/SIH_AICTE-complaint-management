@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from app.services.translation_service import TranslationService
+from app.services.reminder_service import ReminderService
 """
 Complaints management API routes for SIH26264 AICTE Complaint Intelligence.
 Provides end-to-end lifecycle operations:
@@ -61,12 +62,15 @@ VALID_PRIORITIES = {
 
 def _find_complaint_by_identifier(identifier: str, db: Session) -> Optional[Complaint]:
     """Helper to locate a complaint by either database integer ID or complaint_no."""
+    if not identifier:
+        return None
+    clean_id = identifier.strip()
     complaint = None
-    if identifier.isdigit():
-        complaint = db.query(Complaint).filter(Complaint.id == int(identifier)).first()
+    if clean_id.isdigit():
+        complaint = db.query(Complaint).filter(Complaint.id == int(clean_id)).first()
     if not complaint:
         complaint = (
-            db.query(Complaint).filter(Complaint.complaint_no == identifier).first()
+            db.query(Complaint).filter(Complaint.complaint_no.ilike(clean_id)).first()
         )
     return complaint
 
@@ -368,6 +372,9 @@ async def upload_complaint_attachments(
             detail=f"Complaint record '{identifier}' not found.",
         )
 
+    old_status = complaint.status
+    old_bureau = complaint.bureau
+
     # Authorization check for institute role
     if current_user.get("role") == "institute":
         inst_id = current_user.get("institution_id")
@@ -633,6 +640,20 @@ def update_complaint_status(
             complaint.status,
             current_user.get("sub") if current_user else "unauthenticated",
         )
+
+        # Feature 3.3 (Section 4): Trigger institution complaint status notification
+        try:
+            ReminderService.create_complaint_status_notification(
+                db=db,
+                complaint=complaint,
+                old_status=old_status,
+                new_status=complaint.status,
+                old_bureau=old_bureau,
+                new_bureau=complaint.bureau,
+            )
+        except Exception as notif_err:
+            logger.warning("Could not dispatch status change notification: %s", notif_err)
+
         return complaint
     except SQLAlchemyError as exc:
         db.rollback()
@@ -728,21 +749,23 @@ def translate_complaint_content(
 
     target_lang = payload.target_language if payload else "en"
 
+    # Re-process with translation engine, detecting language freshly
+    preferred_lang = complaint.detected_language if complaint.detected_language in ("hi", "mr") else None
     multi_info = TranslationService.process_complaint_multilingual(
         subject=complaint.subject,
         description=complaint.description,
-        preferred_lang=complaint.detected_language,
+        preferred_lang=preferred_lang,
     )
 
-    if not complaint.translated_subject or not complaint.translated_description:
-        complaint.detected_language = multi_info["detected_language"]
-        complaint.translated_subject = multi_info["translated_subject"]
-        complaint.translated_description = multi_info["translated_description"]
-        complaint.translation_status = multi_info["translation_status"]
-        complaint.translation_provider = multi_info["translation_provider"]
-        complaint.translated_at = multi_info["translated_at"]
-        db.commit()
-        db.refresh(complaint)
+    # Always persist updated translation and detected language on on-demand translation
+    complaint.detected_language = multi_info["detected_language"]
+    complaint.translated_subject = multi_info["translated_subject"]
+    complaint.translated_description = multi_info["translated_description"]
+    complaint.translation_status = multi_info["translation_status"]
+    complaint.translation_provider = multi_info["translation_provider"]
+    complaint.translated_at = multi_info["translated_at"]
+    db.commit()
+    db.refresh(complaint)
 
     return ComplaintTranslateResponse(
         complaint_id=complaint.id,

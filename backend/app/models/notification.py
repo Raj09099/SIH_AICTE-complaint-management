@@ -23,6 +23,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.complaint import Complaint
+    from app.models.institution import Institution
     from app.models.user import User
 
 
@@ -30,6 +31,7 @@ class Notification(Base):
     __tablename__ = "notifications"
     __table_args__ = (
         Index("idx_notifications_user_id", "user_id"),
+        Index("idx_notifications_institution_id", "institution_id"),
         Index("idx_notifications_complaint_id", "complaint_id"),
         Index("idx_notifications_is_read", "is_read"),
         Index("idx_notifications_created_at", "created_at"),
@@ -45,6 +47,9 @@ class Notification(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    institution_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=True
     )
     complaint_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("complaints.id", ondelete="CASCADE"), nullable=True
@@ -74,3 +79,4 @@ class Notification(Base):
     complaint: Mapped[Optional["Complaint"]] = relationship(
         "Complaint", back_populates="notifications"
     )
+    institution: Mapped[Optional["Institution"]] = relationship("Institution")

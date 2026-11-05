@@ -10,6 +10,17 @@ import axios from 'axios';
 const getSanitizedBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
 
+  // If in browser on localhost or loopback, prioritize local FastAPI development backend
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    if (envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+      return envUrl.trim().replace(/\/+$/, '');
+    }
+    return 'http://localhost:8000/api/v1';
+  }
+
   if (!envUrl || envUrl.trim() === '') {
     return 'https://sih-aicte-complaint-management.onrender.com/api/v1';
   }

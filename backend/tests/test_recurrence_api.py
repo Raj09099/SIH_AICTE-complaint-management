@@ -366,3 +366,93 @@ def test_9_recurrence_api_filters(client, sqlite_db_session, recurrence_setup):
     assert res_cat.status_code == 200
     assert res_cat.json()["total_complaints_analyzed"] == 1
 
+
+def test_10_ai_agglomerative_clustering_fee_refund_grouping():
+    """10. TF-IDF + Cosine Similarity + Agglomerative Clustering groups semantically similar complaints."""
+    c1 = Complaint(
+        id=101,
+        complaint_no="CMP-FEE-01",
+        institution_id=1,
+        complainant_type="Student",
+        category="Fee Overcharging",
+        subject="Non refund of admission caution money deposit",
+        description="The college administration refuses to refund my 15000 caution deposit after cancellation.",
+    )
+    c2 = Complaint(
+        id=102,
+        complaint_no="CMP-FEE-02",
+        institution_id=1,
+        complainant_type="Student",
+        category="Fee Overcharging",
+        subject="Refund of admission security deposit not given",
+        description="I cancelled admission within statutory window but caution deposit refund has not been transferred.",
+    )
+    c3 = Complaint(
+        id=103,
+        complaint_no="CMP-INFRA-01",
+        institution_id=1,
+        complainant_type="Faculty",
+        category="Infrastructure",
+        subject="Broken lab equipment in mechanical workshop",
+        description="Lathe machines in mechanical lab require urgent replacement of gear drives.",
+    )
+
+    clusters, recurring_ids = RecurrenceService.cluster_institution_complaints([c1, c2, c3])
+
+    # Fee refund complaints should be grouped into an AI cluster
+    assert len(clusters) >= 1
+    top_cluster = clusters[0]
+    assert top_cluster.complaint_count == 2
+    assert 101 in top_cluster.complaint_ids
+    assert 102 in top_cluster.complaint_ids
+    assert 103 not in top_cluster.complaint_ids
+    assert top_cluster.cohesion_score > 0.30
+    assert 101 in recurring_ids and 102 in recurring_ids
+    assert 103 not in recurring_ids
+
+
+def test_11_ai_agglomerative_clustering_detail_endpoint(client, sqlite_db_session, recurrence_setup):
+    """11. Institution detail response includes AI-discovered recurring problem clusters."""
+    c1 = Complaint(
+        id=201,
+        complaint_no="REC-AI-01",
+        institution_id=1,
+        complainant_type="Student",
+        bureau="Approval Bureau",
+        category="Excessive Surcharges",
+        subject="Excessive exam and development fee charged",
+        description="College is charging 25000 unapproved development fee.",
+        status="Under Review",
+        filing_date=date(2026, 6, 1),
+    )
+    c2 = Complaint(
+        id=202,
+        complaint_no="REC-AI-02",
+        institution_id=1,
+        complainant_type="Student",
+        bureau="Approval Bureau",
+        category="Excessive Surcharges",
+        subject="Unapproved development and exam fee surcharges",
+        description="Students forced to pay extra 25000 development fee or blocked from exams.",
+        status="Under Review",
+        filing_date=date(2026, 6, 15),
+    )
+    sqlite_db_session.add_all([c1, c2])
+    sqlite_db_session.commit()
+
+    officer = recurrence_setup["officer"]
+    h = make_auth_header(officer)
+
+    res = client.get("/api/v1/recurrence/institution/1", headers=h)
+    assert res.status_code == 200
+    data = res.json()
+
+    assert data["institution_id"] == 1
+    assert data["recurring_complaints_count"] >= 2
+    assert "ai_clusters" in data
+    assert len(data["ai_clusters"]) >= 1
+    cluster = data["ai_clusters"][0]
+    assert cluster["complaint_count"] == 2
+    assert cluster["cohesion_score"] > 0.0
+
+

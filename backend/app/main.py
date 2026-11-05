@@ -11,6 +11,7 @@ from app.api.routes import (
     evidence,
     institution_risk,
     institutions,
+    institute_compliance,
     notifications,
     overlap,
     patterns,
@@ -83,6 +84,7 @@ app.include_router(notifications.router, prefix=api_prefix)
 app.include_router(recurrence.router, prefix=api_prefix)
 app.include_router(priority.router, prefix=api_prefix)
 app.include_router(institution_risk.router, prefix=api_prefix)
+app.include_router(institute_compliance.router, prefix=api_prefix)
 
 
 @app.get("/", tags=["Root"])

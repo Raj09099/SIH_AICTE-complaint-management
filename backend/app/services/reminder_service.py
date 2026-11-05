@@ -302,4 +302,135 @@ class ReminderService:
             overdue_count=overdue_count,
             total_monitored=len(items),
             items=items,
-        )
+        )
+
+
+    @classmethod
+    def create_complaint_status_notification(
+        cls,
+        db: Session,
+        complaint: Complaint,
+        old_status: Optional[str],
+        new_status: str,
+        old_bureau: Optional[str] = None,
+        new_bureau: Optional[str] = None,
+    ) -> Optional[Notification]:
+        """
+        Generates official complaint-status notifications for the concerned institution (Section 4).
+        Triggered when a complaint status changes to:
+        - Resolved (Scenario A)
+        - Transferred (Scenario B)
+        - Under Review (Scenario C)
+        - Evidence Requested / Additional Information (Scenario D)
+        Enforces strict duplicate prevention, institution scoping, and notification persistence.
+        """
+        if not complaint or not complaint.institution_id:
+            return None
+
+        clean_new_status = (new_status or "").strip().lower()
+        clean_old_status = (old_status or "").strip().lower()
+
+        # Check if actual status or bureau transfer occurred
+        bureau_transferred = (
+            old_bureau is not None
+            and new_bureau is not None
+            and old_bureau.strip().lower() != new_bureau.strip().lower()
+        )
+        status_changed = clean_new_status != clean_old_status
+
+        if not status_changed and not bureau_transferred:
+            return None
+
+        # Determine notification scenario
+        notif_type = None
+        title = ""
+        message = ""
+        urgency = "INFO"
+        pending_act = None
+
+        if clean_new_status in ("resolved", "closed"):
+            notif_type = "COMPLAINT_RESOLVED"
+            title = f"Complaint Resolved: {complaint.complaint_no}"
+            message = f"Your complaint {complaint.complaint_no} ('{complaint.subject}') has been successfully resolved by AICTE."
+            urgency = "INFO"
+            pending_act = "Review Resolution Summary"
+        elif clean_new_status == "transferred" or bureau_transferred:
+            notif_type = "COMPLAINT_TRANSFERRED"
+            target_bureau = (complaint.bureau or new_bureau or "Target Bureau").strip()
+            title = f"Complaint Transferred: {complaint.complaint_no}"
+            message = f"Your complaint {complaint.complaint_no} has been transferred to {target_bureau} for further action."
+            urgency = "INFO"
+            pending_act = f"Awaiting Acceptance by {target_bureau}"
+        elif clean_new_status == "under review":
+            notif_type = "COMPLAINT_UNDER_REVIEW"
+            target_bureau = (complaint.bureau or "AICTE Bureau").strip()
+            title = f"Complaint Under Review: {complaint.complaint_no}"
+            message = f"Your complaint {complaint.complaint_no} is currently under official review by {target_bureau}."
+            urgency = "INFO"
+            pending_act = "Statutory Bureau Inquiry in Progress"
+        elif clean_new_status in ("evidence requested", "additional info requested"):
+            notif_type = "COMPLAINT_ADDITIONAL_INFO_REQUESTED"
+            target_bureau = (complaint.bureau or "AICTE Bureau").strip()
+            title = f"Additional Information Required: {complaint.complaint_no}"
+            message = f"AICTE {target_bureau} has requested additional compliance affidavits / evidence records for complaint {complaint.complaint_no}. Please submit the requested information promptly."
+            urgency = "WARNING"
+            pending_act = "Submit Requested Compliance Documents"
+        else:
+            notif_type = f"STATUS_{clean_new_status.upper().replace(' ', '_')}"
+            title = f"Complaint Status Updated: {complaint.complaint_no}"
+            message = f"Status for complaint {complaint.complaint_no} has been updated to {new_status}."
+            urgency = "INFO"
+            pending_act = derive_pending_action(complaint)
+
+        # Find target user for this institution
+        inst_user = (
+            db.query(User)
+            .filter(
+                User.institution_id == complaint.institution_id,
+                User.role == "institute",
+            )
+            .first()
+        )
+        target_user_id = inst_user.id if inst_user else (complaint.assigned_to or 1)
+        today_val = date.today()
+
+        existing = (
+            db.query(Notification)
+            .filter(
+                Notification.complaint_id == complaint.id,
+                Notification.notification_type == notif_type,
+                Notification.reminder_date == today_val,
+            )
+            .first()
+        )
+        if existing:
+            return existing
+
+        notif = Notification(
+            user_id=target_user_id,
+            institution_id=complaint.institution_id,
+            complaint_id=complaint.id,
+            title=title,
+            message=message,
+            notification_type=notif_type,
+            reminder_date=today_val,
+            urgency_level=urgency,
+            pending_action=pending_act,
+            is_read=False,
+            created_at=datetime.now(timezone.utc),
+        )
+        db.add(notif)
+        try:
+            db.commit()
+            db.refresh(notif)
+            logger.info(
+                "Created institution complaint notification: %s (Type: %s, Inst: %s)",
+                notif.title,
+                notif_type,
+                complaint.institution_id,
+            )
+            return notif
+        except Exception as err:
+            db.rollback()
+            logger.error("Failed to persist complaint status notification: %s", err)
+            return None

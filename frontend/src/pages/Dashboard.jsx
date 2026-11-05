@@ -24,7 +24,25 @@ import {
   Send,
   Shield,
   User,
+  UploadCloud,
+  Download,
+  CheckCheck,
+  FileUp,
+  Paperclip,
+  ExternalLink,
+  Inbox,
+  X,
+  Bell,
 } from 'lucide-react';
+import { complianceService } from '../services/compliance';
+
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+};
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -279,6 +297,145 @@ export function Dashboard() {
   const [isTriggeringCheck, setIsTriggeringCheck] = useState(false);
   const [triggerCheckSuccess, setTriggerCheckSuccess] = useState(null);
 
+  // Feature 3.3 & Master Prompt: Institute Compliance & Complaint Status Reminders States
+  const [instSummary, setInstSummary] = useState(null);
+  const [instDeadlines, setInstDeadlines] = useState([]);
+  const [instReminders, setInstReminders] = useState([]);
+  const [instHistory, setInstHistory] = useState([]);
+  const [loadingInstCompliance, setLoadingInstCompliance] = useState(false);
+  const [instTab, setInstTab] = useState('deadlines'); // 'deadlines' | 'reminders' | 'history'
+  const [instDeadlineFilter, setInstDeadlineFilter] = useState('all'); // 'all' | 'pending' | 'completed' | 'overdue' | 'upcoming'
+  const [instReminderFilter, setInstReminderFilter] = useState('all'); // 'all' | 'unread'
+  const [uploadModalItem, setUploadModalItem] = useState(null);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadRemarks, setUploadRemarks] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [downloadingDocId, setDownloadingDocId] = useState(null);
+  const [markingReadId, setMarkingReadId] = useState(null);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+
+  const fetchInstituteComplianceData = useCallback(async () => {
+    if (!isInstitute) return;
+    setLoadingInstCompliance(true);
+    try {
+      const [summaryRes, deadlinesRes, remindersRes, historyRes] = await Promise.all([
+        complianceService.getComplianceSummary().catch((e) => {
+          console.warn('Failed to load institute compliance summary:', e);
+          return null;
+        }),
+        complianceService.getComplianceDeadlines(instDeadlineFilter).catch((e) => {
+          console.warn('Failed to load institute compliance deadlines:', e);
+          return [];
+        }),
+        complianceService.getInstituteReminders(instReminderFilter === 'unread').catch((e) => {
+          console.warn('Failed to load institute reminders:', e);
+          return [];
+        }),
+        complianceService.getComplianceHistory().catch((e) => {
+          console.warn('Failed to load institute compliance history:', e);
+          return [];
+        }),
+      ]);
+
+      if (summaryRes) setInstSummary(summaryRes);
+      if (Array.isArray(deadlinesRes)) setInstDeadlines(deadlinesRes);
+      if (Array.isArray(remindersRes)) setInstReminders(remindersRes);
+      if (Array.isArray(historyRes)) setInstHistory(historyRes);
+    } catch (err) {
+      console.error('Error fetching institute compliance data:', err);
+    } finally {
+      setLoadingInstCompliance(false);
+    }
+  }, [isInstitute, instDeadlineFilter, instReminderFilter]);
+
+  useEffect(() => {
+    if (isInstitute) {
+      fetchInstituteComplianceData();
+    }
+  }, [isInstitute, fetchInstituteComplianceData]);
+
+  const handleUploadCompliance = async (e) => {
+    e.preventDefault();
+    if (!uploadModalItem || !uploadFile) {
+      setUploadError('Please select a valid document file (.pdf, .png, .jpg, .docx).');
+      return;
+    }
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadSuccess(null);
+
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+    if (uploadRemarks) {
+      formData.append('remarks', uploadRemarks);
+    }
+
+    try {
+      const res = await complianceService.uploadComplianceDocument(uploadModalItem.id, formData);
+      setUploadSuccess(res.message || 'Document uploaded and verified successfully.');
+      setTimeout(() => {
+        setUploadModalItem(null);
+        setUploadFile(null);
+        setUploadRemarks('');
+        setUploadSuccess(null);
+      }, 1200);
+      fetchInstituteComplianceData();
+    } catch (err) {
+      console.error('Failed to upload compliance document:', err);
+      setUploadError(
+        err.response?.data?.detail || err.message || 'Failed to upload compliance document.'
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDownloadDoc = async (docId, fileName) => {
+    try {
+      setDownloadingDocId(docId);
+      await complianceService.downloadDocument(docId, fileName);
+    } catch (err) {
+      console.error('Failed to download document:', err);
+      alert('Unable to download compliance document: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setDownloadingDocId(null);
+    }
+  };
+
+  const handleMarkReminderRead = async (reminderId) => {
+    try {
+      setMarkingReadId(reminderId);
+      await complianceService.markReminderRead(reminderId);
+      setInstReminders((prev) =>
+        prev.map((r) => (r.id === reminderId ? { ...r, is_read: true, read_at: new Date().toISOString() } : r))
+      );
+    } catch (err) {
+      console.error('Failed to mark reminder as read:', err);
+    } finally {
+      setMarkingReadId(null);
+    }
+  };
+
+  const handleMarkAllRemindersRead = async () => {
+    try {
+      setIsMarkingAllRead(true);
+      await complianceService.markAllRemindersRead();
+      setInstReminders((prev) =>
+        prev.map((r) => ({ ...r, is_read: true, read_at: new Date().toISOString() }))
+      );
+    } catch (err) {
+      console.error('Failed to mark all reminders as read:', err);
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
+
+  const unreadRemindersCount = useMemo(() => {
+    return instReminders.filter((r) => !r.is_read).length;
+  }, [instReminders]);
+
   const fetchHealth = useCallback(async () => {
     try {
       const healthUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '/api/health');
@@ -332,6 +489,9 @@ export function Dashboard() {
   const handleRefreshAll = () => {
     fetchHealth();
     fetchDashboardData(true);
+    if (isInstitute) {
+      fetchInstituteComplianceData();
+    }
   };
 
   useEffect(() => {
@@ -870,8 +1030,9 @@ export function Dashboard() {
         </Link>
       </div>
 
-      {/* 5. Automatic Reminder & Deadline Management Section */}
-      <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm p-5 space-y-5">
+      {/* 5. Automatic Reminder & Statutory Deadline Grid (AICTE vs Institute Mode) */}
+      {!isInstitute ? (
+        <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm p-5 space-y-5">
         {/* Header & Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#D9DEE3]">
           <div>
@@ -1190,7 +1351,713 @@ export function Dashboard() {
           </div>
         )}
       </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm p-5 space-y-5">
+          {/* Header & Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#D9DEE3]">
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="p-1 rounded-md bg-teal-50 text-[#087F75] border border-teal-200">
+                  <Clock className="w-4 h-4" />
+                </span>
+                <h2 className="text-base font-bold text-[#263746]">
+                  Campus Statutory Compliance & Complaint Reminders
+                </h2>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-[#198754] border border-emerald-200">
+                  Campus Verified
+                </span>
+              </div>
+              <p className="text-xs text-[#718096] mt-0.5">
+                Statutory compliance deadlines and real-time AICTE complaint status notifications for your institution.
+              </p>
+            </div>
 
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={fetchInstituteComplianceData}
+                disabled={loadingInstCompliance}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold rounded-lg shadow-sm transition disabled:opacity-60"
+                title="Refresh Campus Compliance & Notifications"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingInstCompliance ? 'animate-spin' : ''}`} />
+                <span>{loadingInstCompliance ? 'Refreshing...' : 'Refresh Compliance'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Dashboard Statistics: Total, Completed, Upcoming Deadlines, Overdue Submissions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Stat 1: Total Compliance Requirements */}
+            <div
+              onClick={() => {
+                setInstTab('deadlines');
+                setInstDeadlineFilter('all');
+              }}
+              className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-2xs ${
+                instTab === 'deadlines' && instDeadlineFilter === 'all'
+                  ? 'bg-slate-50 border-slate-400 ring-2 ring-slate-200'
+                  : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center space-x-1.5 text-xs text-[#263746] font-semibold">
+                  <FileText className="w-4 h-4 text-[#263746]" />
+                  <span>Total Compliance Requirements</span>
+                </div>
+                <div className="text-2xl font-bold text-[#263746]">
+                  {instSummary?.total_requirements ?? 0}
+                </div>
+                <p className="text-[11px] text-[#718096]">Statutory mandates tracked</p>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F5F7F7] text-[#263746] border border-[#D9DEE3]">
+                All Records
+              </span>
+            </div>
+
+            {/* Stat 2: Completed Requirements */}
+            <div
+              onClick={() => {
+                setInstTab('deadlines');
+                setInstDeadlineFilter('completed');
+              }}
+              className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-2xs ${
+                instTab === 'deadlines' && instDeadlineFilter === 'completed'
+                  ? 'bg-emerald-50/70 border-emerald-400 ring-2 ring-emerald-300'
+                  : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center space-x-1.5 text-xs text-[#198754] font-semibold">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Completed Requirements</span>
+                </div>
+                <div className="text-2xl font-bold text-[#198754]">
+                  {instSummary?.completed_requirements ?? 0}
+                </div>
+                <p className="text-[11px] text-[#718096]">Submissions verified</p>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-[#198754] border border-emerald-200">
+                Compliant
+              </span>
+            </div>
+
+            {/* Stat 3: Upcoming Deadlines */}
+            <div
+              onClick={() => {
+                setInstTab('deadlines');
+                setInstDeadlineFilter('upcoming');
+              }}
+              className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-2xs ${
+                instTab === 'deadlines' && instDeadlineFilter === 'upcoming'
+                  ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-300'
+                  : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center space-x-1.5 text-xs text-blue-700 font-semibold">
+                  <Clock className="w-4 h-4" />
+                  <span>Upcoming Deadlines</span>
+                </div>
+                <div className="text-2xl font-bold text-blue-700">
+                  {instSummary?.upcoming_deadlines ?? 0}
+                </div>
+                <p className="text-[11px] text-[#718096]">Due within 30 days</p>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                Notice Window
+              </span>
+            </div>
+
+            {/* Stat 4: Overdue Submissions */}
+            <div
+              onClick={() => {
+                setInstTab('deadlines');
+                setInstDeadlineFilter('overdue');
+              }}
+              className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between shadow-2xs ${
+                instTab === 'deadlines' && instDeadlineFilter === 'overdue'
+                  ? 'bg-red-50/70 border-red-400 ring-2 ring-red-300'
+                  : 'bg-white hover:bg-[#F5F7F7] border-[#D9DEE3]'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center space-x-1.5 text-xs text-[#DC3545] font-semibold">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Overdue Submissions</span>
+                </div>
+                <div className="text-2xl font-bold text-[#DC3545]">
+                  {instSummary?.overdue_submissions ?? 0}
+                </div>
+                <p className="text-[11px] text-[#718096]">Immediate action required</p>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-[#DC3545] border border-red-200">
+                Breached
+              </span>
+            </div>
+          </div>
+
+          {/* Navigation Tabs Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-b border-[#D9DEE3]">
+            <div className="flex space-x-1">
+              <button
+                type="button"
+                onClick={() => setInstTab('deadlines')}
+                className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition border-b-2 flex items-center space-x-1.5 ${
+                  instTab === 'deadlines'
+                    ? 'border-[#087F75] text-[#087F75] bg-teal-50/50'
+                    : 'border-transparent text-[#718096] hover:text-[#263746]'
+                }`}
+              >
+                <FileCheck2 className="w-3.5 h-3.5" />
+                <span>Compliance Requirements & Uploads</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#D9DEE3] text-[#263746]">
+                  {instDeadlines.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInstTab('reminders')}
+                className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition border-b-2 flex items-center space-x-1.5 ${
+                  instTab === 'reminders'
+                    ? 'border-[#087F75] text-[#087F75] bg-teal-50/50'
+                    : 'border-transparent text-[#718096] hover:text-[#263746]'
+                }`}
+              >
+                <Bell className="w-3.5 h-3.5" />
+                <span>Complaint Status Notifications</span>
+                {unreadRemindersCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#087F75] text-white">
+                    {unreadRemindersCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInstTab('history')}
+                className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition border-b-2 flex items-center space-x-1.5 ${
+                  instTab === 'history'
+                    ? 'border-[#087F75] text-[#087F75] bg-teal-50/50'
+                    : 'border-transparent text-[#718096] hover:text-[#263746]'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Compliance History & Audit Trail</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#D9DEE3] text-[#263746]">
+                  {instHistory.length}
+                </span>
+              </button>
+            </div>
+
+            {/* Contextual Filters for active tab */}
+            {instTab === 'deadlines' && (
+              <div className="inline-flex rounded-lg border border-[#D9DEE3] bg-[#F5F7F7] p-0.5 text-xs font-medium mb-1">
+                <button
+                  type="button"
+                  onClick={() => setInstDeadlineFilter('all')}
+                  className={`px-2.5 py-1 rounded transition ${
+                    instDeadlineFilter === 'all'
+                      ? 'bg-white text-[#263746] font-semibold shadow-2xs border border-[#D9DEE3]'
+                      : 'text-[#718096] hover:text-[#263746]'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInstDeadlineFilter('overdue')}
+                  className={`px-2.5 py-1 rounded transition ${
+                    instDeadlineFilter === 'overdue'
+                      ? 'bg-white text-[#DC3545] font-semibold shadow-2xs border border-red-200'
+                      : 'text-[#718096] hover:text-[#DC3545]'
+                  }`}
+                >
+                  Overdue
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInstDeadlineFilter('upcoming')}
+                  className={`px-2.5 py-1 rounded transition ${
+                    instDeadlineFilter === 'upcoming'
+                      ? 'bg-white text-blue-700 font-semibold shadow-2xs border border-blue-200'
+                      : 'text-[#718096] hover:text-blue-700'
+                  }`}
+                >
+                  Upcoming
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInstDeadlineFilter('completed')}
+                  className={`px-2.5 py-1 rounded transition ${
+                    instDeadlineFilter === 'completed'
+                      ? 'bg-white text-[#198754] font-semibold shadow-2xs border border-emerald-200'
+                      : 'text-[#718096] hover:text-[#198754]'
+                  }`}
+                >
+                  Completed
+                </button>
+              </div>
+            )}
+
+            {instTab === 'reminders' && (
+              <div className="flex items-center space-x-2 mb-1">
+                <div className="inline-flex rounded-lg border border-[#D9DEE3] bg-[#F5F7F7] p-0.5 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setInstReminderFilter('all')}
+                    className={`px-2.5 py-1 rounded transition ${
+                      instReminderFilter === 'all'
+                        ? 'bg-white text-[#263746] font-semibold shadow-2xs border border-[#D9DEE3]'
+                        : 'text-[#718096] hover:text-[#263746]'
+                    }`}
+                  >
+                    All Notifications
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInstReminderFilter('unread')}
+                    className={`px-2.5 py-1 rounded transition ${
+                      instReminderFilter === 'unread'
+                        ? 'bg-white text-[#087F75] font-semibold shadow-2xs border border-teal-200'
+                        : 'text-[#718096] hover:text-[#087F75]'
+                    }`}
+                  >
+                    Unread ({unreadRemindersCount})
+                  </button>
+                </div>
+
+                {unreadRemindersCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllRemindersRead}
+                    disabled={isMarkingAllRead}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#087F75] border border-teal-200 text-xs font-semibold transition"
+                  >
+                    <CheckCheck className="w-3.5 h-3.5" />
+                    <span>{isMarkingAllRead ? 'Marking...' : 'Mark All Read'}</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* TAB 1: Compliance Requirements & Uploads */}
+          {instTab === 'deadlines' && (
+            <div>
+              {instDeadlines.length === 0 ? (
+                <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
+                  <CheckCircle2 className="w-5 h-5 text-[#198754] mx-auto mb-1" />
+                  <p className="font-semibold text-[#263746]">No compliance requirements match this filter.</p>
+                  <p className="text-[11px]">All tracked institutional statutory requirements in this view are compliant.</p>
+                </div>
+              ) : (
+                <div className="border border-[#D9DEE3] rounded-lg overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#F5F7F7] text-[#718096] font-semibold uppercase tracking-wider text-[11px] border-b border-[#D9DEE3]">
+                      <tr>
+                        <th className="py-3 px-4">Statutory Requirement</th>
+                        <th className="py-3 px-4">Category</th>
+                        <th className="py-3 px-4">Due Date</th>
+                        <th className="py-3 px-4">Status & Window</th>
+                        <th className="py-3 px-4">Documents</th>
+                        <th className="py-3 px-4 text-right">Upload Evidence</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#D9DEE3]">
+                      {instDeadlines.map((item) => {
+                        const isCompleted = item.status?.toLowerCase() === 'completed' || item.status?.toLowerCase() === 'verified';
+                        return (
+                          <tr key={item.id} className="hover:bg-[#F5F7F7]/60 transition">
+                            {/* Requirement */}
+                            <td className="py-3 px-4 max-w-xs">
+                              <div className="font-semibold text-[#263746] leading-snug">
+                                {item.requirement_name}
+                              </div>
+                              {item.description && (
+                                <p className="text-[11px] text-[#718096] mt-0.5 line-clamp-1">
+                                  {item.description}
+                                </p>
+                              )}
+                            </td>
+
+                            {/* Category */}
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <span className="text-[11px] font-medium text-[#263746] bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
+                                {item.category}
+                              </span>
+                            </td>
+
+                            {/* Due Date */}
+                            <td className="py-3 px-4 whitespace-nowrap font-mono text-[11px] text-[#263746]">
+                              <div className="flex items-center space-x-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-[#718096]" />
+                                <span>{formatDate(item.due_date)}</span>
+                              </div>
+                            </td>
+
+                            {/* Status & SLA Days */}
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              {isCompleted ? (
+                                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#198754] border border-emerald-200">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  <span>Completed</span>
+                                </span>
+                              ) : item.is_overdue ? (
+                                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-[#DC3545] border border-red-200">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  <span>Overdue ({Math.abs(item.days_remaining)}d ago)</span>
+                                </span>
+                              ) : item.is_due_today ? (
+                                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span>Due Today</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                  <Clock className="w-3 h-3" />
+                                  <span>Upcoming ({item.days_remaining}d left)</span>
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Uploaded Documents */}
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              {item.documents_count > 0 && item.latest_document ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadDoc(item.latest_document.id, item.latest_document.file_name)}
+                                  disabled={downloadingDocId === item.latest_document.id}
+                                  className="inline-flex items-center space-x-1 text-xs text-[#087F75] hover:underline font-medium"
+                                  title="Download uploaded document"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  <span className="truncate max-w-[130px]">{item.latest_document.file_name}</span>
+                                </button>
+                              ) : (
+                                <span className="text-[11px] text-[#718096] italic">None uploaded</span>
+                              )}
+                            </td>
+
+                            {/* Upload Action */}
+                            <td className="py-3 px-4 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadModalItem(item);
+                                  setUploadFile(null);
+                                  setUploadRemarks('');
+                                  setUploadError(null);
+                                  setUploadSuccess(null);
+                                }}
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold shadow-2xs transition"
+                              >
+                                <UploadCloud className="w-3.5 h-3.5" />
+                                <span>{isCompleted ? 'Re-upload' : 'Upload Doc'}</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: Upcoming Reminders – Complaint Status Notifications (Section 4) */}
+          {instTab === 'reminders' && (
+            <div>
+              {instReminders.length === 0 ? (
+                <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
+                  <Inbox className="w-5 h-5 text-[#087F75] mx-auto mb-1" />
+                  <p className="font-semibold text-[#263746]">No complaint status notifications recorded.</p>
+                  <p className="text-[11px]">When AICTE resolves, transfers, or updates complaints for your campus, alerts appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {instReminders.map((reminder) => {
+                    const statusStr = (reminder.complaint_status || reminder.title || '').toLowerCase();
+                    const isResolved = statusStr.includes('resolved');
+                    const isTransferred = statusStr.includes('transfer');
+                    const isUnderReview = statusStr.includes('review');
+                    const isEvidenceReq = statusStr.includes('evidence') || statusStr.includes('additional') || statusStr.includes('information');
+
+                    let badgeColor = 'bg-slate-100 text-[#263746] border-slate-200';
+                    if (isResolved) badgeColor = 'bg-emerald-50 text-[#198754] border-emerald-200';
+                    else if (isTransferred) badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                    else if (isUnderReview) badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                    else if (isEvidenceReq) badgeColor = 'bg-red-50 text-[#DC3545] border-red-200';
+
+                    return (
+                      <div
+                        key={reminder.id}
+                        className={`p-4 rounded-xl border transition ${
+                          reminder.is_read
+                            ? 'bg-white border-[#D9DEE3]'
+                            : 'bg-teal-50/20 border-teal-300 ring-1 ring-teal-200/60 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          {/* Main Info */}
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {!reminder.is_read && (
+                                <span className="w-2 h-2 rounded-full bg-[#087F75] ring-2 ring-teal-200 shrink-0" title="Unread Alert" />
+                              )}
+                              {reminder.complaint_no && (
+                                <Link
+                                  to={reminder.link || `/complaints/${reminder.complaint_no}`}
+                                  className="font-mono text-xs font-bold text-[#087F75] hover:underline"
+                                >
+                                  {reminder.complaint_no}
+                                </Link>
+                              )}
+                              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${badgeColor}`}>
+                                {reminder.complaint_status || 'Status Update'}
+                              </span>
+                              <span className="text-[10px] text-[#718096] bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
+                                {reminder.notification_type || 'Status Alert'}
+                              </span>
+                            </div>
+
+                            {/* Complaint Subject */}
+                            {reminder.complaint_subject && (
+                              <h4 className="text-xs font-bold text-[#263746] leading-snug">
+                                {reminder.complaint_subject}
+                              </h4>
+                            )}
+
+                            {/* Detailed Message */}
+                            <p className="text-xs text-[#263746]/90 leading-relaxed">
+                              {reminder.message}
+                            </p>
+
+                            {/* Timestamp & SLA Pending Action */}
+                            <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-[#718096]">
+                              <span className="flex items-center space-x-1">
+                                <Clock className="w-3 h-3 text-[#718096]" />
+                                <span>{new Date(reminder.created_at).toLocaleString()}</span>
+                              </span>
+                              {reminder.pending_action && (
+                                <span className="font-medium text-[#263746] bg-[#F5F7F7] px-2 py-0.5 rounded border border-[#D9DEE3]">
+                                  {reminder.pending_action}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center space-x-2 shrink-0 sm:self-center">
+                            {!reminder.is_read && (
+                              <button
+                                type="button"
+                                onClick={() => handleMarkReminderRead(reminder.id)}
+                                disabled={markingReadId === reminder.id}
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-white hover:bg-[#F5F7F7] text-[#263746] border border-[#D9DEE3] text-xs font-medium transition"
+                                title="Mark as read"
+                              >
+                                <Check className="w-3.5 h-3.5 text-[#087F75]" />
+                                <span>{markingReadId === reminder.id ? 'Saving...' : 'Mark Read'}</span>
+                              </button>
+                            )}
+                            {reminder.link && (
+                              <Link
+                                to={reminder.link}
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold transition"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Inspect Case</span>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: Compliance History & Audit Trail */}
+          {instTab === 'history' && (
+            <div>
+              {instHistory.length === 0 ? (
+                <div className="p-8 text-center border border-[#D9DEE3] rounded-lg bg-[#F5F7F7]/50 text-xs text-[#718096] space-y-1">
+                  <FileText className="w-5 h-5 text-[#718096] mx-auto mb-1" />
+                  <p className="font-semibold text-[#263746]">No previous compliance submissions on record.</p>
+                  <p className="text-[11px]">Upload documents in the Requirements tab above to build your statutory audit trail.</p>
+                </div>
+              ) : (
+                <div className="border border-[#D9DEE3] rounded-lg overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#F5F7F7] text-[#718096] font-semibold uppercase tracking-wider text-[11px] border-b border-[#D9DEE3]">
+                      <tr>
+                        <th className="py-3 px-4">Uploaded File</th>
+                        <th className="py-3 px-4">Size</th>
+                        <th className="py-3 px-4">Submitted By</th>
+                        <th className="py-3 px-4">Timestamp</th>
+                        <th className="py-3 px-4">Verification</th>
+                        <th className="py-3 px-4 text-right">Download</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#D9DEE3]">
+                      {instHistory.map((doc) => (
+                        <tr key={doc.id} className="hover:bg-[#F5F7F7]/60 transition">
+                          <td className="py-3 px-4 max-w-xs">
+                            <div className="flex items-center space-x-2">
+                              <FileText className="w-4 h-4 text-[#087F75] shrink-0" />
+                              <div className="min-w-0">
+                                <div className="font-semibold text-[#263746] truncate">
+                                  {doc.file_name}
+                                </div>
+                                {doc.remarks && (
+                                  <p className="text-[11px] text-[#718096] truncate">
+                                    {doc.remarks}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-4 whitespace-nowrap font-mono text-[11px] text-[#718096]">
+                            {formatFileSize(doc.file_size)}
+                          </td>
+
+                          <td className="py-3 px-4 whitespace-nowrap text-[#263746]">
+                            {doc.submitted_by_name}
+                          </td>
+
+                          <td className="py-3 px-4 whitespace-nowrap font-mono text-[11px] text-[#718096]">
+                            {new Date(doc.submitted_at).toLocaleString()}
+                          </td>
+
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#198754] border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>{doc.verification_status || 'Verified'}</span>
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadDoc(doc.id, doc.file_name)}
+                              disabled={downloadingDocId === doc.id}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-white hover:bg-[#F5F7F7] text-[#087F75] border border-[#D9DEE3] text-xs font-semibold transition"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>{downloadingDocId === doc.id ? 'Downloading...' : 'Download'}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Upload Modal Dialog */}
+          {uploadModalItem && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+              <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-xl max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
+                <div className="flex items-center justify-between pb-3 border-b border-[#D9DEE3]">
+                  <div className="flex items-center space-x-2">
+                    <span className="p-1 rounded-md bg-teal-50 text-[#087F75] border border-teal-200">
+                      <UploadCloud className="w-4 h-4" />
+                    </span>
+                    <h3 className="text-sm font-bold text-[#263746]">
+                      Upload Statutory Compliance Document
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUploadModalItem(null)}
+                    className="p-1 rounded-md text-[#718096] hover:bg-[#F5F7F7] hover:text-[#263746] transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-3 rounded-lg bg-[#F5F7F7] border border-[#D9DEE3] space-y-1 text-xs">
+                  <div className="font-semibold text-[#263746]">
+                    {uploadModalItem.requirement_name}
+                  </div>
+                  <div className="flex items-center space-x-3 text-[11px] text-[#718096]">
+                    <span>Category: <strong className="text-[#263746]">{uploadModalItem.category}</strong></span>
+                    <span>Due: <strong className="text-[#263746]">{formatDate(uploadModalItem.due_date)}</strong></span>
+                  </div>
+                </div>
+
+                {uploadError && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-[#DC3545] text-xs flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                {uploadSuccess && (
+                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-[#198754] text-xs flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{uploadSuccess}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleUploadCompliance} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#263746] mb-1">
+                      Supporting Document (.pdf, .png, .jpg, .docx - max 15MB)
+                    </label>
+                    <input
+                      type="file"
+                      required
+                      accept=".pdf,.png,.jpg,.jpeg,.docx"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs text-[#263746] file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-[#087F75] hover:file:bg-teal-100 border border-[#D9DEE3] rounded-lg p-1.5 focus:outline-none focus:ring-1 focus:ring-[#087F75]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#263746] mb-1">
+                      Submitter Remarks / Reference Notes (Optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={uploadRemarks}
+                      onChange={(e) => setUploadRemarks(e.target.value)}
+                      placeholder="e.g. Approved by Academic Council resolution dated 12 October 2026..."
+                      className="w-full p-2.5 text-xs text-[#263746] rounded-lg border border-[#D9DEE3] focus:outline-none focus:ring-1 focus:ring-[#087F75]"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end space-x-2 pt-2 border-t border-[#D9DEE3]">
+                    <button
+                      type="button"
+                      onClick={() => setUploadModalItem(null)}
+                      className="px-3 py-1.5 rounded-lg border border-[#D9DEE3] bg-white text-xs font-semibold text-[#718096] hover:bg-[#F5F7F7] hover:text-[#263746] transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isUploading || !uploadFile}
+                      className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-[#087F75] hover:bg-[#06635c] text-white text-xs font-semibold shadow-2xs transition disabled:opacity-60"
+                    >
+                      <UploadCloud className={`w-3.5 h-3.5 ${isUploading ? 'animate-spin' : ''}`} />
+                      <span>{isUploading ? 'Uploading & Verifying...' : 'Submit Compliance Document'}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* 6. Recent Complaints Card & Table */}
       <div className="bg-white rounded-xl border border-[#D9DEE3] shadow-sm overflow-hidden space-y-4 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#D9DEE3]">

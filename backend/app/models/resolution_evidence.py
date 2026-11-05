@@ -13,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    JSON,
     Numeric,
     String,
     Text,
@@ -52,7 +53,7 @@ class ResolutionEvidence(Base):
         Numeric(5, 4), nullable=True
     )
     relevance_breakdown: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-        JSONB, nullable=True
+        JSON().with_variant(JSONB, "postgresql"), nullable=True
     )
     human_verified: Mapped[Optional[bool]] = mapped_column(
         Boolean,
