@@ -2,14 +2,19 @@
 FastAPI Dependency injection providers for database sessions and authentication.
 """
 
+import logging
+import time
 from typing import Generator, List, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.security import decode_access_token
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_PREFIX}/auth/login",
@@ -57,7 +62,22 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = db.query(User).filter(User.email == email).first()
+    user = None
+    for attempt in range(3):
+        try:
+            user = db.query(User).filter(User.email == email).first()
+            break
+        except (OperationalError, SQLAlchemyError) as db_err:
+            db.rollback()
+            if attempt < 2:
+                time.sleep(0.15 * (attempt + 1))
+                continue
+            logger.error("Database connection failure in get_current_user: %s", db_err)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database service connection unavailable. Please retry.",
+            )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

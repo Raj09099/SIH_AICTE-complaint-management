@@ -7,6 +7,7 @@ from typing import Union
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import NullPool
 from app.core.config import settings
 
 
@@ -29,12 +30,22 @@ def get_database_url() -> str:
 
 db_url = get_database_url()
 engine_kwargs = {
-    "pool_pre_ping": True,
-    "pool_recycle": 120,
     "echo": False,
 }
-if "postgresql" in db_url:
+
+if "pooler.supabase.com" in db_url:
+    # Supabase PgBouncer pooler already manages pooling on server side.
+    # NullPool eliminates stale SSL socket reuse errors ('unexpected eof while reading').
     engine_kwargs.update({
+        "poolclass": NullPool,
+        "connect_args": {
+            "connect_timeout": 15,
+        },
+    })
+elif "postgresql" in db_url:
+    engine_kwargs.update({
+        "pool_pre_ping": True,
+        "pool_recycle": 120,
         "pool_size": 5,
         "max_overflow": 10,
         "connect_args": {
@@ -44,6 +55,10 @@ if "postgresql" in db_url:
             "keepalives_interval": 10,
             "keepalives_count": 5,
         },
+    })
+else:
+    engine_kwargs.update({
+        "pool_pre_ping": True,
     })
 
 engine: Engine = create_engine(db_url, **engine_kwargs)

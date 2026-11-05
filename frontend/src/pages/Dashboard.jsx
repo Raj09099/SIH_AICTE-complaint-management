@@ -323,11 +323,22 @@ export function Dashboard() {
     setLoadingInstCompliance(true);
     setInstComplianceError(null);
     try {
-      const [summaryRes, deadlinesRes, remindersRes, historyRes] = await Promise.all([
-        complianceService.getComplianceSummary().catch((e) => {
-          console.warn('Failed to load institute compliance summary:', e);
-          return null;
-        }),
+      // 1. Fetch compliance summary with transparent single retry on network lag
+      let summaryRes = null;
+      try {
+        summaryRes = await complianceService.getComplianceSummary();
+      } catch (sumErr) {
+        console.warn('Attempt 1 compliance summary fetch failed, retrying in 350ms:', sumErr);
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        try {
+          summaryRes = await complianceService.getComplianceSummary();
+        } catch (sumRetryErr) {
+          console.warn('Attempt 2 compliance summary fetch failed:', sumRetryErr);
+        }
+      }
+
+      // 2. Fetch deadlines, complaint status notifications, and compliance history
+      const [deadlinesRes, remindersRes, historyRes] = await Promise.all([
         complianceService.getComplianceDeadlines(instDeadlineFilter).catch((e) => {
           console.warn('Failed to load institute compliance deadlines:', e);
           return [];
