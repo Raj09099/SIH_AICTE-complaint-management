@@ -747,35 +747,59 @@ def translate_complaint_content(
                 detail="Institute accounts are not authorized to access records belonging to other institutions.",
             )
 
-    target_lang = payload.target_language if payload else "en"
+    target_lang = (payload.target_language if payload and payload.target_language else "en").lower().strip()
+    if target_lang in ("hindi", "hi-in"):
+        target_lang = "hi"
+    elif target_lang in ("marathi", "mr-in"):
+        target_lang = "mr"
+    elif target_lang in ("english", "en-us", "en-gb"):
+        target_lang = "en"
 
-    # Re-process with translation engine, detecting language freshly
-    preferred_lang = complaint.detected_language if complaint.detected_language in ("hi", "mr") else None
-    multi_info = TranslationService.process_complaint_multilingual(
-        subject=complaint.subject,
-        description=complaint.description,
-        preferred_lang=preferred_lang,
+    # 1. Detect source language
+    detected_lang = complaint.detected_language or TranslationService.detect_language(
+        (complaint.subject or "") + " " + (complaint.description or "")
     )
+    complaint.detected_language = detected_lang
 
-    # Always persist updated translation and detected language on on-demand translation
-    complaint.detected_language = multi_info["detected_language"]
-    complaint.translated_subject = multi_info["translated_subject"]
-    complaint.translated_description = multi_info["translated_description"]
-    complaint.translation_status = multi_info["translation_status"]
-    complaint.translation_provider = multi_info["translation_provider"]
-    complaint.translated_at = multi_info["translated_at"]
-    db.commit()
-    db.refresh(complaint)
+    # 2. Ensure normalized English representation is persisted for AI analysis (Case Overlap, Patterns, Evidence Checker)
+    if not complaint.translated_subject or not complaint.translated_description or detected_lang in ("hi", "mr"):
+        eng_sub, _, _ = TranslationService.translate_to_english(complaint.subject, source_lang=detected_lang)
+        eng_desc, _, _ = TranslationService.translate_to_english(complaint.description, source_lang=detected_lang)
+        complaint.translated_subject = eng_sub
+        complaint.translated_description = eng_desc
+        complaint.translation_status = "translated" if detected_lang != "en" else "original"
+        complaint.translation_provider = "internal_indic"
+        complaint.translated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(complaint)
+
+    # 3. Generate requested target language output for the officer
+    if target_lang == "en":
+        out_sub = complaint.translated_subject or complaint.subject
+        out_desc = complaint.translated_description or complaint.description
+        status_val = "original" if detected_lang == "en" else "translated"
+    elif target_lang == "hi":
+        out_sub, _, _ = TranslationService.translate_to_hindi(complaint.subject, source_lang=detected_lang)
+        out_desc, _, _ = TranslationService.translate_to_hindi(complaint.description, source_lang=detected_lang)
+        status_val = "original" if detected_lang == "hi" else "translated"
+    elif target_lang == "mr":
+        out_sub, _, _ = TranslationService.translate_to_marathi(complaint.subject, source_lang=detected_lang)
+        out_desc, _, _ = TranslationService.translate_to_marathi(complaint.description, source_lang=detected_lang)
+        status_val = "original" if detected_lang == "mr" else "translated"
+    else:
+        out_sub = complaint.translated_subject or complaint.subject
+        out_desc = complaint.translated_description or complaint.description
+        status_val = "original" if detected_lang == "en" else "translated"
 
     return ComplaintTranslateResponse(
         complaint_id=complaint.id,
         complaint_no=complaint.complaint_no,
-        detected_language=complaint.detected_language or multi_info["detected_language"] or "en",
+        detected_language=detected_lang,
         target_language=target_lang,
         original_subject=complaint.subject,
         original_description=complaint.description,
-        translated_subject=complaint.translated_subject or multi_info["translated_subject"] or complaint.subject,
-        translated_description=complaint.translated_description or multi_info["translated_description"] or complaint.description,
-        translation_status=complaint.translation_status or "translated",
-        translation_provider=complaint.translation_provider or "internal_indic",
+        translated_subject=out_sub,
+        translated_description=out_desc,
+        translation_status=status_val,
+        translation_provider="internal_indic",
     )

@@ -295,7 +295,7 @@ def test_on_demand_translate_endpoint(client, officer_headers):
     assert create_res.status_code == 201
     c_id = create_res.json()["id"]
 
-    # Call on-demand translate endpoint
+    # Call on-demand translate endpoint to English
     trans_res = client.post(f"/api/v1/complaints/{c_id}/translate", json={"target_language": "en"}, headers=officer_headers)
     assert trans_res.status_code == 200
     t_data = trans_res.json()
@@ -305,6 +305,38 @@ def test_on_demand_translate_endpoint(client, officer_headers):
     assert t_data["original_subject"] == payload["subject"]
     assert t_data["translated_subject"] is not None
     assert t_data["translation_status"] == "translated"
+
+
+def test_translate_english_to_hindi_and_marathi_on_demand(client, officer_headers):
+    """Verifies that English complaints can be translated on-demand to Hindi and Marathi."""
+    payload = {
+        "institution_id": 1,
+        "complainant_type": "Public",
+        "bureau": "Approval Bureau",
+        "category": "Excessive Fee Surcharges",
+        "subject": "management",
+        "description": "institute can get all fees but , not provide the expected outcomes .",
+        "priority": "Medium",
+    }
+    create_res = client.post("/api/v1/complaints", json=payload, headers=officer_headers)
+    assert create_res.status_code == 201
+    c_id = create_res.json()["id"]
+
+    # Translate to Hindi
+    hi_res = client.post(f"/api/v1/complaints/{c_id}/translate", json={"target_language": "hi"}, headers=officer_headers)
+    assert hi_res.status_code == 200
+    hi_data = hi_res.json()
+    assert hi_data["target_language"] == "hi"
+    assert "प्रबंधन" in hi_data["translated_subject"]
+    assert any(w in hi_data["translated_description"] for w in ["संस्थान", "फीस", "अपेक्षित", "सुविधाएं"])
+
+    # Translate to Marathi
+    mr_res = client.post(f"/api/v1/complaints/{c_id}/translate", json={"target_language": "mr"}, headers=officer_headers)
+    assert mr_res.status_code == 200
+    mr_data = mr_res.json()
+    assert mr_data["target_language"] == "mr"
+    assert "व्यवस्थापन" in mr_data["translated_subject"]
+    assert any(w in mr_data["translated_description"] for w in ["संस्था", "फी", "अपेक्षित", "सुविधा"])
 
 
 def test_institute_access_control_on_translate(client, officer_headers, institute2_headers):

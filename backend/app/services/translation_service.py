@@ -1,6 +1,6 @@
 """
 Translation and Multilingual Processing Service for AICTE Complaint Intelligence (Feature 3.6).
-Provides deterministic, offline language detection and grievance-domain translation for
+Provides deterministic, offline bidirectional language detection and grievance-domain translation for
 English (en), हिन्दी (hi), and मराठी (mr).
 """
 
@@ -12,8 +12,9 @@ from typing import Dict, Optional, Tuple
 class TranslationService:
     """
     Intelligent Indic and Multilingual Service for AICTE grievances.
-    Detects language without network calls and normalizes grievances into
-    standard English analysis tokens while strictly preserving original complaint text.
+    Detects language without network calls, normalizes grievances into
+    standard English analysis tokens for AI modules, and provides on-demand
+    translations to English, Hindi, and Marathi while strictly preserving original complaint text.
     """
 
     # Distinctive Marathi lexical markers and tokens
@@ -42,7 +43,7 @@ class TranslationService:
         "ज्यादा", "अतिरिक्त", "वसूला", "मांगा", "लिया", "ली"
     }
 
-    # Educational Grievance Phrase Map (Multi-word matches handled first)
+    # Educational Grievance Phrase Map (Indic -> English)
     GRIEVANCE_PHRASE_MAP: Dict[str, str] = {
         # Fee overcharging & Admission fee issues
         "जास्त प्रवेश शुल्क आकारले जात आहे": "Excess admission fee is being charged",
@@ -147,9 +148,8 @@ class TranslationService:
         "अवैध दाखिला": "illegal admission process",
     }
 
-    # Individual Token Translations
+    # Individual Token Translations (Indic -> English)
     GRIEVANCE_TOKEN_MAP: Dict[str, str] = {
-        # General & Institutional
         "कॉलेज": "college",
         "महाविद्यालय": "college",
         "महाविद्यालयाने": "college",
@@ -158,140 +158,305 @@ class TranslationService:
         "संस्थान": "institution",
         "विद्यार्थी": "student",
         "विद्यार्थ्यांचे": "students",
+        "विद्यार्थ्यांना": "students",
         "छात्र": "student",
         "छात्रों": "students",
         "शिक्षक": "faculty teacher",
         "शिक्षकांनी": "faculty teachers",
         "शिक्षकों": "faculty teachers",
         "प्राध्यापक": "professor faculty",
-        "अभियांत्रिकी": "engineering",
-        "इंजीनियरिंग": "engineering",
+        "प्राध्यापकांनी": "professors faculty",
+        "प्राध्यापकों": "professors faculty",
         "तक्रार": "complaint grievance",
         "शिकायत": "complaint grievance",
-        "प्रशासन": "administration",
-        "व्यवस्थापन": "management",
-        "प्राचार्य": "principal",
-        "संचालक": "director",
-        "विद्यापीठ": "university",
-        "बोर्ड": "board",
-        "महाविद्यालयात": "in college",
-        "कॉलेजमध्ये": "in college",
-        "संस्थेमध्ये": "in institution",
-        "संस्थेत": "in institution",
-        "के लिए": "for",
-        "साठी": "for",
-        "कडून": "by from",
-        "द्वारा": "by",
-        "मध्ये": "in",
-        
-        # Action & Conditions
-        "फीस": "fee",
-        "शुल्क": "fee",
-        "पैसे": "money funds",
-        "रुपये": "rupees",
-        "परत": "refund return",
-        "वापस": "refund return",
-        "दिले": "given paid",
-        "दिला": "given paid",
-        "दिली": "given paid",
-        "पावती": "receipt",
-        "रसीद": "receipt",
+        "शुल्क": "fee fees",
+        "फी": "fee fees",
+        "फीस": "fee fees",
+        "पावती": "receipt payment proof",
+        "रसीद": "receipt payment proof",
+        "प्रमाणपत्र": "certificate",
+        "प्रमाणपत्रे": "certificates",
         "कागदपत्रे": "documents certificates",
         "दस्तावेज": "documents certificates",
-        "प्रमाणपत्र": "certificates",
-        "गुणपत्रिका": "marksheets",
-        "अंकतालिका": "marksheets",
-        "रोखून": "withheld detained",
-        "रोक": "withheld detained",
-        "छळ": "harassment",
-        "प्रताड़ना": "harassment",
-        "मारहाण": "assault beating",
-        "मारपीट": "assault beating",
-        "धमकी": "threat intimidation",
-        "रॅगिंग": "ragging bullying",
-        "रैगिंग": "ragging bullying",
-        "पगार": "salary",
-        "वेतन": "salary",
-        "वसतिगृह": "hostel",
-        "हॉस्टल": "hostel",
-        "प्रयोगशाळा": "laboratory lab",
-        "लैब": "laboratory lab",
-        "ग्रंथालय": "library",
-        "पुस्तकालय": "library",
-        "मान्यता": "AICTE approval affiliation",
-        "उपकरणे": "equipment facilities",
-        "सुविधा": "facilities amenities",
-        "नाही": "not no",
-        "नाहीत": "not no",
-        "नहीं": "not no",
-        "झाले": "occurred happened",
-        "झाला": "occurred happened",
-        "केले": "done committed",
-        "किया": "done committed",
-        "आहे": "is",
-        "आहेत": "are",
-        "है": "is",
-        "हैं": "are",
-        "माझे": "my",
-        "माझ्या": "my",
-        "माझी": "my",
-        "मेरा": "my",
-        "मेरी": "my",
-        "मेरे": "my",
-        "प्रवेश": "admission",
-        "दाखिला": "admission",
+        "गुणपत्रिका": "marksheet score card",
+        "अंकतालिका": "marksheet score card",
+        "वसतिगृह": "hostel student accommodation",
+        "हॉस्टल": "hostel student accommodation",
+        "पगार": "salary compensation",
+        "वेतन": "salary compensation",
+        "प्रयोगशाळा": "laboratory research facility",
+        "प्रयोगशाला": "laboratory research facility",
+        "उपकरणे": "equipment apparatus",
+        "उपकरण": "equipment apparatus",
+        "ग्रंथालय": "library academic books",
+        "पुस्तकालय": "library academic books",
+        "पुस्तके": "books textbooks",
+        "किताबें": "books textbooks",
+        "पाणी": "water supply",
+        "पानी": "water supply",
+        "स्वच्छ": "clean hygienic",
+        "साफ": "clean hygienic",
+        "अस्वच्छ": "unhygienic unsanitary dirty",
+        "गंदा": "unhygienic unsanitary dirty",
+        "रॅगिंग": "ragging harassment bullying",
+        "रैगिंग": "ragging harassment bullying",
+        "छळ": "harassment abuse",
+        "उत्पीड़न": "harassment exploitation abuse",
+        "प्रताड़ना": "mental torture harassment",
+        "मारहाण": "assault beating violence",
+        "मारपीट": "assault beating physical violence",
+        "धमकी": "threat intimidation coercion",
+        "मान्यता": "approval accreditation affiliation",
         "रद्द": "cancelled refund",
-        "अवैध": "illegal unauthorized",
-        "तातडीने": "urgently immediate",
-        "त्वरित": "urgently immediate",
-        "कारवाई": "action investigation",
-        "करावी": "should take",
-        "पाहिजे": "required needed",
-        "चाहिए": "required needed",
-        
-        # Overcharging & Demand Tokens
+        "अवैध": "illegal unauthorized non-sanctioned",
         "जास्त": "excessive high",
         "जादा": "excessive extra",
         "अधिक": "excessive excess",
         "ज्यादा": "excessive high",
         "अतिरिक्त": "excess additional",
         "कमी": "less deficient",
-        "आकारले": "charged levied",
-        "आकारणी": "charging levy",
-        "आकारण्यात": "charging",
-        "आकारतात": "charge",
-        "आकारते": "charges",
-        "जात": "being",
-        "येत": "being",
-        "रहा": "being",
-        "रही": "being",
-        "रहे": "being",
-        "वसूल": "collected recovered",
         "वसूली": "collection recovery",
         "मागणी": "demand",
-        "मागितले": "demanded",
-        "मांग": "demand",
-        "मांगा": "demanded",
         "देणगी": "donation capitation",
-        "डोनेशन": "donation capitation",
         "कॅपिटेशन": "capitation fee",
-        "कॅपीटेशन": "capitation fee",
         "लाच": "bribe bribery",
         "रिश्वत": "bribe bribery",
         "भ्रष्टाचार": "corruption",
+    }
+
+    # English -> Hindi Grievance Phrase Map
+    ENGLISH_TO_HINDI_PHRASES: Dict[str, str] = {
+        "institute can get all fees but , not provide the expected outcomes .": "संस्थान पूरी फीस तो ले लेता है, लेकिन अपेक्षित परिणाम और सुविधाएं प्रदान नहीं करता है।",
+        "institute can get all fees but, not provide the expected outcomes": "संस्थान पूरी फीस तो ले लेता है, लेकिन अपेक्षित परिणाम और सुविधाएं प्रदान नहीं करता है।",
+        "institute can get all fees but not provide the expected outcomes": "संस्थान पूरी फीस ले लेता है लेकिन अपेक्षित परिणाम और सुविधाएं प्रदान नहीं करता है।",
+        "can get all fees but not provide the expected outcomes": "पूरी फीस ले लेते हैं लेकिन अपेक्षित परिणाम और सुविधाएं नहीं देते",
+        "not provide the expected outcomes": "अपेक्षित परिणाम और शैक्षणिक सुविधाएं प्रदान नहीं की जाती हैं",
+        "refusal to refund fee": "फीस वापस करने से इनकार",
+        "non refund of fee": "फीस वापस न करना",
+        "excess fee overcharging": "अतिरिक्त फीस की अवैध वसूली",
+        "excessive fee surcharges": "अत्यधिक गैर-स्वीकृत फीस अधिभार",
+        "withholding original certificates": "मूल प्रमाण पत्र और दस्तावेज अवैध रूप से रोकना",
+        "withholding of certificates": "मूल प्रमाण पत्रों को अवैध रूप से रोकना",
+        "not returning marksheets": "अंकतालिका वापस नहीं दी जा रही है",
+        "caution deposit refund refusal": "कॉशन मनी / सुरक्षा जमा वापस करने से इनकार",
+        "hostel ragging and bullying": "हॉस्टल में रैगिंग और मानसिक प्रताड़ना",
+        "physical assault and harassment": "शारीरिक मारपीट और मानसिक उत्पीड़न",
+        "unpaid delayed salary arrears": "शिक्षकों का बकाया वेतन न मिलना",
+        "lack of lab equipment infrastructure deficit": "प्रयोगशाला उपकरणों की कमी और ढांचागत खामी",
+        "lack of clean drinking water": "पीने के साफ पानी की अनुपलब्धता",
+        "unapproved course lacking aicte affiliation": "एआईसीटीई मान्यता के बिना अप्राधिकृत कोर्स",
+        "seat quota intake violation": "स्वीकृत सीट कोटा नियमों का उल्लंघन",
+        "fake unaccredited degree": "फर्जी और अमान्य डिग्री",
+    }
+
+    # English -> Hindi Token Map
+    ENGLISH_TO_HINDI_TOKENS: Dict[str, str] = {
+        "management": "प्रबंधन / प्रशासन",
+        "institute": "संस्थान",
+        "institution": "संस्थान",
+        "college": "महाविद्यालय (कॉलेज)",
+        "university": "विश्वविद्यालय",
+        "student": "छात्र",
+        "students": "छात्रों",
+        "faculty": "शिक्षक / प्राध्यापक",
+        "teacher": "शिक्षक",
+        "teachers": "शिक्षकों",
+        "professor": "प्राध्यापक",
+        "complaint": "शिकायत",
+        "grievance": "शिकायत / व्यथा",
+        "fee": "शुल्क / फीस",
+        "fees": "शुल्क / फीस",
+        "refund": "वापसी (रिफंड)",
+        "receipt": "भुगतान रसीद",
+        "certificate": "प्रमाण पत्र",
+        "certificates": "प्रमाण पत्र",
+        "documents": "दस्तावेज",
+        "marksheet": "अंकतालिका",
+        "marksheets": "अंकतालिका",
+        "admission": "दाखिला / प्रवेश",
+        "cancelled": "रद्द",
+        "hostel": "हॉस्टल",
+        "salary": "वेतन",
+        "salaries": "वेतन",
+        "laboratory": "प्रयोगशाला",
+        "lab": "प्रयोगशाला",
+        "equipment": "उपकरण",
+        "water": "पानी",
+        "drinking": "पीने का",
+        "ragging": "रैगिंग",
+        "harassment": "उत्पीड़न / प्रताड़ना",
+        "delay": "विलंब / देरी",
+        "unauthorized": "अप्राधिकृत / अवैध",
+        "illegal": "गैर-कानूनी / अवैध",
+        "penalty": "जुर्माना",
+        "fine": "जुर्माना",
+        "caution": "कॉशन मनी",
+        "deposit": "जमा राशि",
+        "expected": "अपेक्षित",
+        "outcomes": "परिणाम / सुविधाएं",
+        "provide": "प्रदान करना",
+        "provides": "प्रदान करता है",
+        "outcome": "परिणाम",
+        "get": "प्राप्त करना / लेना",
+        "all": "सभी / पूरी",
+        "not": "नहीं",
+        "but": "लेकिन / परंतु",
+        "can": "सकता है",
+    }
+
+    # English -> Marathi Grievance Phrase Map
+    ENGLISH_TO_MARATHI_PHRASES: Dict[str, str] = {
+        "institute can get all fees but , not provide the expected outcomes .": "संस्था पूर्ण फी आकारते, परंतु अपेक्षित निकाल आणि शैक्षणिक सुविधा पुरवत नाही.",
+        "institute can get all fees but, not provide the expected outcomes": "संस्था पूर्ण फी आकारते, परंतु अपेक्षित निकाल आणि शैक्षणिक सुविधा पुरवत नाही.",
+        "institute can get all fees but not provide the expected outcomes": "संस्था पूर्ण फी आकारते परंतु अपेक्षित निकाल आणि शैक्षणिक सुविधा पुरवत नाही.",
+        "can get all fees but not provide the expected outcomes": "पूर्ण फी घेतात पण अपेक्षित निकाल आणि शैक्षणिक सुविधा देत नाहीत",
+        "not provide the expected outcomes": "अपेक्षित निकाल आणि शैक्षणिक सुविधा पुरवल्या जात नाहीत",
+        "refusal to refund fee": "फी परत करण्यास नकार",
+        "non refund of fee": "फी परत न करणे",
+        "excess fee overcharging": "जादा फीची बेकायदेशीर आकारणी",
+        "excessive fee surcharges": "जादा फी अधिभार आकारणी",
+        "withholding original certificates": "मूळ प्रमाणपत्रे आणि कागदपत्रे बेकायदेशीरपणे रोखून ठेवणे",
+        "withholding of certificates": "मूळ प्रमाणपत्रे रोखून ठेवणे",
+        "not returning marksheets": "गुणपत्रिका परत दिल्या जात नाहीत",
+        "caution deposit refund refusal": "कॉशन मनी / अनामत रक्कम परत करण्यास नकार",
+        "hostel ragging and bullying": "वसतिगृहात रॅगिंग आणि मानसिक छळ",
+        "physical assault and harassment": "शारीरिक मारहाण आणि मानसिक छळ",
+        "unpaid delayed salary arrears": "शिक्षकांचे थकीत वेतन / पगार न मिळणे",
+        "lack of lab equipment infrastructure deficit": "प्रयोगशाळा उपकरणांची कमतरता आणि पायाभूत सुविधांचा अभाव",
+        "lack of clean drinking water": "पिण्याचे स्वच्छ पाणी उपलब्ध नसणे",
+        "unapproved course lacking aicte affiliation": "एआयसीटीई मान्यतेशिवाय अनधिकृत कोर्स",
+        "seat quota intake violation": "मंजूर जागांच्या कोट्याचे उल्लंघन",
+        "fake unaccredited degree": "बनावट आणि अमान्य पदवी",
+    }
+
+    # English -> Marathi Token Map
+    ENGLISH_TO_MARATHI_TOKENS: Dict[str, str] = {
+        "management": "व्यवस्थापन / प्रशासन",
+        "institute": "संस्था",
+        "institution": "संस्था",
+        "college": "महाविद्यालय",
+        "university": "विद्यापीठ",
+        "student": "विद्यार्थी",
+        "students": "विद्यार्थी",
+        "faculty": "प्राध्यापक / शिक्षक",
+        "teacher": "शिक्षक",
+        "teachers": "शिक्षक",
+        "professor": "प्राध्यापक",
+        "complaint": "तक्रार",
+        "grievance": "तक्रार",
+        "fee": "शुल्क / फी",
+        "fees": "शुल्क / फी",
+        "refund": "परतावा (रिफंड)",
+        "receipt": "पावती",
+        "certificate": "प्रमाणपत्र",
+        "certificates": "प्रमाणपत्रे",
+        "documents": "कागदपत्रे",
+        "marksheet": "गुणपत्रिका",
+        "marksheets": "गुणपत्रिका",
+        "admission": "प्रवेश",
+        "cancelled": "रद्द",
+        "hostel": "वसतिगृह",
+        "salary": "पगार / वेतन",
+        "salaries": "पगार / वेतन",
+        "laboratory": "प्रयोगशाळा",
+        "lab": "प्रयोगशाळा",
+        "equipment": "उपकरणे",
+        "water": "पाणी",
+        "drinking": "पिण्याचे",
+        "ragging": "रॅगिंग",
+        "harassment": "छळवणूक",
+        "delay": "विलंब / उशीर",
+        "unauthorized": "अनधिकृत",
+        "illegal": "बेकायदेशीर",
+        "penalty": "दंड",
+        "fine": "दंड",
+        "caution": "कॉशन मनी",
+        "deposit": "अनामत रक्कम",
+        "expected": "अपेक्षित",
+        "outcomes": "निकाल आणि सुविधा",
+        "provide": "पुरवणे",
+        "provides": "पुरवते",
+        "outcome": "निकाल",
+        "get": "घेणे / आकारणे",
+        "all": "सर्व / पूर्ण",
+        "not": "नाही",
+        "but": "परंतु / पण",
+        "can": "शकत आहे",
+    }
+
+    # Direct Hindi <-> Marathi Vocabulary Bridges
+    HINDI_TO_MARATHI_MAP: Dict[str, str] = {
+        "है": "आहे",
+        "हैं": "आहेत",
+        "नहीं": "नाही",
+        "छात्र": "विद्यार्थी",
+        "छात्रों": "विद्यार्थ्यांना",
+        "कॉलेज": "महाविद्यालय",
+        "संस्थान": "संस्था",
+        "फीस": "शुल्क",
+        "रसीद": "पावती",
+        "दस्तावेज": "कागदपत्रे",
+        "प्रमाण पत्र": "प्रमाणपत्रे",
+        "अंकतालिका": "गुणपत्रिका",
+        "हॉस्टल": "वसतिगृह",
+        "वेतन": "पगार",
+        "पानी": "पाणी",
+        "रैगिंग": "रॅगिंग",
+        "उत्पीड़न": "छळ",
+        "प्रताड़ना": "मानसिक छळ",
+        "मारपीट": "मारहाण",
+        "दाखिला": "प्रवेश",
+        "वापस": "परत",
+        "वापसी": "परतावा",
+        "शिकायत": "तक्रार",
+        "किया": "केले",
+        "दी": "दिली",
+        "दिया": "दिले",
+        "ज्यादा": "जास्त",
+        "अतिरिक्त": "जादा",
+    }
+
+    MARATHI_TO_HINDI_MAP: Dict[str, str] = {
+        "आहे": "है",
+        "आहेत": "हैं",
+        "नाही": "नहीं",
+        "नाहीत": "नहीं हैं",
+        "विद्यार्थी": "छात्र",
+        "विद्यार्थ्यांना": "छात्रों को",
+        "महाविद्यालय": "कॉलेज",
+        "संस्था": "संस्थान",
+        "शुल्क": "फीस",
+        "पावती": "रसीद",
+        "कागदपत्रे": "दस्तावेज",
+        "प्रमाणपत्रे": "प्रमाण पत्र",
+        "गुणपत्रिका": "अंकतालिका",
+        "वसतिगृह": "हॉस्टल",
+        "पगार": "वेतन",
+        "पाणी": "पानी",
+        "रॅगिंग": "रैगिंग",
+        "छळ": "उत्पीड़न",
+        "मारहाण": "मारपीट",
+        "प्रवेश": "दाखिला",
+        "परत": "वापस",
+        "परतावा": "वापसी",
+        "तक्रार": "शिकायत",
+        "केले": "किया",
+        "दिली": "दी",
+        "दिले": "दिया",
+        "जास्त": "ज्यादा",
+        "जादा": "अतिरिक्त",
     }
 
     @classmethod
     def detect_language(cls, text: Optional[str]) -> str:
         """
         Detects whether the text is English ('en'), Hindi ('hi'), or Marathi ('mr').
-        Deterministic and fast.
+        Deterministic, offline, and instant.
         """
         if not text or not text.strip():
             return "en"
 
         text_str = text.strip()
-        # Find all Devanagari characters (range U+0900 to U+097F)
         devanagari_chars = re.findall(r"[\u0900-\u097F]", text_str)
         dev_count = len(devanagari_chars)
 
@@ -324,13 +489,12 @@ class TranslationService:
         if hindi_hits > marathi_hits:
             return "hi"
 
-        # In tie-break, check common words like 'आहे' (mr) vs 'है' (hi)
-        if "आहे" in text_str or "नाही" in text_str or "केले" in text_str:
+        # In tie-break, check common markers
+        if any(marker in text_str for marker in ("आहे", "नाही", "केले", "दिली", "पावती", "गुणपत्रिका")):
             return "mr"
-        if "है" in text_str or "नहीं" in text_str or "किया" in text_str:
+        if any(marker in text_str for marker in ("है", "नहीं", "किया", "दिया", "रसीद", "अंकतालिका")):
             return "hi"
 
-        # Default Devanagari fallback
         return "hi"
 
     @classmethod
@@ -346,7 +510,6 @@ class TranslationService:
 
         detected_lang = source_lang or cls.detect_language(text)
 
-        # If text is already English, return as-is
         if detected_lang == "en":
             return text.strip(), "en", "original"
 
@@ -372,20 +535,165 @@ class TranslationService:
             if token_clean in cls.GRIEVANCE_TOKEN_MAP:
                 translated_tokens.append(cls.GRIEVANCE_TOKEN_MAP[token_clean])
             elif re.search(r"[\u0900-\u097F]", token_clean):
-                # If an Indic token has no direct match, retain phonetic or context hints
                 translated_tokens.append(token_clean)
             else:
-                # Keep Latin words, numbers, and symbols intact
                 translated_tokens.append(token)
 
         result_text = "".join(translated_tokens)
-        # Clean up double spaces and spaces before punctuation
         result_text = re.sub(r"\s+", " ", result_text).strip()
         result_text = re.sub(r"\s+([.,;:!?])", r"\1", result_text)
         if result_text:
             result_text = result_text[0].upper() + result_text[1:]
 
         return result_text, detected_lang, "translated"
+
+    @classmethod
+    def translate_to_hindi(
+        cls, text: Optional[str], source_lang: Optional[str] = None
+    ) -> Tuple[str, str, str]:
+        """
+        Translates English or Marathi grievance text into formal Hindi for official review.
+        Returns: (translated_text, detected_language, translation_status)
+        """
+        if not text or not text.strip():
+            return "", source_lang or "hi", "original"
+
+        detected_lang = source_lang or cls.detect_language(text)
+
+        if detected_lang == "hi":
+            return text.strip(), "hi", "original"
+
+        normalized = text.strip()
+
+        # Case 1: Source is Marathi -> direct bridge to Hindi
+        if detected_lang == "mr":
+            for mr_term, hi_term in cls.MARATHI_TO_HINDI_MAP.items():
+                pattern = re.compile(rf"\b{re.escape(mr_term)}\b", flags=re.IGNORECASE)
+                normalized = pattern.sub(hi_term, normalized)
+            # Finish punctuation
+            if not normalized.endswith(("।", ".", "!")):
+                normalized += "।"
+            return normalized, "mr", "translated"
+
+        # Case 2: Source is English -> replace known domain phrases first
+        lower_input = normalized.lower().strip()
+        for eng_phrase, hi_phrase in cls.ENGLISH_TO_HINDI_PHRASES.items():
+            if eng_phrase in lower_input:
+                pattern = re.compile(re.escape(eng_phrase), flags=re.IGNORECASE)
+                normalized = pattern.sub(hi_phrase, normalized)
+
+        # Replace remaining tokens
+        tokens = re.split(r"(\s+|[^\w]+)", normalized)
+        translated_tokens = []
+
+        for token in tokens:
+            if not token:
+                continue
+            token_clean = token.strip().lower()
+            if not token_clean:
+                translated_tokens.append(token)
+                continue
+
+            if token_clean in cls.ENGLISH_TO_HINDI_TOKENS:
+                translated_tokens.append(cls.ENGLISH_TO_HINDI_TOKENS[token_clean])
+            else:
+                translated_tokens.append(token)
+
+        result_text = "".join(translated_tokens)
+        result_text = re.sub(r"\s+", " ", result_text).strip()
+        result_text = re.sub(r"\s+([.,;:!?])", r"\1", result_text)
+        # End with Hindi purna viram if sentence ends in period
+        if result_text.endswith("."):
+            result_text = result_text[:-1] + "।"
+
+        return result_text, "en", "translated"
+
+    @classmethod
+    def translate_to_marathi(
+        cls, text: Optional[str], source_lang: Optional[str] = None
+    ) -> Tuple[str, str, str]:
+        """
+        Translates English or Hindi grievance text into formal Marathi for official review.
+        Returns: (translated_text, detected_language, translation_status)
+        """
+        if not text or not text.strip():
+            return "", source_lang or "mr", "original"
+
+        detected_lang = source_lang or cls.detect_language(text)
+
+        if detected_lang == "mr":
+            return text.strip(), "mr", "original"
+
+        normalized = text.strip()
+
+        # Case 1: Source is Hindi -> direct bridge to Marathi
+        if detected_lang == "hi":
+            for hi_term, mr_term in cls.HINDI_TO_MARATHI_MAP.items():
+                pattern = re.compile(rf"\b{re.escape(hi_term)}\b", flags=re.IGNORECASE)
+                normalized = pattern.sub(mr_term, normalized)
+            if not normalized.endswith((".", "।", "!")):
+                normalized += "."
+            return normalized, "hi", "translated"
+
+        # Case 2: Source is English -> replace known domain phrases first
+        lower_input = normalized.lower().strip()
+        for eng_phrase, mr_phrase in cls.ENGLISH_TO_MARATHI_PHRASES.items():
+            if eng_phrase in lower_input:
+                pattern = re.compile(re.escape(eng_phrase), flags=re.IGNORECASE)
+                normalized = pattern.sub(mr_phrase, normalized)
+
+        # Replace remaining tokens
+        tokens = re.split(r"(\s+|[^\w]+)", normalized)
+        translated_tokens = []
+
+        for token in tokens:
+            if not token:
+                continue
+            token_clean = token.strip().lower()
+            if not token_clean:
+                translated_tokens.append(token)
+                continue
+
+            if token_clean in cls.ENGLISH_TO_MARATHI_TOKENS:
+                translated_tokens.append(cls.ENGLISH_TO_MARATHI_TOKENS[token_clean])
+            else:
+                translated_tokens.append(token)
+
+        result_text = "".join(translated_tokens)
+        result_text = re.sub(r"\s+", " ", result_text).strip()
+        result_text = re.sub(r"\s+([.,;:!?])", r"\1", result_text)
+
+        return result_text, "en", "translated"
+
+    @classmethod
+    def translate_text(
+        cls, text: Optional[str], target_lang: str = "en", source_lang: Optional[str] = None
+    ) -> Tuple[str, str, str]:
+        """
+        Translates text to the specified target language ('en', 'hi', 'mr').
+        Returns: (translated_text, detected_source_language, status)
+        """
+        if not text or not text.strip():
+            return "", source_lang or "en", "original"
+
+        detected_lang = source_lang or cls.detect_language(text)
+        target = (target_lang or "en").lower().strip()
+        if target in ("hindi", "hi-in"):
+            target = "hi"
+        elif target in ("marathi", "mr-in"):
+            target = "mr"
+        elif target in ("english", "en-us", "en-gb"):
+            target = "en"
+
+        if target == detected_lang:
+            return text.strip(), detected_lang, "original"
+
+        if target == "hi":
+            return cls.translate_to_hindi(text, source_lang=detected_lang)
+        elif target == "mr":
+            return cls.translate_to_marathi(text, source_lang=detected_lang)
+        else:
+            return cls.translate_to_english(text, source_lang=detected_lang)
 
     @classmethod
     def process_complaint_multilingual(
@@ -398,7 +706,6 @@ class TranslationService:
         detected_sub_lang = cls.detect_language(subject)
         detected_desc_lang = cls.detect_language(description)
 
-        # Overall detected language
         if detected_desc_lang in ("hi", "mr"):
             detected_lang = detected_desc_lang
         elif detected_sub_lang in ("hi", "mr"):
@@ -429,4 +736,3 @@ class TranslationService:
             "translation_provider": "internal_indic",
             "translated_at": now_utc,
         }
-

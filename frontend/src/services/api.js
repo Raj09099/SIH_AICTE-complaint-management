@@ -10,15 +10,21 @@ import axios from 'axios';
 const getSanitizedBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
 
-  // If in browser on localhost or loopback, prioritize local FastAPI development backend
+  // If in browser on localhost or local LAN IP, prioritize local FastAPI development backend
   if (
     typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('172.') ||
+      window.location.hostname.endsWith('.local'))
   ) {
     if (envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
       return envUrl.trim().replace(/\/+$/, '');
     }
-    return 'http://localhost:8000/api/v1';
+    const host = window.location.hostname || 'localhost';
+    return `http://${host}:8000/api/v1`;
   }
 
   if (!envUrl || envUrl.trim() === '') {
