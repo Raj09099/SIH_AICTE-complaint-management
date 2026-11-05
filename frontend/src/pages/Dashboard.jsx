@@ -884,12 +884,12 @@ const FALLBACK_INSTITUTE_HISTORY = [
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#263746] tracking-tight mt-1">
-            {isInstitute ? 'Campus Grievance Console' : t('dashboard.title', 'Complaint Intelligence Dashboard')}
+            {isInstitute ? t('dashboard.campusGrievanceConsole', 'Campus Grievance Console') : t('dashboard.title', 'Complaint Intelligence Dashboard')}
           </h1>
           <p className="text-sm text-[#718096] mt-0.5">
             {isInstitute
-              ? 'Lodge institutional disputes, track redressal milestones, and interface directly with AICTE Bureaus.'
-              : 'Overview of complaint cases, resolution progress, and cross-bureau overlap telemetry.'}
+              ? t('dashboard.campusConsoleSubtitle', 'Lodge institutional disputes, track redressal milestones, and interface directly with AICTE Bureaus.')
+              : t('dashboard.subtitle', 'Overview of complaint cases, resolution progress, and cross-bureau overlap telemetry.')}
           </p>
         </div>
 
@@ -901,7 +901,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               className="inline-flex items-center space-x-2 px-3.5 py-2 bg-[#087F75] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-semibold rounded-lg text-xs transition shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Send Grievance to AICTE</span>
+              <span>{t('dashboard.sendGrievanceToAicte', 'Send Grievance to AICTE')}</span>
             </Link>
           )}
 
@@ -915,7 +915,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
                   : 'text-[#718096] hover:text-[#263746]'
               }`}
             >
-              Live Database
+              {t('common.liveDb', 'Live Database')}
             </button>
             <button
               type="button"
@@ -926,7 +926,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
                   : 'text-[#718096] hover:text-[#263746]'
               }`}
             >
-              Demo Set
+              {t('common.demoSet', 'Demo Set')}
             </button>
           </div>
 
@@ -970,7 +970,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#087F75] hover:bg-[#115E59] text-white font-medium rounded-lg text-xs transition shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Dispatch New Grievance</span>
+              <span>{t('dashboard.dispatchNewGrievance', 'Dispatch New Grievance')}</span>
             </Link>
           </div>
         </div>
@@ -1024,7 +1024,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               ? '...'
               : '0'
           }
-          subtitle="Currently Active or Under Review"
+          subtitle={t('dashboard.activeUnderReview', 'Currently Active or Under Review')}
           icon={Clock}
           color="amber"
           progress={
@@ -1048,7 +1048,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               ? '...'
               : '0'
           }
-          subtitle="Successfully Redressed with Proof"
+          subtitle={t('dashboard.successfullyRedressed', 'Successfully Redressed with Proof')}
           icon={CheckCircle2}
           color="green"
           progress={
@@ -1072,10 +1072,10 @@ const FALLBACK_INSTITUTE_HISTORY = [
               ? '...'
               : '0'
           }
-          subtitle="Exceeded 30-Day Turnaround SLA"
+          subtitle={t('dashboard.exceededTurnaround', 'Exceeded 30-Day Turnaround SLA')}
           icon={AlertTriangle}
           color="red"
-          tag={presentationMode === 'demo' ? 'Requires Action' : summaryData?.overdue_complaints > 0 ? 'Urgent Review' : 'Within SLA'}
+          tag={presentationMode === 'demo' ? t('dashboard.urgentReview', 'Requires Action') : summaryData?.overdue_complaints > 0 ? t('dashboard.urgentReview', 'Urgent Review') : t('dashboard.withinSla', 'Within SLA')}
           to="/complaints"
         />
       </div>
@@ -1087,7 +1087,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
           <div className="flex items-center justify-between pb-3 border-b border-[#D9DEE3]">
             <div>
               <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
-                Monthly Inflow vs. Resolution
+                {t('dashboard.monthlyInflow', 'Monthly Inflow vs. Resolution')}
               </h2>
               <p className="text-xs text-[#718096]">
                 Monthly filing volume and redressal velocity
@@ -1153,10 +1153,10 @@ const FALLBACK_INSTITUTE_HISTORY = [
           <div className="flex items-center justify-between pb-3 border-b border-[#D9DEE3]">
             <div>
               <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
-                Cross-Bureau Workload
+                {t('dashboard.crossBureauWorkload', 'Cross-Bureau Workload')}
               </h2>
               <p className="text-xs text-[#718096]">
-                Active cases and SLA resolution rates by bureau/cell
+                {t('dashboard.bureauWorkloadSubtitle', 'Active cases and SLA resolution rates by bureau/cell')}
               </p>
             </div>
             <Link
@@ -1335,7 +1335,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
             <div className="space-y-1">
               <div className="flex items-center space-x-1.5 text-xs text-[#D97736] font-semibold">
                 <Clock className="w-4 h-4" />
-                <span>Upcoming Deadlines</span>
+                <span>{t('dashboard.upcomingDeadlines', 'Upcoming Deadlines')}</span>
               </div>
               <div className="text-2xl font-bold text-[#263746]">
                 {activeDeadlines?.upcoming_count || 0}
@@ -1606,14 +1606,14 @@ const FALLBACK_INSTITUTE_HISTORY = [
                   <Clock className="w-4 h-4" />
                 </span>
                 <h2 className="text-base font-bold text-[#263746]">
-                  Campus Statutory Compliance & Complaint Reminders
+                  {t('dashboard.campusComplianceTitle', 'Campus Statutory Compliance & Complaint Reminders')}
                 </h2>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-[#198754] border border-emerald-200">
                   Campus Verified
                 </span>
               </div>
               <p className="text-xs text-[#718096] mt-0.5">
-                Statutory compliance deadlines and real-time AICTE complaint status notifications for your institution.
+                {t('dashboard.campusComplianceSubtitle', 'Statutory compliance deadlines and real-time AICTE complaint status notifications for your institution.')}
               </p>
             </div>
 
@@ -1626,7 +1626,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
                 title="Refresh Campus Compliance & Notifications"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loadingInstCompliance ? 'animate-spin' : ''}`} />
-                <span>{loadingInstCompliance ? 'Refreshing...' : 'Refresh Compliance'}</span>
+                <span>{loadingInstCompliance ? t('common.loading', 'Refreshing...') : t('dashboard.refreshCompliance', 'Refresh Compliance')}</span>
               </button>
             </div>
           </div>
@@ -1672,7 +1672,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               <div className="space-y-1">
                 <div className="flex items-center space-x-1.5 text-xs text-[#263746] font-semibold">
                   <FileText className="w-4 h-4 text-[#263746]" />
-                  <span>Total Compliance Requirements</span>
+                  <span>{t('dashboard.totalCompliance', 'Total Compliance Requirements')}</span>
                 </div>
                 <div className="text-2xl font-bold text-[#263746]">
                   {loadingInstCompliance ? (
@@ -1703,7 +1703,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               <div className="space-y-1">
                 <div className="flex items-center space-x-1.5 text-xs text-[#198754] font-semibold">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Completed Requirements</span>
+                  <span>{t('dashboard.completedCompliance', 'Completed Requirements')}</span>
                 </div>
                 <div className="text-2xl font-bold text-[#198754]">
                   {loadingInstCompliance ? (
@@ -1734,7 +1734,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               <div className="space-y-1">
                 <div className="flex items-center space-x-1.5 text-xs text-blue-700 font-semibold">
                   <Clock className="w-4 h-4" />
-                  <span>Upcoming Deadlines</span>
+                  <span>{t('dashboard.upcomingDeadlines', 'Upcoming Deadlines')}</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-700">
                   {loadingInstCompliance ? (
@@ -1765,7 +1765,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
               <div className="space-y-1">
                 <div className="flex items-center space-x-1.5 text-xs text-[#DC3545] font-semibold">
                   <AlertTriangle className="w-4 h-4" />
-                  <span>Overdue Submissions</span>
+                  <span>{t('dashboard.overdueSubmissions', 'Overdue Submissions')}</span>
                 </div>
                 <div className="text-2xl font-bold text-[#DC3545]">
                   {loadingInstCompliance ? (
@@ -1795,7 +1795,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
                 }`}
               >
                 <FileCheck2 className="w-3.5 h-3.5" />
-                <span>Compliance Requirements & Uploads</span>
+                <span>{t('dashboard.tabRequirements', 'Compliance Requirements & Uploads')}</span>
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#D9DEE3] text-[#263746]">
                   {instDeadlines.length}
                 </span>
@@ -1811,7 +1811,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
                 }`}
               >
                 <Bell className="w-3.5 h-3.5" />
-                <span>Complaint Status Notifications</span>
+                <span>{t('dashboard.tabNotifications', 'Complaint Status Notifications')}</span>
                 {unreadRemindersCount > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#087F75] text-white">
                     {unreadRemindersCount}
@@ -1829,7 +1829,7 @@ const FALLBACK_INSTITUTE_HISTORY = [
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Compliance History & Audit Trail</span>
+                <span>{t('dashboard.tabHistory', 'Compliance History & Audit Trail')}</span>
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-[#D9DEE3] text-[#263746]">
                   {instHistory.length}
                 </span>

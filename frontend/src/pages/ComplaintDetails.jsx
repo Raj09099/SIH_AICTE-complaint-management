@@ -24,8 +24,10 @@ import {
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { complaintService } from '../services/complaints';
 import { formatDate } from '../utils/formatters';
+import { translateGrievance, detectLanguage } from '../utils/indicTranslation';
 const formatFileSize = (bytes) => {
   if (!bytes) return '0 B';
   const k = 1024;
@@ -55,6 +57,7 @@ const STATUS_OPTIONS = [
 export function ComplaintDetails() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const isInstitute =
     user?.role === 'institute' ||
     user?.role === 'INSTITUTE' ||
@@ -72,46 +75,17 @@ export function ComplaintDetails() {
   const [actionSuccessMessage, setActionSuccessMessage] = useState(null);
   const [actionErrorMessage, setActionErrorMessage] = useState(null);
   // Multilingual State: 'original' | 'en' | 'hi' | 'mr'
-  const [viewingLanguage, setViewingLanguage] = useState('original');
+  const [viewingLanguage, setViewingLanguage] = useState(language || 'original');
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationError, setTranslationError] = useState(null);
   const [translationCache, setTranslationCache] = useState({});
 
-  // Fast client-side fallback translation dictionary to guarantee instant response
+  // Fast client-side translation engine using Indic model
   const getFallbackTranslation = (sub = '', desc = '', targetLang = 'en') => {
-    const s = String(sub).trim();
-    const d = String(desc).trim();
-
-    if (targetLang === 'hi') {
-      let hiSub = s.toLowerCase() === 'management' ? 'प्रबंधन / प्रशासन' : s;
-      let hiDesc = d;
-      if (d.toLowerCase().includes('get all fees') || d.toLowerCase().includes('expected outcomes')) {
-        hiDesc = 'संस्थान पूरी फीस तो ले लेता है, लेकिन अपेक्षित परिणाम और सुविधाएं प्रदान नहीं करता है।';
-      } else if (d.toLowerCase().includes('caution') || d.toLowerCase().includes('refund')) {
-        hiDesc = 'संस्थान कॉशन मनी / सुरक्षा जमा वापस नहीं कर रहा है।';
-      } else if (d.toLowerCase().includes('certificate') || d.toLowerCase().includes('marksheets')) {
-        hiDesc = 'कॉलेज ने मूल प्रमाण पत्र और अंकतालिका अवैध रूप से रोक रखी है।';
-      }
-      return { subject: hiSub, description: hiDesc };
-    }
-
-    if (targetLang === 'mr') {
-      let mrSub = s.toLowerCase() === 'management' ? 'व्यवस्थापन / प्रशासन' : s;
-      let mrDesc = d;
-      if (d.toLowerCase().includes('get all fees') || d.toLowerCase().includes('expected outcomes')) {
-        mrDesc = 'संस्था पूर्ण फी आकारते, परंतु अपेक्षित निकाल आणि शैक्षणिक सुविधा पुरवत नाही.';
-      } else if (d.toLowerCase().includes('caution') || d.toLowerCase().includes('refund')) {
-        mrDesc = 'संस्था कॉशन मनी / अनामत रक्कम परत देण्यास नकार देत आहे.';
-      } else if (d.toLowerCase().includes('certificate') || d.toLowerCase().includes('marksheets')) {
-        mrDesc = 'कॉलेजने मूळ प्रमाणपत्रे आणि गुणपत्रिका बेकायदेशीरपणे रोखून ठेवली आहेत.';
-      }
-      return { subject: mrSub, description: mrDesc };
-    }
-
-    // Default English
+    const res = translateGrievance(sub, desc, targetLang);
     return {
-      subject: complaint?.translated_subject || s,
-      description: complaint?.translated_description || d,
+      subject: res.subject,
+      description: res.description,
     };
   };
 
@@ -121,53 +95,68 @@ export function ComplaintDetails() {
 
     if (targetLang === 'original') return;
 
-    // Return cached translation if available
     if (translationCache[targetLang]) {
       return;
     }
 
-    // If English and backend already populated translated_description
-    if (targetLang === 'en' && complaint?.translated_description) {
+    // Check if complaint already has valid translated fields in that language
+    if (targetLang === 'en' && complaint?.translated_subject && complaint?.translated_description) {
       setTranslationCache((prev) => ({
         ...prev,
         en: {
-          subject: complaint.translated_subject || complaint.subject,
-          description: complaint.translated_description || complaint.description,
+          subject: complaint.translated_subject,
+          description: complaint.translated_description,
         },
       }));
       return;
     }
 
     setIsTranslating(true);
+    let backendSuccess = false;
     const identifier = complaint?.complaint_no || complaint?.id || id;
 
     try {
       const res = await complaintService.translateComplaint(identifier, targetLang);
-      setTranslationCache((prev) => ({
-        ...prev,
-        [targetLang]: {
-          subject: res.translated_subject || res.original_subject,
-          description: res.translated_description || res.original_description,
-        },
-      }));
-      if (res.detected_language) {
-        setComplaint((prev) => ({ ...prev, detected_language: res.detected_language }));
+      if (res?.translated_subject && res?.translated_description) {
+        setTranslationCache((prev) => ({
+          ...prev,
+          [targetLang]: {
+            subject: res.translated_subject,
+            description: res.translated_description,
+          },
+        }));
+        if (res.detected_language) {
+          setComplaint((prev) => ({ ...prev, detected_language: res.detected_language }));
+        }
+        backendSuccess = true;
       }
     } catch (err) {
-      console.warn('Backend translation failed, falling back to local Indic engine:', err);
-      const fallback = getFallbackTranslation(
-        complaint?.subject || '',
-        complaint?.description || '',
-        targetLang
-      );
-      setTranslationCache((prev) => ({
-        ...prev,
-        [targetLang]: fallback,
-      }));
+      console.warn('Backend translate route unavailable, applying client Indic engine:', err);
     } finally {
       setIsTranslating(false);
     }
+
+    if (!backendSuccess && complaint) {
+      const localTrans = translateGrievance(complaint.subject || '', complaint.description || '', targetLang);
+      setTranslationCache((prev) => ({
+        ...prev,
+        [targetLang]: {
+          subject: localTrans.subject,
+          description: localTrans.description,
+        },
+      }));
+      if (localTrans.detectedLanguage && !complaint.detected_language) {
+        setComplaint((prev) => ({ ...prev, detected_language: localTrans.detectedLanguage }));
+      }
+    }
   };
+
+  // Sync viewing language when user changes global language selector in top navbar
+  useEffect(() => {
+    if (complaint && (language === 'hi' || language === 'mr' || language === 'en')) {
+      handleSelectLanguage(language);
+    }
+  }, [language, complaint?.id]);
   const fetchComplaint = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setIsRefreshing(true);
@@ -328,10 +317,12 @@ export function ComplaintDetails() {
               </span>
             </div>
             <h1 className="text-xl font-bold tracking-tight text-[#263746] mt-1.5">
-              {complaint.subject}
+              {viewingLanguage === 'original'
+                ? complaint.subject
+                : translationCache[viewingLanguage]?.subject || complaint.subject}
             </h1>
             <p className="text-xs text-[#718096] mt-0.5">
-              Filed under <span className="font-medium text-[#263746]">{complaint.bureau}</span> • Grievance Category: <span className="font-medium text-[#263746]">{complaint.category}</span>
+              {t('details.filedUnder', 'Filed under')} <span className="font-medium text-[#263746]">{complaint.bureau}</span> • {t('details.grievanceCategory', 'Grievance Category:')} <span className="font-medium text-[#263746]">{complaint.category}</span>
             </p>
           </div>
         </div>
@@ -344,7 +335,7 @@ export function ComplaintDetails() {
             title="Refresh from PostgreSQL"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#087F75]' : 'text-[#718096]'}`} />
-            <span>Reload Record</span>
+            <span>{t('details.reloadRecord', 'Reload Record')}</span>
           </button>
         </div>
       </div>
@@ -358,7 +349,7 @@ export function ComplaintDetails() {
               <div className="flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-[#087F75]" />
                 <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
-                  Official Complainant Statement
+                  {t('details.officialStatement', 'Official Complainant Statement')}
                 </h2>
               </div>
 
@@ -535,33 +526,33 @@ export function ComplaintDetails() {
           {/* Key Parameters Matrix */}
           <div className="bg-white p-5 rounded-2xl border border-[#D9DEE3] shadow-sm space-y-4">
             <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider border-b border-[#D9DEE3] pb-3">
-              Case Registry Parameters
+              {t('details.caseRegistryParams', 'Case Registry Parameters')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 rounded-xl bg-[#F5F7F7] border border-[#D9DEE3] space-y-1">
                 <span className="text-[#718096] flex items-center space-x-1.5 text-[11px]">
                   <Building2 className="w-3.5 h-3.5 text-[#087F75]" />
-                  <span>Referenced Institution</span>
+                  <span>{t('details.referencedInstitution', 'Referenced Institution')}</span>
                 </span>
                 <p className="font-semibold text-[#263746]">
                   Institution ID #{complaint.institution_id}
                 </p>
-                <p className="text-[11px] text-[#718096]">AICTE Approved Technical Entity</p>
+                <p className="text-[11px] text-[#718096]">{t('details.aicteApprovedEntity', 'AICTE Approved Technical Entity')}</p>
               </div>
               <div className="p-3.5 rounded-xl bg-[#F5F7F7] border border-[#D9DEE3] space-y-1">
                 <span className="text-[#718096] flex items-center space-x-1.5 text-[11px]">
                   <User className="w-3.5 h-3.5 text-[#087F75]" />
-                  <span>Complainant Affiliation</span>
+                  <span>{t('details.complainantAffiliation', 'Complainant Affiliation')}</span>
                 </span>
                 <p className="font-semibold text-[#263746]">
                   {complaint.complainant_type}
                 </p>
-                <p className="text-[11px] text-[#718096]">Authenticated Grievance Filer</p>
+                <p className="text-[11px] text-[#718096]">{t('details.authenticatedFiler', 'Authenticated Grievance Filer')}</p>
               </div>
               <div className="p-3.5 rounded-xl bg-[#F5F7F7] border border-[#D9DEE3] space-y-1">
                 <span className="text-[#718096] flex items-center space-x-1.5 text-[11px]">
                   <Calendar className="w-3.5 h-3.5 text-[#087F75]" />
-                  <span>Filing & Incident Dates</span>
+                  <span>{t('details.filingAndIncidentDates', 'Filing & Incident Dates')}</span>
                 </span>
                 <p className="font-semibold text-[#263746]">
                   Filed: {formatDate(complaint.filing_date)}
@@ -573,7 +564,7 @@ export function ComplaintDetails() {
               <div className="p-3.5 rounded-xl bg-[#F5F7F7] border border-[#D9DEE3] space-y-1">
                 <span className="text-[#718096] flex items-center space-x-1.5 text-[11px]">
                   <Clock className="w-3.5 h-3.5 text-[#D97736]" />
-                  <span>Statutory SLA Deadline</span>
+                  <span>{t('details.statutorySlaDeadline', 'Statutory SLA Deadline')}</span>
                 </span>
                 <p className="font-semibold text-[#263746]">
                   {complaint.deadline_date ? formatDate(complaint.deadline_date) : 'Not specified'}
@@ -589,7 +580,7 @@ export function ComplaintDetails() {
                     <span>{hoursRemaining} hours remaining before SLA lapse</span>
                   </span>
                 ) : (
-                  <span className="text-[#198754] text-[10px] font-medium">Within statutory timeframe</span>
+                  <span className="text-[#198754] text-[10px] font-medium">{t('details.withinStatutoryTimeframe', 'Within statutory timeframe')}</span>
                 )}
               </div>
             </div>
@@ -600,7 +591,7 @@ export function ComplaintDetails() {
               <div className="flex items-center space-x-2">
                 <Paperclip className="w-4 h-4 text-[#087F75]" />
                 <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
-                  Attached Evidence & Documents
+                  {t('details.evidenceAttachments', 'Attached Evidence & Documents')}
                 </h2>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded bg-teal-50 text-[#087F75] border border-teal-200 uppercase">
@@ -652,7 +643,7 @@ export function ComplaintDetails() {
               </div>
             ) : (
               <div className="p-4 rounded-xl bg-[#F5F7F7] border border-[#D9DEE3] text-center text-xs text-[#718096]">
-                No official supporting documents or evidence files were attached to this case.
+                {t('details.noEvidenceAttached', 'No official supporting documents or evidence files were attached to this case.')}
               </div>
             )}
           </div>
@@ -676,11 +667,11 @@ export function ComplaintDetails() {
             <div className="flex items-center space-x-2 border-b border-[#D9DEE3] pb-3">
               <Sparkles className="w-4 h-4 text-[#087F75]" />
               <h2 className="text-sm font-bold text-[#263746] uppercase tracking-wider">
-                Case Lifecycle Action
+                {t('details.caseLifecycleAction', 'Case Lifecycle Action')}
               </h2>
             </div>
             <p className="text-xs text-[#718096]">
-              Update statutory review status, record resolution affidavit summaries, or transfer bureau jurisdiction.
+              {t('details.lifecycleActionSubtitle', 'Update statutory review status, record resolution affidavit summaries, or transfer bureau jurisdiction.')}
             </p>
             {actionSuccessMessage && (
               <div className="p-3 rounded-xl bg-teal-50 border border-teal-200 text-[#087F75] text-xs flex items-start space-x-2">
@@ -697,7 +688,7 @@ export function ComplaintDetails() {
             <form onSubmit={handleStatusTransition} className="space-y-4 text-xs">
               <div>
                 <label className="block text-[#263746] font-semibold mb-1">
-                  Target Lifecycle Status
+                  {t('details.targetStatus', 'Target Lifecycle Status')}
                 </label>
                 <select
                   value={targetStatus}
@@ -715,7 +706,7 @@ export function ComplaintDetails() {
               {targetStatus === 'Transferred' && (
                 <div className="space-y-1 p-3 rounded-xl bg-teal-50/60 border border-teal-200">
                   <label className="block text-[#087F75] font-semibold">
-                    Target Bureau Jurisdiction
+                    {t('details.targetBureau', 'Target Bureau Jurisdiction')}
                   </label>
                   <select
                     value={targetBureau}
@@ -729,7 +720,7 @@ export function ComplaintDetails() {
                     ))}
                   </select>
                   <p className="text-[11px] text-[#718096] mt-1">
-                    This case will be routed to the selected bureau's triage queue.
+                    {t('details.bureauRouteHint', "This case will be routed to the selected bureau's triage queue.")}
                   </p>
                 </div>
               )}
@@ -765,7 +756,7 @@ export function ComplaintDetails() {
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Apply Lifecycle Update</span>
+                    <span>{t('details.applyLifecycleUpdate', 'Apply Lifecycle Update')}</span>
                   </>
                 )}
               </button>
@@ -774,7 +765,7 @@ export function ComplaintDetails() {
           {/* Quick AI Modules Navigation Card */}
           <div className="bg-white p-5 rounded-2xl border border-[#D9DEE3] shadow-sm space-y-3 text-xs">
             <span className="text-[10px] font-mono font-bold text-[#087F75] uppercase tracking-wider block">
-              Intelligence Actions
+              {t('details.intelligenceActions', 'Intelligence Actions')}
             </span>
             <div className="space-y-2">
               <Link
@@ -782,11 +773,11 @@ export function ComplaintDetails() {
                 className="block p-3 rounded-xl bg-[#F5F7F7] hover:bg-white border border-[#D9DEE3] hover:border-[#087F75] transition text-[#263746] group"
               >
                 <div className="font-semibold flex items-center justify-between group-hover:text-[#087F75] transition-colors">
-                  <span>Cross-Bureau Overlap Check</span>
+                  <span>{t('details.crossBureauOverlapCheck', 'Cross-Bureau Overlap Check')}</span>
                   <ArrowRight className="w-3.5 h-3.5 text-[#718096] group-hover:text-[#087F75]" />
                 </div>
                 <p className="text-[11px] text-[#718096] mt-0.5">
-                  Scan for identical claims filed across other AICTE bureaus.
+                  {t('details.scanOverlapHint', 'Scan for identical claims filed across other AICTE bureaus.')}
                 </p>
               </Link>
               <Link
@@ -794,7 +785,7 @@ export function ComplaintDetails() {
                 className="block p-3 rounded-xl bg-[#F5F7F7] hover:bg-white border border-[#D9DEE3] hover:border-[#087F75] transition text-[#263746] group"
               >
                 <div className="font-semibold flex items-center justify-between group-hover:text-[#087F75] transition-colors">
-                  <span>Verify Compliance Affidavits</span>
+                  <span>{t('details.verifyComplianceAffidavits', 'Verify Compliance Affidavits')}</span>
                   <ArrowRight className="w-3.5 h-3.5 text-[#718096] group-hover:text-[#087F75]" />
                 </div>
                 <p className="text-[11px] text-[#718096] mt-0.5">
