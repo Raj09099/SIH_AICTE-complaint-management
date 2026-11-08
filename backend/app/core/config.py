@@ -26,10 +26,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+psycopg2://aicte_admin:postgres_dev_password@localhost:5432/aicte_complaints"
     
     # CORS Origins
+    # Default covers local development. Override in production via the
+    # CORS_ORIGINS environment variable (JSON array string):
+    #   CORS_ORIGINS=["https://sih-aicte-complaint-management.vercel.app"]
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
+        "https://sih-aicte-complaint-management.vercel.app",
     ]
     
     # Storage

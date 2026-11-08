@@ -46,9 +46,23 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware
+# allow_credentials=True is only safe with an explicit list of origins — never with ["*"].
+# CORS_ORIGINS is always a list after the pydantic field_validator runs;
+# the assertion below is a runtime guard against misconfiguration.
+_cors_origins: list = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else []
+assert _cors_origins, (
+    "CORS_ORIGINS must be a non-empty list. "
+    "Set the CORS_ORIGINS environment variable on Render, e.g.: "
+    '["https://sih-aicte-complaint-management.vercel.app","http://localhost:5173"]'
+)
+assert "*" not in _cors_origins, (
+    "Wildcard origin '*' cannot be used with allow_credentials=True. "
+    "List explicit origins in CORS_ORIGINS."
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else ["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
