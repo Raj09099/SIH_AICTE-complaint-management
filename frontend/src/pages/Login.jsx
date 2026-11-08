@@ -21,6 +21,43 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
 
+// Classify an Axios error into a user-facing message.
+// isColdStartCandidate: true when the call is to the public Render backend
+// (i.e. not localhost), so we can show the appropriate retry prompt.
+function classifyLoginError(err, isDemo = false) {
+  // Server responded with an explicit error detail — always use it verbatim.
+  if (err.response?.data?.detail) return err.response.data.detail;
+
+  const status = err.response?.status;
+  if (status === 401) {
+    return isDemo
+      ? 'Invalid demo credentials. Please verify your database seeding.'
+      : 'Invalid credentials. Please verify your email and password.';
+  }
+  if (status === 403) {
+    return 'This account is inactive. Please contact an AICTE system administrator.';
+  }
+  if (status >= 500) {
+    return 'The server returned an error. Please try again in a moment.';
+  }
+
+  // Network-level failures
+  const code = err.code;
+  const msg  = err.message || '';
+
+  if (code === 'ECONNABORTED' || msg.includes('timeout')) {
+    // The backend took longer than 60 s — genuine cold-start or overload.
+    return '__COLD_START__';
+  }
+
+  if (code === 'ERR_NETWORK' || msg.includes('Network Error')) {
+    // Immediate connection refusal — usually a wrong URL or backend truly down.
+    return 'Cannot reach the server. Check your connection or try again shortly.';
+  }
+
+  return 'An unexpected error occurred. Please try again.';
+}
+
 export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,7 +70,11 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  // null | 'cold_start' — drives the retry banner
+  const [coldStart, setColdStart] = useState(null);
   const [demoLoadingRole, setDemoLoadingRole] = useState(null);
+  // Pending demo role so the retry button knows what to re-attempt
+  const [retryContext, setRetryContext] = useState(null);
 
   // Preserve intended destination from router state
   const destination = location.state?.from?.pathname || '/dashboard';
@@ -41,6 +82,7 @@ export function Login() {
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     setErrorMessage(null);
+    setColdStart(null);
     if (role === 'officer') {
       setEmail('officer@aicte-india.org');
       setPassword('Officer@123');
@@ -50,47 +92,50 @@ export function Login() {
     }
   };
 
-  const handleDemoLogin = async (role) => {
-    setSelectedRole(role);
+  // Single shared login executor used by both demo and form paths.
+  const executeLogin = async (loginEmail, loginPassword, isDemo, demoRole = null) => {
     setErrorMessage(null);
-    setDemoLoadingRole(role);
+    setColdStart(null);
     setLoading(true);
-
-    const demoEmail = role === 'officer' ? 'officer@aicte-india.org' : 'institute@apex.edu.in';
-    const demoPassword = role === 'officer' ? 'Officer@123' : 'Institute@123';
-
-    setEmail(demoEmail);
-    setPassword(demoPassword);
+    if (demoRole) setDemoLoadingRole(demoRole);
 
     try {
-      const response = await authService.login(demoEmail, demoPassword);
+      const response = await authService.login(loginEmail, loginPassword);
+      // Success — clear any prior error state immediately before navigating.
+      setErrorMessage(null);
+      setColdStart(null);
       login(response.user, response.access_token);
       navigate(destination, { replace: true });
     } catch (err) {
-      console.error('Demo sign-in failed:', err);
-      const serverDetail = err.response?.data?.detail;
-      let displayMsg = serverDetail;
-      if (!displayMsg) {
-        if (err.response?.status === 401) {
-          displayMsg = 'Invalid demo credentials. Please verify your database seeding.';
-        } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-          displayMsg = 'Request timed out. If using Render free tier, the backend is waking up — please retry in 10-15 seconds.';
-        } else if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
-          displayMsg = 'Cannot reach the backend server. If running locally, start the FastAPI server with: uvicorn app.main:app --reload (in the backend folder). If using the cloud deployment, please retry in a moment.';
-        } else {
-          displayMsg = 'Unable to connect to backend service. If using Render free tier, the instance is spinning up — please click Demo Login again in a moment.';
-        }
+      console.error('Sign-in failed:', err);
+      const classified = classifyLoginError(err, isDemo);
+      if (classified === '__COLD_START__') {
+        setColdStart(isDemo ? 'demo' : 'form');
+        setRetryContext(isDemo ? { role: demoRole, email: loginEmail, password: loginPassword, isDemo: true } : { email: loginEmail, password: loginPassword, isDemo: false });
+        setErrorMessage(null);
+      } else {
+        setErrorMessage(classified);
+        setColdStart(null);
       }
-      setErrorMessage(displayMsg);
     } finally {
       setLoading(false);
       setDemoLoadingRole(null);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleDemoLogin = (role) => {
+    setSelectedRole(role);
+    const demoEmail    = role === 'officer' ? 'officer@aicte-india.org' : 'institute@apex.edu.in';
+    const demoPassword = role === 'officer' ? 'Officer@123'             : 'Institute@123';
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    executeLogin(demoEmail, demoPassword, true, role);
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMessage(null);
+    setColdStart(null);
 
     if (!email.trim()) {
       setErrorMessage(
@@ -105,30 +150,15 @@ export function Login() {
       return;
     }
 
-    setLoading(true);
+    executeLogin(email, password, false);
+  };
 
-    try {
-      const response = await authService.login(email, password);
-      login(response.user, response.access_token);
-      navigate(destination, { replace: true });
-    } catch (err) {
-      console.error('Sign-in failed:', err);
-      const serverDetail = err.response?.data?.detail;
-      let displayMsg = serverDetail;
-      if (!displayMsg) {
-        if (err.response?.status === 401) {
-          displayMsg = 'Invalid credentials. Please verify your email and password.';
-        } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-          displayMsg = 'Request timed out. If using Render free tier, the backend is waking up — please retry in 10-15 seconds.';
-        } else if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
-          displayMsg = 'Cannot reach the backend server. If running locally, start the FastAPI server with: uvicorn app.main:app --reload (in the backend folder). If using the cloud deployment, please retry in a moment.';
-        } else {
-          displayMsg = 'Unable to connect to the authentication service. If using Render free tier, the instance is spinning up — please try again in a moment.';
-        }
-      }
-      setErrorMessage(displayMsg);
-    } finally {
-      setLoading(false);
+  const handleRetry = () => {
+    if (!retryContext) return;
+    if (retryContext.isDemo) {
+      handleDemoLogin(retryContext.role);
+    } else {
+      executeLogin(retryContext.email, retryContext.password, false);
     }
   };
 
@@ -378,8 +408,39 @@ export function Login() {
               </p>
             </div>
 
-            {/* Error Message Alert */}
-            {errorMessage && (
+            {/* Cold-start banner — shown instead of the generic timeout error */}
+            {coldStart && (
+              <div
+                role="alert"
+                className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs animate-in fade-in"
+              >
+                <div className="flex items-start space-x-2.5">
+                  <RefreshCw className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                  <div className="flex-1 space-y-1.5">
+                    <p className="font-semibold leading-snug">
+                      Backend is waking up (Render free tier)
+                    </p>
+                    <p className="leading-relaxed text-amber-700">
+                      The server was sleeping due to inactivity. Cold starts typically take
+                      30–50 seconds. Click <strong>Retry</strong> to try again — it should
+                      connect now.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={handleRetry}
+                      className="mt-1 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                      <span>{loading ? 'Retrying…' : 'Retry Now'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Standard error alert */}
+            {errorMessage && !coldStart && (
               <div
                 role="alert"
                 className="mb-5 p-3.5 rounded-xl bg-[#DC3545]/10 border border-[#DC3545]/25 text-[#DC3545] flex items-start space-x-2.5 text-xs animate-in fade-in"

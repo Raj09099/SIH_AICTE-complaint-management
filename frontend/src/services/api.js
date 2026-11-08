@@ -1,58 +1,76 @@
 import axios from 'axios';
 
+const PRODUCTION_BACKEND = 'https://sih-aicte-complaint-management.onrender.com/api/v1';
+
 /**
  * Resolve and sanitize the Backend API Base URL.
- * Automatically handles:
- * 1. Default to live Render cloud backend if no env var is set.
- * 2. Appends '/api/v1' if omitted from the URL.
- * 3. Sanitizes duplicate slashes and typo corrections.
+ * Priority:
+ * 1. VITE_API_BASE_URL env var (set via .env.production on Vercel, or .env locally).
+ * 2. Localhost auto-detect when running the dev server locally.
+ * 3. Hard-coded production Render URL as final fallback.
+ *
+ * Defense-in-depth: if the resolved URL is a localhost address but the
+ * browser hostname is a public domain, ignore it and use the production URL.
+ * This guards against .env leaking into a production build when .env.production
+ * is missing from the repository.
  */
 const getSanitizedBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
-  // If in browser on localhost or local LAN IP, prioritize local FastAPI development backend
-  if (
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.startsWith('10.') ||
-      window.location.hostname.startsWith('192.168.') ||
-      window.location.hostname.startsWith('172.') ||
-      window.location.hostname.endsWith('.local'))
-  ) {
+  const isLocalHostname =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('172.') ||
+    hostname.endsWith('.local');
+
+  // --- Local development: browser is on localhost/LAN ---
+  if (isLocalHostname) {
     if (envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
       return envUrl.trim().replace(/\/+$/, '');
     }
-    const host = window.location.hostname || 'localhost';
-    return `http://${host}:8000/api/v1`;
+    return `http://${hostname}:8000/api/v1`;
   }
 
+  // --- Production / Vercel / any public hostname ---
+
+  // If no env var is set, use the known production URL.
   if (!envUrl || envUrl.trim() === '') {
-    return 'https://sih-aicte-complaint-management.onrender.com/api/v1';
+    return PRODUCTION_BACKEND;
   }
 
-  let cleaned = envUrl.trim().replace(/\/+$/, '');
+  const cleaned = envUrl.trim().replace(/\/+$/, '');
 
-  // Auto-correct domain typo if present
-  cleaned = cleaned.replace('-system.onrender.com', '.onrender.com');
+  // Guard: if the baked-in env var still points to localhost (e.g. .env was
+  // accidentally used instead of .env.production), fall back to production URL.
+  if (cleaned.includes('localhost') || cleaned.includes('127.0.0.1')) {
+    console.warn(
+      '[api] VITE_API_BASE_URL resolves to localhost on a public host — ' +
+      'falling back to production backend. Set VITE_API_BASE_URL in .env.production.'
+    );
+    return PRODUCTION_BACKEND;
+  }
+
+  // Auto-correct legacy domain typo if present
+  let result = cleaned.replace('-system.onrender.com', '.onrender.com');
 
   // Ensure path ends with /api/v1
-  if (!cleaned.includes('/api/v1')) {
-    if (cleaned.endsWith('/api')) {
-      cleaned += '/v1';
-    } else {
-      cleaned += '/api/v1';
-    }
+  if (!result.includes('/api/v1')) {
+    result += result.endsWith('/api') ? '/v1' : '/api/v1';
   }
 
-  return cleaned;
+  return result;
 };
 
 const API_BASE_URL = getSanitizedBaseUrl();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 45000, // 45-second timeout to handle Render free-tier cold-starts seamlessly
+  // 60 s covers Render free-tier cold-starts (typically 30–50 s on first wake).
+  // The Login page shows a retry prompt well before this fires.
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
