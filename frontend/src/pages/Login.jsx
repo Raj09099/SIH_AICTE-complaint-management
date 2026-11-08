@@ -74,7 +74,9 @@ export function Login() {
         if (err.response?.status === 401) {
           displayMsg = 'Invalid demo credentials. Please verify your database seeding.';
         } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-          displayMsg = 'Backend is currently waking up from sleep mode (Render free tier). Please retry in 10-15 seconds.';
+          displayMsg = 'Request timed out. If using Render free tier, the backend is waking up — please retry in 10-15 seconds.';
+        } else if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
+          displayMsg = 'Cannot reach the backend server. If running locally, start the FastAPI server with: uvicorn app.main:app --reload (in the backend folder). If using the cloud deployment, please retry in a moment.';
         } else {
           displayMsg = 'Unable to connect to backend service. If using Render free tier, the instance is spinning up — please click Demo Login again in a moment.';
         }
@@ -117,7 +119,9 @@ export function Login() {
         if (err.response?.status === 401) {
           displayMsg = 'Invalid credentials. Please verify your email and password.';
         } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-          displayMsg = 'Backend is currently waking up from sleep mode (Render free tier). Please retry in 10-15 seconds.';
+          displayMsg = 'Request timed out. If using Render free tier, the backend is waking up — please retry in 10-15 seconds.';
+        } else if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
+          displayMsg = 'Cannot reach the backend server. If running locally, start the FastAPI server with: uvicorn app.main:app --reload (in the backend folder). If using the cloud deployment, please retry in a moment.';
         } else {
           displayMsg = 'Unable to connect to the authentication service. If using Render free tier, the instance is spinning up — please try again in a moment.';
         }
